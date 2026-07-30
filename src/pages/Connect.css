@@ -1,0 +1,19 @@
+.connect-form {
+  max-width: 720px;
+  margin: 0 auto 2rem;
+}
+
+.connect-form__iframe {
+  width: 100%;
+  min-height: 680px;
+  border: none;
+  background: var(--color-white);
+}
+
+.connect-social {
+  margin-top: 2rem;
+}
+
+.connect-social h3 {
+  margin-bottom: 1rem;
+}

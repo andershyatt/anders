@@ -1,0 +1,50 @@
+.songlist-page .lead {
+  max-width: 640px;
+  margin: 0 auto 0.5rem;
+}
+
+.songlist-table-wrap {
+  width: 100%;
+  max-width: 720px;
+  margin: 1.5rem auto 0;
+  overflow-x: auto;
+  border: 1px solid #222;
+}
+
+.songlist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+  background: #fff;
+}
+
+.songlist-table th {
+  background: var(--color-accent);
+  color: #000;
+  font-family: var(--font-nav);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #222;
+}
+
+.songlist-table td {
+  padding: 0.45rem 0.85rem;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ddd;
+}
+
+.songlist-table td:last-child,
+.songlist-table th:last-child {
+  border-right: none;
+}
+
+.songlist-table tbody tr:nth-child(even) {
+  background: #f7f7f7;
+}
+
+.songlist-table tbody tr:hover {
+  background: #eef6e4;
+}

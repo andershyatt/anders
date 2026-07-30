@@ -1,0 +1,42 @@
+.events-table-wrap {
+  overflow-x: auto;
+  margin: 2rem 0;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.events-table th,
+.events-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.events-table th {
+  background: var(--color-accent);
+  color: var(--color-white);
+  font-family: var(--font-nav);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.events-table__date-short {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .events-table__date-full {
+    display: none;
+  }
+
+  .events-table__date-short {
+    display: inline;
+  }
+}

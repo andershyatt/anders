@@ -1,0 +1,17 @@
+.photo-booth-packages {
+  max-width: 640px;
+  margin: 1.5rem auto;
+  text-align: left;
+}
+
+.photo-booth-packages li {
+  margin-bottom: 0.35rem;
+}
+
+.photo-booth-backdrops {
+  margin-top: 2rem;
+}
+
+.photo-booth-backdrops a {
+  font-weight: 600;
+}

@@ -1,0 +1,120 @@
+.hero-banner {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.hero-banner--home {
+  aspect-ratio: 2000 / 878;
+  min-height: 320px;
+  max-height: 720px;
+  background-color: #0b0b0b;
+}
+
+.hero-banner--guitar {
+  aspect-ratio: 2400 / 1040;
+  min-height: 300px;
+  max-height: 640px;
+  /* The source is a 3:2 portrait-ish photo; bias the banner crop upward so the
+     guitar and hands stay in frame instead of the bottom of the body. */
+  background-position: center 38%;
+  background-color: #0b0b0b;
+}
+
+.hero-banner--home::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 55%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  z-index: 1;
+}
+
+.hero-banner--guitar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.1) 45%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  z-index: 1;
+}
+
+.hero-banner__inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--site-max);
+  margin: 0 auto;
+  padding: 2rem 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.hero-banner--home .hero-banner__inner,
+.hero-banner--guitar .hero-banner__inner {
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+}
+
+.hero-banner__content {
+  color: var(--color-white);
+  width: 100%;
+}
+
+.hero-banner__title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-white);
+  margin: 0 0 0.25rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.hero-banner__subtitle {
+  font-family: var(--font-nav);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.hero-banner__bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-top: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .hero-banner--home {
+    min-height: 200px;
+    max-height: none;
+  }
+
+  .hero-banner--guitar {
+    min-height: 220px;
+    max-height: none;
+  }
+
+  .hero-banner__inner {
+    padding: 1.25rem 1rem 1rem;
+  }
+
+  .hero-banner__title {
+    font-size: 22px;
+  }
+}

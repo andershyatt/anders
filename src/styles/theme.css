@@ -1,0 +1,22 @@
+:root {
+  --color-accent: #48880c;
+  --color-accent-dark: #3a6e0a;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-muted: #747a86;
+  --color-text: #000000;
+  --color-bg: #fafafa;
+  --color-bg-texture: #f0f0f0;
+  --color-border: #d6d6d6;
+  --color-overlay: rgba(0, 0, 0, 0.48);
+  --color-nav-bg: rgba(0, 0, 0, 0.7);
+  --color-nav-bg-solid: #1a1a1a;
+
+  --font-nav: 'Open Sans', sans-serif;
+  --font-body: 'Lucida Grande', Tahoma, Verdana, sans-serif;
+  --font-heading: 'Lucida Grande', Tahoma, Verdana, sans-serif;
+
+  --nav-height: 48px;
+  --content-max: 960px;
+  --site-max: 1100px;
+}
