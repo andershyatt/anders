@@ -4,9 +4,14 @@ import './PhotoGallery.css'
 interface PhotoGalleryProps {
   images: string[]
   altPrefix?: string
+  layout?: 'grid' | 'masonry'
 }
 
-export default function PhotoGallery({ images, altPrefix = 'Gallery photo' }: PhotoGalleryProps) {
+export default function PhotoGallery({
+  images,
+  altPrefix = 'Gallery photo',
+  layout = 'grid',
+}: PhotoGalleryProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
   const close = useCallback(() => setActiveIndex(null), [])
@@ -44,7 +49,7 @@ export default function PhotoGallery({ images, altPrefix = 'Gallery photo' }: Ph
   if (images.length === 0) return null
 
   return (
-    <div className="photo-gallery">
+    <div className={`photo-gallery${layout === 'masonry' ? ' photo-gallery--masonry' : ''}`}>
       <div className="photo-gallery__grid">
         {images.map((src, index) => (
           <button
@@ -58,7 +63,7 @@ export default function PhotoGallery({ images, altPrefix = 'Gallery photo' }: Ph
               src={src}
               alt={`${altPrefix} ${index + 1}`}
               className="photo-gallery__thumb"
-              loading="lazy"
+              loading={layout === 'masonry' ? 'eager' : 'lazy'}
             />
           </button>
         ))}

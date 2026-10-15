@@ -2,7 +2,10 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Nav from './Nav'
 import HeroBanner, { type HeroVariant } from './HeroBanner'
 import Footer from './Footer'
+import SocialBar from './SocialBar'
+import { images } from '../data/media'
 import './layout.css'
+import './HomeHero.css'
 
 interface RouteMeta {
   hero: HeroVariant
@@ -32,10 +35,28 @@ export default function SiteLayout() {
   const { pathname } = useLocation()
   const meta = routeMeta[pathname] ?? defaultMeta
 
+  const isHome = pathname === '/'
+
   return (
-    <div className="site-layout">
-      <Nav />
-      <HeroBanner variant={meta.hero} title={meta.title} subtitle={meta.subtitle} />
+    <div className={`site-layout${isHome ? ' site-layout--home' : ''}`}>
+      {isHome ? (
+        <header className="home-hero">
+          <img
+            className="home-hero__image"
+            src={images.heroHome}
+            alt="Anders Hyatt playing guitar with a band on stage"
+          />
+          <Nav variant="overlay" />
+          <div className="home-hero__social">
+            <SocialBar variant="hero" />
+          </div>
+        </header>
+      ) : (
+        <>
+          <Nav />
+          <HeroBanner variant={meta.hero} title={meta.title} subtitle={meta.subtitle} />
+        </>
+      )}
       <main className="site-main">
         <Outlet />
       </main>

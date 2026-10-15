@@ -35,3 +35,31 @@
 .social-bar--hero {
   margin-top: 1rem;
 }
+
+.social-bar--brand {
+  gap: 1.6rem;
+}
+
+.social-bar--brand .social-bar__link {
+  width: 50px;
+  height: 50px;
+  color: #222222;
+}
+
+.social-bar--brand .social-bar__icon {
+  width: 46px;
+  height: 46px;
+}
+
+.social-bar--brand .social-bar__link--facebook {
+  color: #1877f2;
+}
+
+.social-bar--brand .social-bar__link--youtube {
+  color: #ff0000;
+}
+
+.social-bar--brand .social-bar__link:hover {
+  transform: none;
+  opacity: 0.8;
+}
