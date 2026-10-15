@@ -18,3 +18,17 @@
   margin: 0;
   opacity: 0.75;
 }
+
+.site-footer--home {
+  background: transparent;
+  color: #747a86;
+  padding-top: 0.25rem;
+  padding-bottom: 2rem;
+}
+
+.site-footer--home .site-footer__copy {
+  margin-top: 1.1rem;
+  opacity: 1;
+  color: #8b919a;
+  font-size: 12px;
+}

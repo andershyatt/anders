@@ -10,6 +10,12 @@ export const images = {
   photoBoothBanner: asset('photo-booth-banner.jpg'),
   duoAngella: asset('duo-angella-01.jpg'),
   duoBen: asset('duo-ben-01.jpg'),
+  homeLiveMusic: asset('home-live-music.jpg'),
+  homeDj: asset('home-dj.jpg'),
+  homeBanner: asset('home-banner.jpg'),
+  badgeZola: asset('badge-zola.jpg'),
+  badgeTk: asset('badge-tk.png'),
+  badgeBow: asset('badge-bow.png'),
 } as const
 
 /** Locally cached YouTube poster frame (see scripts/fetch-assets.mjs). */

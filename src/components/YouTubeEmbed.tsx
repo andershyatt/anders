@@ -5,9 +5,14 @@ import './YouTubeEmbed.css'
 interface YouTubeEmbedProps {
   videoId: string
   title?: string
+  showCaption?: boolean
 }
 
-export default function YouTubeEmbed({ videoId, title = 'YouTube video' }: YouTubeEmbedProps) {
+export default function YouTubeEmbed({
+  videoId,
+  title = 'YouTube video',
+  showCaption = true,
+}: YouTubeEmbedProps) {
   const [playing, setPlaying] = useState(false)
   const watchUrl = `https://www.youtube.com/watch?v=${videoId}`
 
@@ -34,11 +39,13 @@ export default function YouTubeEmbed({ videoId, title = 'YouTube video' }: YouTu
           </button>
         )}
       </div>
-      <figcaption className="youtube-embed__caption">
-        <a href={watchUrl} target="_blank" rel="noreferrer">
-          Watch on YouTube
-        </a>
-      </figcaption>
+      {showCaption && (
+        <figcaption className="youtube-embed__caption">
+          <a href={watchUrl} target="_blank" rel="noreferrer">
+            Watch on YouTube
+          </a>
+        </figcaption>
+      )}
     </figure>
   )
 }

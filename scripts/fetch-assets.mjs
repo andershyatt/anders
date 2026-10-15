@@ -43,6 +43,27 @@ const assets = [
   { file: 'home-gallery-14.jpg', url: ORIG('8857af0081f070763d9e6b0b208cc863749144cd', '03b137b2-81bb-48aa-93ba-8d3e252e7650-1-105-c.jpeg') },
   { file: 'home-gallery-15.jpg', url: ORIG('07ab93dd115cd734b5aa7c89086dc87debe0e489', 'dac411ec-4d97-4447-a91c-a0ef647e9698.jpeg') },
 
+  // Home page feature images (cropped the same way the live site displays them)
+  {
+    file: 'home-live-music.jpg',
+    url: 'https://images.zoogletools.com/s:bzglfiles/u/216357/93c761469ffc2fa95ffaa83bd2af80aac385ffae/original/9cdf2e40-be26-406b-90df-1d6351ac6d13.jpeg/!!/b%3AW1siZXh0cmFjdCIseyJsZWZ0IjowLCJ0b3AiOjE4MCwid2lkdGgiOjY4MywiaGVpZ2h0Ijo2ODN9XSxbInJlc2l6ZSIsNjgzXSxbIm1heCJdLFsid2UiXV0%3D/meta%3AeyJzcmNCdWNrZXQiOiJiemdsZmlsZXMifQ%3D%3D.jpg',
+  },
+  {
+    file: 'home-dj.jpg',
+    url: 'https://images.zoogletools.com/s:bzglfiles/u/216357/6a7909e5ad7d5bec5e21568abcdbf4ad55d911a3/original/d36f55ed-6a30-4858-8063-ea045da7ffc6-1-105-c.jpeg/!!/b%3AW1siZXh0cmFjdCIseyJsZWZ0IjoxMzIsInRvcCI6MCwid2lkdGgiOjcyNCwiaGVpZ2h0Ijo3MjR9XSxbInJlc2l6ZSIsMTAwMF0sWyJtYXgiXSxbIndlIl1d/meta%3AeyJzcmNCdWNrZXQiOiJiemdsZmlsZXMifQ%3D%3D.jpg',
+  },
+  {
+    file: 'home-banner.jpg',
+    url: 'https://images.zoogletools.com/s:bzglfiles/u/216357/f00086ac51640ced0574dd04e7dfc3c6d0996bf4/original/banner.jpeg/!!/b%3AW1sicmVzaXplIiwyMDAwXSxbIm1heCJdLFsid2UiXV0%3D/meta%3AeyJzcmNCdWNrZXQiOiJiemdsZmlsZXMifQ%3D%3D.jpg',
+  },
+  { file: 'badge-zola.jpg', url: ORIG('68d3c90d13679bcd6a7267a03d097f256d9aa851', 'zola-social-kit-post-in-feed-still-copy.jpg') },
+  { file: 'badge-tk.png', url: ORIG('b8b2dd834ff37d2407d120f52bf12b85ec8e2f33', 'tk-hof-badge.png') },
+  { file: 'badge-bow.png', url: ORIG('3919b94319d3f79415676e76847f43f32e40b479', 'bow-badge-primary.png') },
+  {
+    file: 'content-texture.png',
+    url: 'https://zglseed.s3.ca-central-1.amazonaws.com/usersite/themes/161/a/203-content-light.png',
+  },
+
   // DJ gallery
   { file: 'dj-gallery-01.jpg', url: ORIG('c809ab6c0c65b60ed6e4dd444622653df3b73c3b', '2990ecca-c538-49bf-9ce9-c805339e48b9.jpeg') },
   { file: 'dj-gallery-02.jpg', url: ORIG('c209cdbe3e00a854ecae53b9a198e12a1a0e30e3', '382a01ac-57ac-4441-bd7c-a90b77b47113-1-105-c.jpeg') },
@@ -65,6 +86,7 @@ const assets = [
  * own origin even when the YouTube iframe itself is blocked or slow to load.
  */
 const videoIds = [
+  '9IO4wOveS2U',
   'lyWz78KfERk',
   '-SXiczxgHu8',
   '4W-pS9-lwLo',
