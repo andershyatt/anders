@@ -33,23 +33,25 @@ export default function Home() {
             />
           </div>
           <div className="home-split__copy">
-            <p id="live-music-heading">
-              <strong>LIVE MUSIC</strong>
-            </p>
-            <p>
-              <em>Weddings: Ceremony, Cocktail Hour, Dinner, First Dance, Parent Dances</em>
-            </p>
-            <p>
-              <em>
-                Private parties, corporate events, wineries, breweries, restaurants and bars
-              </em>
-            </p>
-            <p>
-              <em>Solo, duo and trio options</em>
-            </p>
-            <Link to="/live-music" className="home-btn">
-              Learn more
-            </Link>
+            <div className="home-split__card">
+              <p id="live-music-heading">
+                <strong>LIVE MUSIC</strong>
+              </p>
+              <p>
+                <em>Weddings: Ceremony, Cocktail Hour, Dinner, First Dance, Parent Dances</em>
+              </p>
+              <p>
+                <em>
+                  Private parties, corporate events, wineries, breweries, restaurants and bars
+                </em>
+              </p>
+              <p>
+                <em>Solo, duo and trio options</em>
+              </p>
+              <Link to="/live-music" className="home-btn">
+                Learn more
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -58,21 +60,23 @@ export default function Home() {
             <img src={images.homeDj} alt="Anders Hyatt performing as a DJ in a cowboy hat" />
           </div>
           <div className="home-split__copy">
-            <p id="dj-heading">
-              <strong>DJ SERVICES</strong>
-            </p>
-            <p>
-              <em>Weddings: Dinner, Reception, Dancing</em>
-            </p>
-            <p>
-              <em>Private Parties, Corporate events</em>
-            </p>
-            <p>
-              <em>Emcee services included</em>
-            </p>
-            <Link to="/dj" className="home-btn">
-              learn more
-            </Link>
+            <div className="home-split__card">
+              <p id="dj-heading">
+                <strong>DJ SERVICES</strong>
+              </p>
+              <p>
+                <em>Weddings: Dinner, Reception, Dancing</em>
+              </p>
+              <p>
+                <em>Private Parties, Corporate events</em>
+              </p>
+              <p>
+                <em>Emcee services included</em>
+              </p>
+              <Link to="/dj" className="home-btn">
+                learn more
+              </Link>
+            </div>
           </div>
         </section>
 
