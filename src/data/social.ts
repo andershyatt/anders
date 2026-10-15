@@ -1,6 +1,6 @@
 export const socialLinks = {
   facebook: 'http://www.facebook.com/andershyattmusic',
-  youtube: 'http://www.youtube.com/user/aghyatt',
+  youtube: 'https://www.youtube.com/@andershyattmusic',
   instagram: 'http://instagram.com/andershyattmusic',
 } as const
 
