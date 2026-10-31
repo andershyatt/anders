@@ -32,6 +32,8 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_GOOGLE_PLACES_API_KEY: ${{ vars.GOOGLE_PLACES_API_KEY }}
         run: npm run build
 
       - name: Upload Pages artifact

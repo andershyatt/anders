@@ -1,12 +1,17 @@
 /**
- * Browser key for the Places API (New). Replace the placeholder with the real
- * key before deploy. Restrict that key to the Places API and to the site
- * referrers (https://andershyatt.github.io/* and andershyattmusic.com/*).
+ * Browser key for the Places API (New). The deploy workflow injects
+ * VITE_GOOGLE_PLACES_API_KEY from the Actions variable GOOGLE_PLACES_API_KEY.
+ * An empty or missing value keeps the Photon search. Restrict the real key
+ * to the Places API and to https://andershyatt.github.io/* and
+ * andershyattmusic.com/*.
  */
-export const GOOGLE_PLACES_API_KEY: string = '__GOOGLE_PLACES_API_KEY__'
+function readPlacesKey(): string {
+  const value = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
+  return typeof value === 'string' ? value.trim() : ''
+}
 
-const PLACEHOLDER = '__GOOGLE_PLACES_API_KEY__'
+export const GOOGLE_PLACES_API_KEY = readPlacesKey()
 
 export function googlePlacesConfigured(): boolean {
-  return GOOGLE_PLACES_API_KEY !== PLACEHOLDER && GOOGLE_PLACES_API_KEY.trim() !== ''
+  return GOOGLE_PLACES_API_KEY !== ''
 }
