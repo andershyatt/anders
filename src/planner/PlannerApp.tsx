@@ -20,6 +20,7 @@ import {
   parseDanceFormat,
   toIsoDate,
 } from './format'
+import VenueField from './VenueField'
 import './planner.css'
 
 const LINK_MESSAGE = "This planner link doesn't look right, please check the link Anders sent you."
@@ -304,14 +305,27 @@ export default function PlannerApp() {
                 <section key={section.id} id={section.id} className="planner-section">
                   <h2>{section.title}</h2>
                   <p className="planner-section__blurb">{section.blurb}</p>
-                  {section.fields.map((field) => (
-                    <FieldControl
-                      key={field.key}
-                      field={field}
-                      value={fields[field.key] ?? ''}
-                      onChange={(value) => updateField(field.key, value)}
-                    />
-                  ))}
+                  {section.fields.map((field) =>
+                    field.key === 'Venue' ? (
+                      <VenueField
+                        key={field.key}
+                        id="field-Venue"
+                        value={fields.Venue ?? ''}
+                        onChange={(value) => updateField('Venue', value)}
+                        onPick={(place) => {
+                          updateField('Venue', place.name)
+                          if (place.address) updateField('Venue address', place.address)
+                        }}
+                      />
+                    ) : (
+                      <FieldControl
+                        key={field.key}
+                        field={field}
+                        value={fields[field.key] ?? ''}
+                        onChange={(value) => updateField(field.key, value)}
+                      />
+                    ),
+                  )}
                 </section>
               ))}
 
