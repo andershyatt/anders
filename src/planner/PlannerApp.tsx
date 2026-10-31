@@ -3,8 +3,8 @@ import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner } from './api
 import {
   DANCE_LENGTH,
   DANCE_PERFORMANCE,
-  STYLE_OPTIONS,
   YES_NO_OPTIONS,
+  ceremonyStyleOptions,
   ALL_SERVICES,
   fieldsForSave,
   plannerFieldKeys,
@@ -73,25 +73,36 @@ function ChoiceGroup({
   )
 }
 
+function choicesWithSaved(options: readonly string[], value: string): string[] {
+  const saved = value.trim()
+  if (!saved) return [...options]
+  const known = options.some((option) => option.toLowerCase() === saved.toLowerCase())
+  return known ? [...options] : [saved, ...options]
+}
+
 function FieldControl({
   field,
   value,
+  services,
   onChange,
 }: {
   field: PlannerField
   value: string
+  services: BookedServices
   onChange: (next: string) => void
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
 
   if (field.kind === 'style' || field.kind === 'yesno') {
-    const options = field.kind === 'yesno' ? YES_NO_OPTIONS : STYLE_OPTIONS
+    const base = field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services)
+    const options = choicesWithSaved(base, value)
+    const selected = options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? ''
     return (
       <ChoiceGroup
         name={id}
         legend={field.label}
         options={options}
-        value={options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? ''}
+        value={selected}
         onChange={onChange}
       />
     )
@@ -330,6 +341,7 @@ export default function PlannerApp() {
                         key={field.key}
                         field={field}
                         value={fields[field.key] ?? ''}
+                        services={services}
                         onChange={(value) => updateField(field.key, value)}
                       />
                     ),

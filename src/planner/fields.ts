@@ -222,6 +222,26 @@ export function servicesFromPreview(search: string): BookedServices | null {
 }
 
 export const STYLE_OPTIONS = ['Instrumental', 'Vocals'] as const
+
+/** Ceremony style choices when the couple booked both live music and a DJ. */
+export const CEREMONY_STYLE_WITH_DJ = [
+  'Live - instrumental',
+  'Live - vocals',
+  'DJ - instrumental',
+  'DJ - vocals',
+] as const
+
+const CEREMONY_STYLE_KEYS = new Set([
+  'Wedding party processional style (instrumental/vocals)',
+  'Bridal processional style',
+  'Recessional style',
+])
+
+export function ceremonyStyleOptions(key: string, services: BookedServices): readonly string[] {
+  if (CEREMONY_STYLE_KEYS.has(key) && services.live && services.dj) return CEREMONY_STYLE_WITH_DJ
+  return STYLE_OPTIONS
+}
+
 export const YES_NO_OPTIONS = ['Yes', 'No'] as const
 export const DANCE_PERFORMANCE = ['Live', 'DJ'] as const
 export const DANCE_LENGTH = ['Full', 'Shortened'] as const
