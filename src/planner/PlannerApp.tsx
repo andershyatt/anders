@@ -278,7 +278,7 @@ export default function PlannerApp() {
         {status.kind === 'ready' && (
           <>
             <header className="planner-welcome">
-              <p className="planner-kicker">Your wedding with Anders</p>
+              <p className="planner-kicker">Your wedding with Anders Hyatt Music</p>
               <h1>{couple.names || 'Wedding details'}</h1>
               {welcomeBits.length > 0 && <p className="planner-meta">{welcomeBits.join(' · ')}</p>}
               <p className="planner-lead">
