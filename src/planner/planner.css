@@ -139,9 +139,11 @@
 .planner-choices legend {
   display: block;
   margin: 0 0 0.35rem;
+  padding: 0;
   font-family: var(--font-nav);
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.45;
 }
 
 .planner-field input,

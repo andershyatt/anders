@@ -4,6 +4,7 @@ import {
   DANCE_LENGTH,
   DANCE_PERFORMANCE,
   STYLE_OPTIONS,
+  YES_NO_OPTIONS,
   plannerFieldKeys,
   plannerSections,
   type PlannerField,
@@ -13,6 +14,7 @@ import {
   emptyFields,
   fieldsEqual,
   formatDance,
+  formatCoupleDate,
   formatSavedAt,
   parseDanceFormat,
 } from './format'
@@ -75,13 +77,14 @@ function FieldControl({
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
 
-  if (field.kind === 'style') {
+  if (field.kind === 'style' || field.kind === 'yesno') {
+    const options = field.kind === 'yesno' ? YES_NO_OPTIONS : STYLE_OPTIONS
     return (
       <ChoiceGroup
         name={id}
         legend={field.label}
-        options={STYLE_OPTIONS}
-        value={STYLE_OPTIONS.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? ''}
+        options={options}
+        value={options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? ''}
         onChange={onChange}
       />
     )
@@ -217,7 +220,8 @@ export default function PlannerApp() {
   }, [fields, saving, token])
 
   const savedLabel = formatSavedAt(lastUpdated)
-  const welcomeBits = [couple.date, couple.venue].filter(Boolean)
+  const welcomeDate = couple.date ? formatCoupleDate(couple.date) : ''
+  const welcomeBits = [welcomeDate, couple.venue].filter(Boolean)
 
   return (
     <div className="planner">

@@ -1,4 +1,4 @@
-export type FieldKind = 'text' | 'textarea' | 'style' | 'dance'
+export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno'
 
 export interface PlannerField {
   key: string
@@ -29,6 +29,12 @@ export const plannerSections: PlannerSection[] = [
       { key: 'Length of service', label: 'Length of service', kind: 'text', placeholder: '30 minutes' },
       { key: 'Guest count', label: 'Guest count', kind: 'text', placeholder: '120' },
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
+      {
+        key: 'Social media permission',
+        label:
+          'Can we share tasteful photos or videos from your wedding on our social media accounts for promotional purposes?',
+        kind: 'yesno',
+      },
       { key: 'IG handle', label: 'IG handle', kind: 'text', placeholder: '@' },
     ],
   },
@@ -137,5 +143,6 @@ export const plannerFieldKeys: string[] = plannerSections.flatMap((section) =>
 )
 
 export const STYLE_OPTIONS = ['Instrumental', 'Vocals'] as const
+export const YES_NO_OPTIONS = ['Yes', 'No'] as const
 export const DANCE_PERFORMANCE = ['Live', 'DJ'] as const
 export const DANCE_LENGTH = ['Full', 'Shortened'] as const
