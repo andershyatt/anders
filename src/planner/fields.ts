@@ -142,6 +142,85 @@ export const plannerFieldKeys: string[] = plannerSections.flatMap((section) =>
   section.fields.map((field) => field.key),
 )
 
+export interface BookedServices {
+  live: boolean
+  dj: boolean
+  photobooth: boolean
+}
+
+/** Used when the backend omits `services` (older responses). */
+export const ALL_SERVICES: BookedServices = { live: true, dj: true, photobooth: true }
+
+const LIVE_FIELDS = new Set([
+  'Songs to learn',
+  'Pre-ceremony music',
+  'Wedding party processional song',
+  'Wedding party processional style (instrumental/vocals)',
+  'Bridal processional song',
+  'Bridal processional style',
+  'Recessional song',
+  'Recessional style',
+  'Live music requests',
+])
+
+const DJ_FIELDS = new Set([
+  'DJ music requests',
+  'Last song of the night with guests',
+  'Private last dance',
+  'Do-not-play list',
+])
+
+const LIVE_AND_DJ_FIELDS = new Set([
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+])
+
+export function fieldVisible(key: string, services: BookedServices): boolean {
+  if (LIVE_FIELDS.has(key)) return services.live
+  if (DJ_FIELDS.has(key)) return services.dj
+  if (key.startsWith('Photo Booth')) return services.photobooth
+  if (LIVE_AND_DJ_FIELDS.has(key)) return services.live && services.dj
+  return true
+}
+
+/** Sections with every field hidden are dropped, so their headings are not shown. */
+export function visibleSections(services: BookedServices): PlannerSection[] {
+  return plannerSections.flatMap((section) => {
+    const fields = section.fields.filter((field) => fieldVisible(field.key, services))
+    if (fields.length === 0) return []
+    return [{ ...section, fields }]
+  })
+}
+
+/** Hidden answers are omitted so a save does not wipe them with empty strings. */
+export function fieldsForSave(
+  fields: Record<string, string>,
+  services: BookedServices,
+): Record<string, string> {
+  return Object.fromEntries(Object.entries(fields).filter(([key]) => fieldVisible(key, services)))
+}
+
+/**
+ * Dev preview. `?preview=live,dj` overrides booked services only when the
+ * query param is present. Tokens are `live`, `dj`, and `photobooth`.
+ */
+export function servicesFromPreview(search: string): BookedServices | null {
+  const params = new URLSearchParams(search)
+  if (!params.has('preview')) return null
+  const parts = new Set(
+    (params.get('preview') ?? '')
+      .split(',')
+      .map((part) => part.trim().toLowerCase())
+      .filter(Boolean),
+  )
+  return {
+    live: parts.has('live'),
+    dj: parts.has('dj'),
+    photobooth: parts.has('photobooth'),
+  }
+}
+
 export const STYLE_OPTIONS = ['Instrumental', 'Vocals'] as const
 export const YES_NO_OPTIONS = ['Yes', 'No'] as const
 export const DANCE_PERFORMANCE = ['Live', 'DJ'] as const

@@ -5,8 +5,12 @@ import {
   DANCE_PERFORMANCE,
   STYLE_OPTIONS,
   YES_NO_OPTIONS,
+  ALL_SERVICES,
+  fieldsForSave,
   plannerFieldKeys,
-  plannerSections,
+  servicesFromPreview,
+  visibleSections,
+  type BookedServices,
   type PlannerField,
 } from './fields'
 import {
@@ -175,7 +179,9 @@ function FieldControl({
 
 export default function PlannerApp() {
   const token = useMemo(() => tokenFromLocation(), [])
+  const previewServices = useMemo(() => servicesFromPreview(window.location.search), [])
   const [status, setStatus] = useState<Status>({ kind: token ? 'loading' : 'invalid' })
+  const [services, setServices] = useState<BookedServices>(previewServices ?? ALL_SERVICES)
   const [couple, setCouple] = useState({ names: '', date: '', venue: '' })
   const [fields, setFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
@@ -204,6 +210,7 @@ export default function PlannerApp() {
       })
       setFields(next)
       setSavedFields(next)
+      setServices(previewServices ?? result.services)
       setLastUpdated(result.lastUpdated)
       setStatus({ kind: 'ready' })
     })
@@ -211,7 +218,7 @@ export default function PlannerApp() {
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [previewServices, token])
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -234,7 +241,7 @@ export default function PlannerApp() {
     setSaving(true)
     setSaveFailed(false)
     setSaveMessage('')
-    const result = await savePlanner(token, fields)
+    const result = await savePlanner(token, fieldsForSave(fields, services))
     setSaving(false)
     if (!result.ok) {
       setSaveFailed(true)
@@ -245,8 +252,9 @@ export default function PlannerApp() {
     setSavedFields(fields)
     setLastUpdated(result.lastUpdated ?? new Date().toISOString())
     setSaveMessage('Saved')
-  }, [fields, saving, token])
+  }, [fields, saving, services, token])
 
+  const sections = useMemo(() => visibleSections(services), [services])
   const savedLabel = formatSavedAt(lastUpdated)
   const welcomeDate = couple.date ? formatCoupleDate(couple.date) : ''
   const welcomeBits = [welcomeDate, couple.venue].filter(Boolean)
@@ -287,7 +295,7 @@ export default function PlannerApp() {
             </header>
 
             <nav className="planner-jump" aria-label="Planner sections">
-              {plannerSections.map((section) => (
+              {sections.map((section) => (
                 <a key={section.id} href={`#${section.id}`}>
                   {section.title}
                 </a>
@@ -301,7 +309,7 @@ export default function PlannerApp() {
                 void onSave()
               }}
             >
-              {plannerSections.map((section) => (
+              {sections.map((section) => (
                 <section key={section.id} id={section.id} className="planner-section">
                   <h2>{section.title}</h2>
                   <p className="planner-section__blurb">{section.blurb}</p>
