@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type PointerEvent, type TransitionEvent } from 'react'
 import './Slideshow.css'
 
 interface SlideshowProps {
@@ -7,8 +7,15 @@ interface SlideshowProps {
   intervalMs?: number
 }
 
+/** How long the horizontal slide takes. The snap back to center is not animated. */
+const SLIDE_MS = 700
+/** Reduced motion still advances, just more slowly and without the slide. */
+const REDUCED_INTERVAL_FACTOR = 2
+
 function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false)
+  const [reduced, setReduced] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -21,64 +28,135 @@ function usePrefersReducedMotion(): boolean {
   return reduced
 }
 
+type TrackPosition = 'center' | 'forward' | 'back'
+
 export default function Slideshow({
   images,
   altPrefix = 'Photo',
   intervalMs = 5000,
 }: SlideshowProps) {
-  const [slide, setSlide] = useState({ current: 0, previous: 0 })
+  const [index, setIndex] = useState(0)
+  const [dotIndex, setDotIndex] = useState(0)
+  const [track, setTrack] = useState<TrackPosition>('center')
+  const [animateTrack, setAnimateTrack] = useState(true)
   const [paused, setPaused] = useState(false)
-  const index = slide.current
-  const previous = slide.previous
   const reducedMotion = usePrefersReducedMotion()
   const labelId = useId()
   const rootRef = useRef<HTMLElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
+  const incomingRef = useRef(0)
+  const lock = useRef(false)
+  const [incoming, setIncoming] = useState(0)
   const count = images.length
 
-  const goTo = useCallback(
-    (next: number) => {
-      if (count === 0) return
-      const normalized = (next + count) % count
-      setSlide((current) =>
-        current.current === normalized ? current : { current: normalized, previous: current.current },
-      )
+  const releaseLock = useCallback(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setAnimateTrack(true)
+        lock.current = false
+      })
+    })
+  }, [])
+
+  const settle = useCallback(() => {
+    if (!lock.current) return
+    setAnimateTrack(false)
+    setIndex(incomingRef.current)
+    setTrack('center')
+    releaseLock()
+  }, [releaseLock])
+
+  const go = useCallback(
+    (target: number, direction: 1 | -1) => {
+      if (count < 2 || lock.current) return
+      const normalized = (target + count) % count
+      if (normalized === index) return
+      incomingRef.current = normalized
+      setIncoming(normalized)
+      setDotIndex(normalized)
+      if (reducedMotion) {
+        setIndex(normalized)
+        setTrack('center')
+        return
+      }
+      lock.current = true
+      setTrack(direction === 1 ? 'forward' : 'back')
     },
-    [count],
+    [count, index, reducedMotion],
   )
 
   const step = useCallback(
-    (direction: number) => {
-      setSlide((current) => {
-        const normalized = (current.current + direction + count) % count
-        return { current: normalized, previous: current.current }
-      })
+    (direction: 1 | -1) => {
+      go(index + direction, direction)
     },
-    [count],
+    [go, index],
+  )
+
+  const goTo = useCallback(
+    (target: number) => {
+      if (count < 2) return
+      const normalized = (target + count) % count
+      if (normalized === index) return
+      const forward = (normalized - index + count) % count
+      const backward = (index - normalized + count) % count
+      go(normalized, forward <= backward ? 1 : -1)
+    },
+    [count, go, index],
   )
 
   useEffect(() => {
-    if (paused || reducedMotion || count < 2) return
-    const timer = window.setInterval(() => {
-      setSlide((current) => ({
-        current: (current.current + 1) % count,
-        previous: current.current,
-      }))
-    }, intervalMs)
-    return () => window.clearInterval(timer)
-  }, [count, index, intervalMs, paused, reducedMotion])
+    if (paused || count < 2 || track !== 'center') return
+    const delay = reducedMotion ? intervalMs * REDUCED_INTERVAL_FACTOR : intervalMs
+    const timer = window.setTimeout(() => {
+      go(index + 1, 1)
+    }, delay)
+    return () => window.clearTimeout(timer)
+  }, [count, go, index, intervalMs, paused, reducedMotion, track])
 
-  const pause = () => setPaused(true)
-  const resumeIfIdle = () => {
+  useEffect(() => {
+    if (track === 'center') return
+    const fallback = window.setTimeout(() => settle(), SLIDE_MS + 250)
+    return () => window.clearTimeout(fallback)
+  }, [settle, track])
+
+  useEffect(() => {
     const root = rootRef.current
-    const hovered = root?.matches(':hover') ?? false
-    const focused = root?.contains(document.activeElement) ?? false
-    if (!hovered && !focused) setPaused(false)
+    if (!root) return
+
+    const keyboardFocusInside = (node: EventTarget | null) =>
+      node instanceof HTMLElement && root.contains(node) && node.matches(':focus-visible')
+
+    const onFocusIn = (event: FocusEvent) => {
+      if (keyboardFocusInside(event.target)) setPaused(true)
+    }
+
+    const onFocusOut = (event: FocusEvent) => {
+      if (keyboardFocusInside(event.relatedTarget)) {
+        setPaused(true)
+        return
+      }
+      setPaused(false)
+    }
+
+    root.addEventListener('focusin', onFocusIn)
+    root.addEventListener('focusout', onFocusOut)
+    return () => {
+      root.removeEventListener('focusin', onFocusIn)
+      root.removeEventListener('focusout', onFocusOut)
+    }
+  }, [])
+
+  const onTrackTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
+    if (event.target !== trackRef.current || event.propertyName !== 'transform') return
+    if (track === 'center') return
+    settle()
   }
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest('button')) return
     pointerStart.current = { x: event.clientX, y: event.clientY }
+    event.currentTarget.setPointerCapture(event.pointerId)
   }
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
@@ -93,16 +171,31 @@ export default function Slideshow({
 
   if (count === 0) return null
 
+  const leftIndex = track === 'back' ? incoming : (index - 1 + count) % count
+  const rightIndex = track === 'forward' ? incoming : (index + 1) % count
+  const slots = [
+    { slot: 'left', imageIndex: leftIndex },
+    { slot: 'center', imageIndex: index },
+    { slot: 'right', imageIndex: rightIndex },
+  ]
+  const slotKeys = new Set(slots.map((slot) => slot.imageIndex))
+  const slotsShareAPhoto = slotKeys.size !== slots.length
+
+  const trackClass = [
+    'slideshow__track',
+    track === 'forward' ? 'slideshow__track--forward' : '',
+    track === 'back' ? 'slideshow__track--back' : '',
+    !animateTrack || reducedMotion ? 'slideshow__track--instant' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <section
       ref={rootRef}
       className={`slideshow${reducedMotion ? ' slideshow--reduced' : ''}`}
       aria-roledescription="carousel"
       aria-labelledby={labelId}
-      onMouseEnter={pause}
-      onMouseLeave={resumeIfIdle}
-      onFocus={pause}
-      onBlur={resumeIfIdle}
     >
       <h2 id={labelId} className="sr-only">
         Photo slideshow
@@ -115,24 +208,20 @@ export default function Slideshow({
           pointerStart.current = null
         }}
       >
-        {images.map((src, imageIndex) => {
-          const upcoming = (index + 1) % count
-          const shown = imageIndex === 0 || imageIndex === previous || imageIndex === index || imageIndex === upcoming
-          if (!shown) return null
-          const active = imageIndex === index
-          return (
+        <div ref={trackRef} className={trackClass} onTransitionEnd={onTrackTransitionEnd}>
+          {slots.map(({ slot, imageIndex }) => (
             <img
-              key={src}
-              src={src}
-              alt={`${altPrefix} ${imageIndex + 1} of ${count}`}
-              className={`slideshow__slide${active ? ' slideshow__slide--active' : ''}`}
-              loading={imageIndex === 0 ? 'eager' : 'lazy'}
-              fetchPriority={imageIndex === 0 ? 'high' : 'low'}
+              key={slotsShareAPhoto ? slot : imageIndex}
+              src={images[imageIndex]}
+              alt={slot === 'center' ? `${altPrefix} ${imageIndex + 1} of ${count}` : ''}
+              className="slideshow__slide"
+              loading={imageIndex === 0 || slot === 'center' ? 'eager' : 'lazy'}
+              fetchPriority={slot === 'center' ? 'high' : 'low'}
               draggable={false}
-              aria-hidden={!active}
+              aria-hidden={slot !== 'center'}
             />
-          )
-        })}
+          ))}
+        </div>
         <button
           type="button"
           className="slideshow__arrow slideshow__arrow--prev"
@@ -156,9 +245,9 @@ export default function Slideshow({
             key={src}
             type="button"
             role="tab"
-            className={`slideshow__dot${imageIndex === index ? ' slideshow__dot--active' : ''}`}
+            className={`slideshow__dot${imageIndex === dotIndex ? ' slideshow__dot--active' : ''}`}
             aria-label={`Show photo ${imageIndex + 1}`}
-            aria-selected={imageIndex === index}
+            aria-selected={imageIndex === dotIndex}
             onClick={() => goTo(imageIndex)}
           />
         ))}
