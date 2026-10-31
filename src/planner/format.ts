@@ -38,6 +38,52 @@ export function formatDance(performance: string, length: string): string {
   return [performance, length].filter(Boolean).join(', ')
 }
 
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+function ordinalDay(day: number): string {
+  const teen = day % 100
+  if (teen >= 11 && teen <= 13) return `${day}th`
+  switch (day % 10) {
+    case 1:
+      return `${day}st`
+    case 2:
+      return `${day}nd`
+    case 3:
+      return `${day}rd`
+    default:
+      return `${day}th`
+  }
+}
+
+/** Format a YYYY-MM-DD calendar date for the welcome header. Other strings stay as sent. */
+export function formatCoupleDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim())
+  if (!match) return value
+  const year = Number(match[1])
+  const monthIndex = Number(match[2]) - 1
+  const day = Number(match[3])
+  // Construct in local time so UTC parsing cannot move the calendar day.
+  const date = new Date(year, monthIndex, day)
+  if (date.getFullYear() !== year || date.getMonth() !== monthIndex || date.getDate() !== day) {
+    return value
+  }
+  return `${WEEKDAYS[date.getDay()]}, ${MONTHS[monthIndex]} ${ordinalDay(day)}, ${year}`
+}
+
 export function formatSavedAt(value: string | number | undefined): string {
   if (value === undefined || value === null || value === '') return ''
   const date = new Date(value)
