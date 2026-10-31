@@ -69,6 +69,52 @@ function ordinalDay(day: number): string {
   }
 }
 
+function isoFromParts(year: number, monthIndex: number, day: number): string | null {
+  if (!Number.isInteger(year) || !Number.isInteger(monthIndex) || !Number.isInteger(day)) return null
+  const date = new Date(year, monthIndex, day)
+  if (date.getFullYear() !== year || date.getMonth() !== monthIndex || date.getDate() !== day) return null
+  const month = String(monthIndex + 1).padStart(2, '0')
+  const dayText = String(day).padStart(2, '0')
+  return `${year}-${month}-${dayText}`
+}
+
+/**
+ * Read a stored Event date into YYYY-MM-DD for the calendar control.
+ * ISO dates are built in local time. Other recognizable dates are parsed.
+ * Unrecognized text returns null so the caller can keep showing the raw value.
+ */
+export function toIsoDate(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed)
+  if (iso) return isoFromParts(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]))
+
+  const withoutWeekday = trimmed.replace(
+    /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday),\s+/i,
+    '',
+  )
+  const withoutOrdinal = withoutWeekday.replace(/(\d{1,2})(?:st|nd|rd|th)\b/gi, '$1')
+  const monthName =
+    /^(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}),?\s+(\d{4})$/i.exec(
+      withoutOrdinal.trim(),
+    )
+  if (monthName) {
+    const monthIndex = MONTHS.findIndex((month) => month.toLowerCase() === monthName[1].toLowerCase())
+    return isoFromParts(Number(monthName[3]), monthIndex, Number(monthName[2]))
+  }
+
+  const numeric = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.exec(trimmed)
+  if (numeric) return isoFromParts(Number(numeric[3]), Number(numeric[1]) - 1, Number(numeric[2]))
+
+  return null
+}
+
+export function isIsoDate(value: string): boolean {
+  const trimmed = value.trim()
+  return toIsoDate(trimmed) === trimmed
+}
+
 /** Format a YYYY-MM-DD calendar date for the welcome header. Other strings stay as sent. */
 export function formatCoupleDate(value: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim())

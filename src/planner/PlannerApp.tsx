@@ -16,7 +16,9 @@ import {
   formatDance,
   formatCoupleDate,
   formatSavedAt,
+  isIsoDate,
   parseDanceFormat,
+  toIsoDate,
 } from './format'
 import './planner.css'
 
@@ -112,6 +114,31 @@ function FieldControl({
           onChange={(length) => onChange(formatDance(parsed.performance, length))}
         />
       </div>
+    )
+  }
+
+  if (field.kind === 'date') {
+    const iso = toIsoDate(value)
+    const showRaw = value.trim() !== '' && !isIsoDate(value)
+    return (
+      <label className="planner-field" htmlFor={id}>
+        <span>{field.label}</span>
+        <input
+          id={id}
+          type="date"
+          value={iso ?? ''}
+          onChange={(event) => {
+            const next = event.target.value
+            if (!next && !isIsoDate(value)) return
+            onChange(next)
+          }}
+        />
+        {showRaw && (
+          <p className="planner-date-raw">
+            Saved value: {value}. It stays as written until you pick a date.
+          </p>
+        )}
+      </label>
     )
   }
 
