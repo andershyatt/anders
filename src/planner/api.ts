@@ -12,6 +12,8 @@ export interface PlannerLoadSuccess {
   couple: CoupleInfo
   fields: Record<string, unknown>
   services: BookedServices
+  /** Inline image for the planner. Null when the couple has not sent one. */
+  photo: { dataUrl: string } | null
   lastUpdated?: string | number
 }
 
@@ -61,6 +63,14 @@ function parseServices(value: unknown): BookedServices {
   }
 }
 
+function parseLoadedPhoto(value: unknown): { dataUrl: string } | null {
+  if (value == null) return null
+  const record = asRecord(value)
+  if (!record) return null
+  const dataUrl = typeof record.dataUrl === 'string' ? record.dataUrl.trim() : ''
+  return dataUrl ? { dataUrl } : null
+}
+
 function parseLoad(value: unknown): PlannerLoadResult | null {
   const record = asRecord(value)
   if (!record || typeof record.ok !== 'boolean') return null
@@ -80,6 +90,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     couple,
     fields,
     services: parseServices(record.services),
+    photo: parseLoadedPhoto(record.photo),
     lastUpdated:
       typeof lastUpdated === 'string' || typeof lastUpdated === 'number' ? lastUpdated : undefined,
   }
@@ -158,6 +169,7 @@ export async function savePlanner(
 export interface UploadedPhoto {
   url: string
   name: string
+  dataUrl: string
 }
 
 export type PhotoUploadResult = { ok: true; photo: UploadedPhoto } | PlannerFailure
@@ -174,6 +186,7 @@ function parsePhotoUpload(value: unknown): PhotoUploadResult | null {
     photo: {
       url: typeof photo.url === 'string' ? photo.url : '',
       name: typeof photo.name === 'string' ? photo.name : '',
+      dataUrl: typeof photo.dataUrl === 'string' ? photo.dataUrl.trim() : '',
     },
   }
 }

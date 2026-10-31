@@ -142,12 +142,18 @@
   line-height: 1.45;
 }
 
+.planner-photo__frame {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 0.85rem;
+}
+
 .planner-photo__preview {
   display: block;
-  max-width: 100%;
-  max-height: 280px;
-  margin: 0 0 0.85rem;
-  object-fit: contain;
+  width: min(100%, 320px);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 16px;
 }
 
 .planner-photo__status {

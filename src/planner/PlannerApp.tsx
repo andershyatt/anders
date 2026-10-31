@@ -200,6 +200,7 @@ export default function PlannerApp() {
   const [fields, setFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [couplePhoto, setCouplePhoto] = useState('')
+  const [couplePhotoUrl, setCouplePhotoUrl] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | number | undefined>(undefined)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
@@ -225,6 +226,7 @@ export default function PlannerApp() {
       })
       const photo = result.fields[COUPLE_PHOTO_FIELD]
       setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
+      setCouplePhotoUrl(result.photo?.dataUrl ?? null)
       setFields(next)
       setSavedFields(next)
       setServices(previewServices ?? result.services)
@@ -311,7 +313,7 @@ export default function PlannerApp() {
               </p>
             </header>
 
-            <CouplePhoto token={token} savedValue={couplePhoto} />
+            <CouplePhoto token={token} savedValue={couplePhoto} savedDataUrl={couplePhotoUrl} />
 
             <nav className="planner-jump" aria-label="Planner sections">
               {sections.map((section) => (

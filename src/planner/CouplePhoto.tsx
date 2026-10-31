@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { uploadCouplePhoto } from './api'
 import { PhotoTooLargeError, blobToBase64, prepareCouplePhoto } from './preparePhoto'
 
@@ -8,26 +8,38 @@ const REQUEST_TEXT =
 interface CouplePhotoProps {
   token: string
   savedValue: string
+  savedDataUrl: string | null
 }
 
-export default function CouplePhoto({ token, savedValue }: CouplePhotoProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+export default function CouplePhoto({ token, savedValue, savedDataUrl }: CouplePhotoProps) {
+  const [localPreview, setLocalPreview] = useState<string | null>(null)
+  const [uploadedDataUrl, setUploadedDataUrl] = useState<string | null>(null)
   const [phase, setPhase] = useState<'idle' | 'uploading' | 'thankyou' | 'error'>('idle')
   const [message, setMessage] = useState('')
+  const blobUrl = useRef<string | null>(null)
 
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      if (blobUrl.current) URL.revokeObjectURL(blobUrl.current)
     }
-  }, [previewUrl])
+  }, [])
 
+  const replacePreview = (next: string | null) => {
+    if (blobUrl.current) URL.revokeObjectURL(blobUrl.current)
+    blobUrl.current = next
+    setLocalPreview(next)
+  }
+
+  const shown = uploadedDataUrl || localPreview || savedDataUrl
   const alreadyReceived = savedValue.trim() !== ''
-  const showReceived = phase === 'idle' && alreadyReceived
+  const showReceived = phase === 'idle' && !shown && alreadyReceived
+  const hasPhoto = Boolean(shown) || showReceived || phase === 'thankyou'
 
   const onFile = (file: File | undefined) => {
     if (!file) return
     setPhase('uploading')
     setMessage('')
+    setUploadedDataUrl(null)
     void (async () => {
       let prepared
       try {
@@ -42,10 +54,7 @@ export default function CouplePhoto({ token, savedValue }: CouplePhotoProps) {
         return
       }
 
-      setPreviewUrl((current) => {
-        if (current) URL.revokeObjectURL(current)
-        return prepared.previewUrl
-      })
+      replacePreview(prepared.previewUrl)
 
       const data = await blobToBase64(prepared.blob)
       const result = await uploadCouplePhoto(token, {
@@ -58,6 +67,7 @@ export default function CouplePhoto({ token, savedValue }: CouplePhotoProps) {
         setMessage("We couldn't send that photo. Please try again.")
         return
       }
+      if (result.photo.dataUrl) setUploadedDataUrl(result.photo.dataUrl)
       setPhase('thankyou')
       setMessage('Photo received, thank you!')
     })()
@@ -67,7 +77,11 @@ export default function CouplePhoto({ token, savedValue }: CouplePhotoProps) {
     <section className="planner-section planner-photo" aria-labelledby="couple-photo-heading">
       <h2 id="couple-photo-heading">Couple photo request</h2>
       <p className="planner-section__blurb">{REQUEST_TEXT}</p>
-      {previewUrl && <img className="planner-photo__preview" src={previewUrl} alt="Your photo preview" />}
+      {shown && (
+        <div className="planner-photo__frame">
+          <img className="planner-photo__preview" src={shown} alt="Photo of the couple" />
+        </div>
+      )}
       {phase === 'uploading' && <p className="planner-photo__status">Sending your photo…</p>}
       {phase === 'thankyou' && <p className="planner-photo__status">{message}</p>}
       {showReceived && <p className="planner-photo__status">Photo received</p>}
@@ -77,7 +91,7 @@ export default function CouplePhoto({ token, savedValue }: CouplePhotoProps) {
         </p>
       )}
       <label className={`btn planner-photo__pick${phase === 'uploading' ? ' is-disabled' : ''}`}>
-        {phase === 'uploading' ? 'Sending…' : showReceived || phase === 'thankyou' ? 'Replace photo' : 'Choose a photo'}
+        {phase === 'uploading' ? 'Sending…' : hasPhoto ? 'Replace photo' : 'Choose a photo'}
         <input
           type="file"
           accept="image/*"
