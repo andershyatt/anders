@@ -158,6 +158,19 @@
   line-height: 1.45;
 }
 
+.planner-field input[type='date'] {
+  min-height: 2.75rem;
+  font-family: var(--font-nav);
+  color-scheme: light;
+}
+
+.planner-date-raw {
+  margin: 0.4rem 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .planner-field textarea {
   resize: vertical;
   min-height: 6.5rem;

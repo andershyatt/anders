@@ -1,4 +1,4 @@
-export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno'
+export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date'
 
 export interface PlannerField {
   key: string
@@ -22,7 +22,7 @@ export const plannerSections: PlannerSection[] = [
     fields: [
       { key: 'Names', label: 'Names', kind: 'text', placeholder: 'Alex and Jordan' },
       { key: 'Event type', label: 'Event type', kind: 'text', placeholder: 'Wedding' },
-      { key: 'Event date', label: 'Event date', kind: 'text', placeholder: 'June 12, 2027' },
+      { key: 'Event date', label: 'Event date', kind: 'date' },
       { key: 'Venue', label: 'Venue', kind: 'text', placeholder: 'Venue name' },
       { key: 'Venue address', label: 'Venue address', kind: 'textarea', placeholder: 'Street, city' },
       { key: 'Start time', label: 'Start time', kind: 'text', placeholder: '4:00 PM' },
