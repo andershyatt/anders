@@ -14,6 +14,8 @@ interface CouplePhotoProps {
 export default function CouplePhoto({ token, savedValue, savedDataUrl }: CouplePhotoProps) {
   const [localPreview, setLocalPreview] = useState<string | null>(null)
   const [uploadedDataUrl, setUploadedDataUrl] = useState<string | null>(null)
+  const [acceptedRemote, setAcceptedRemote] = useState<string | null>(null)
+  const [rejectedRemote, setRejectedRemote] = useState<string | null>(null)
   const [phase, setPhase] = useState<'idle' | 'uploading' | 'thankyou' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const blobUrl = useRef<string | null>(null)
@@ -24,15 +26,36 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl }: CoupleP
     }
   }, [])
 
+  const remote = uploadedDataUrl || savedDataUrl || null
+  const remoteOk = remote && remote !== rejectedRemote ? remote : null
+
+  useEffect(() => {
+    if (!remoteOk) return
+    let cancelled = false
+    const image = new Image()
+    image.onload = () => {
+      if (!cancelled) setAcceptedRemote(remoteOk)
+    }
+    image.onerror = () => {
+      if (!cancelled) setRejectedRemote(remoteOk)
+    }
+    image.src = remoteOk
+    return () => {
+      cancelled = true
+    }
+  }, [remoteOk])
+
   const replacePreview = (next: string | null) => {
     if (blobUrl.current) URL.revokeObjectURL(blobUrl.current)
     blobUrl.current = next
     setLocalPreview(next)
   }
 
-  const shown = uploadedDataUrl || localPreview || savedDataUrl
+  const remoteReady = Boolean(remoteOk && acceptedRemote === remoteOk)
+  const freshRemoteReady = Boolean(uploadedDataUrl && acceptedRemote === uploadedDataUrl)
+  const shown = freshRemoteReady ? uploadedDataUrl : localPreview || (remoteReady ? remoteOk : null)
   const alreadyReceived = savedValue.trim() !== ''
-  const showReceived = phase === 'idle' && !shown && alreadyReceived
+  const showReceived = !shown && phase !== 'uploading' && phase !== 'error' && (alreadyReceived || phase === 'thankyou')
   const hasPhoto = Boolean(shown) || showReceived || phase === 'thankyou'
 
   const onFile = (file: File | undefined) => {
@@ -79,11 +102,19 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl }: CoupleP
       <p className="planner-section__blurb">{REQUEST_TEXT}</p>
       {shown && (
         <div className="planner-photo__frame">
-          <img className="planner-photo__preview" src={shown} alt="Photo of the couple" />
+          <img
+            className="planner-photo__preview"
+            src={shown}
+            alt="Photo of the couple"
+            onError={() => {
+              if (shown === localPreview) replacePreview(null)
+              else setRejectedRemote(shown)
+            }}
+          />
         </div>
       )}
       {phase === 'uploading' && <p className="planner-photo__status">Sending your photo…</p>}
-      {phase === 'thankyou' && <p className="planner-photo__status">{message}</p>}
+      {phase === 'thankyou' && shown && <p className="planner-photo__status">{message}</p>}
       {showReceived && <p className="planner-photo__status">Photo received</p>}
       {phase === 'error' && (
         <p className="planner-photo__status planner-photo__status--error" role="alert">
