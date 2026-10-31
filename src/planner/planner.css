@@ -142,6 +142,43 @@
   line-height: 1.45;
 }
 
+.planner-photo__preview {
+  display: block;
+  max-width: 100%;
+  max-height: 280px;
+  margin: 0 0 0.85rem;
+  object-fit: contain;
+}
+
+.planner-photo__status {
+  margin: 0 0 0.75rem;
+}
+
+.planner-photo__status--error {
+  color: #8a2b2b;
+}
+
+.planner-photo__pick {
+  position: relative;
+  cursor: pointer;
+}
+
+.planner-photo__pick input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.planner-photo__pick.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .planner-field span,
 .planner-field > label,
 .planner-dance__label,

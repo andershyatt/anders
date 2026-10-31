@@ -6,6 +6,7 @@ import {
   YES_NO_OPTIONS,
   ceremonyStyleOptions,
   ALL_SERVICES,
+  COUPLE_PHOTO_FIELD,
   fieldsForSave,
   plannerFieldKeys,
   servicesFromPreview,
@@ -24,6 +25,7 @@ import {
   parseDanceFormat,
   toIsoDate,
 } from './format'
+import CouplePhoto from './CouplePhoto'
 import VenueField from './VenueField'
 import './planner.css'
 
@@ -197,6 +199,7 @@ export default function PlannerApp() {
   const [couple, setCouple] = useState({ names: '', date: '', venue: '' })
   const [fields, setFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
+  const [couplePhoto, setCouplePhoto] = useState('')
   const [lastUpdated, setLastUpdated] = useState<string | number | undefined>(undefined)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
@@ -220,6 +223,8 @@ export default function PlannerApp() {
         date: result.couple.date ?? '',
         venue: result.couple.venue ?? '',
       })
+      const photo = result.fields[COUPLE_PHOTO_FIELD]
+      setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
       setFields(next)
       setSavedFields(next)
       setServices(previewServices ?? result.services)
@@ -305,6 +310,8 @@ export default function PlannerApp() {
                 Fill in what you know. You can come back to this same link and edit it any time.
               </p>
             </header>
+
+            <CouplePhoto token={token} savedValue={couplePhoto} />
 
             <nav className="planner-jump" aria-label="Planner sections">
               {sections.map((section) => (

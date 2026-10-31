@@ -201,12 +201,17 @@ export function visibleSections(services: BookedServices): PlannerSection[] {
   })
 }
 
+/** Not a form field. Uploaded separately and never included in a normal save. */
+export const COUPLE_PHOTO_FIELD = 'Couple photo'
+
 /** Hidden answers are omitted so a save does not wipe them with empty strings. */
 export function fieldsForSave(
   fields: Record<string, string>,
   services: BookedServices,
 ): Record<string, string> {
-  return Object.fromEntries(Object.entries(fields).filter(([key]) => fieldVisible(key, services)))
+  return Object.fromEntries(
+    Object.entries(fields).filter(([key]) => key !== COUPLE_PHOTO_FIELD && fieldVisible(key, services)),
+  )
 }
 
 /**
