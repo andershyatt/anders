@@ -1,4 +1,5 @@
 import { PLANNER_API_URL } from './config'
+import { ALL_SERVICES, type BookedServices } from './fields'
 
 export interface CoupleInfo {
   names?: string
@@ -10,6 +11,7 @@ export interface PlannerLoadSuccess {
   ok: true
   couple: CoupleInfo
   fields: Record<string, unknown>
+  services: BookedServices
   lastUpdated?: string | number
 }
 
@@ -49,6 +51,16 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>
 }
 
+function parseServices(value: unknown): BookedServices {
+  const record = asRecord(value)
+  if (!record) return ALL_SERVICES
+  return {
+    live: record.live === true,
+    dj: record.dj === true,
+    photobooth: record.photobooth === true,
+  }
+}
+
 function parseLoad(value: unknown): PlannerLoadResult | null {
   const record = asRecord(value)
   if (!record || typeof record.ok !== 'boolean') return null
@@ -67,6 +79,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     ok: true,
     couple,
     fields,
+    services: parseServices(record.services),
     lastUpdated:
       typeof lastUpdated === 'string' || typeof lastUpdated === 'number' ? lastUpdated : undefined,
   }
