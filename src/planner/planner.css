@@ -371,3 +371,20 @@
   color: var(--color-muted);
   text-decoration: underline;
 }
+
+.planner-venue__attrib {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.45rem 0.75rem 0.35rem;
+}
+
+.planner-venue__google {
+  font-family: Roboto, var(--font-body), sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: normal;
+  white-space: nowrap;
+  color: #5e5e5e;
+}
