@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import PhotoGallery from '../components/PhotoGallery'
+import Slideshow from '../components/Slideshow'
 import YouTubeEmbed from '../components/YouTubeEmbed'
 import { homeGallery, images } from '../data/media'
 import './Home.css'
@@ -113,7 +113,7 @@ export default function Home() {
           </figcaption>
         </figure>
 
-        <PhotoGallery images={homeGallery} altPrefix="Anders Hyatt Music" layout="masonry" />
+        <Slideshow images={homeGallery} altPrefix="Anders Hyatt Music" />
 
         <ul className="home-badges">
           <li>
