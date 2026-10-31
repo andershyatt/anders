@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
-import { searchVenues, type VenueMatch } from './venueSearch'
+import { googlePlacesConfigured } from './googlePlacesKey'
+import { loadGooglePlace, searchVenues, type VenueMatch, type VenueProvider } from './venueSearch'
 
 const MIN_QUERY = 3
-const DEBOUNCE_MS = 400
+const DEBOUNCE_MS = 250
 
 interface VenueFieldProps {
   id: string
@@ -11,13 +12,21 @@ interface VenueFieldProps {
   onPick: (place: VenueMatch) => void
 }
 
+function newSessionToken(): string {
+  return crypto.randomUUID()
+}
+
 export default function VenueField({ id, value, onChange, onPick }: VenueFieldProps) {
   const listId = useId()
   const [open, setOpen] = useState(false)
   const [results, setResults] = useState<VenueMatch[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [provider, setProvider] = useState<VenueProvider>(googlePlacesConfigured() ? 'google' : 'photon')
   const rootRef = useRef<HTMLDivElement>(null)
+  const sessionRef = useRef(newSessionToken())
+  const pickGeneration = useRef(0)
+  const detailsAbort = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -27,15 +36,17 @@ export default function VenueField({ id, value, onChange, onPick }: VenueFieldPr
     const controller = new AbortController()
     const timer = window.setTimeout(() => {
       setStatus('loading')
-      searchVenues(query, controller.signal)
-        .then((matches) => {
-          setResults(matches)
+      searchVenues(query, controller.signal, sessionRef.current)
+        .then((result) => {
+          setResults(result.matches)
+          setProvider(result.provider)
           setActiveIndex(0)
           setStatus('done')
         })
         .catch((error: unknown) => {
           if (error instanceof DOMException && error.name === 'AbortError') return
           setResults([])
+          setProvider('photon')
           setStatus('error')
         })
     }, DEBOUNCE_MS)
@@ -54,11 +65,31 @@ export default function VenueField({ id, value, onChange, onPick }: VenueFieldPr
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [])
 
+  useEffect(() => {
+    return () => detailsAbort.current?.abort()
+  }, [])
+
   const choose = (place: VenueMatch) => {
+    const generation = ++pickGeneration.current
     setOpen(false)
     setResults([])
     setStatus('idle')
     onPick(place)
+    if (place.source !== 'google' || !place.placeId) return
+
+    const token = sessionRef.current
+    sessionRef.current = newSessionToken()
+    detailsAbort.current?.abort()
+    const controller = new AbortController()
+    detailsAbort.current = controller
+    void loadGooglePlace(place, token, controller.signal)
+      .then((detailed) => {
+        if (pickGeneration.current !== generation) return
+        onPick(detailed)
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+      })
   }
 
   const showList = open && value.trim().length >= MIN_QUERY && status !== 'idle'
@@ -105,6 +136,7 @@ export default function VenueField({ id, value, onChange, onPick }: VenueFieldPr
         autoComplete="off"
         onChange={(event) => {
           const next = event.target.value
+          pickGeneration.current += 1
           onChange(next)
           setOpen(true)
           if (next.trim().length < MIN_QUERY) {
@@ -143,20 +175,35 @@ export default function VenueField({ id, value, onChange, onPick }: VenueFieldPr
               </button>
             </li>
           ))}
+          {provider === 'google' && status !== 'loading' && (
+            <li className="planner-venue__attrib">
+              <span className="planner-venue__google" translate="no">
+                Google Maps
+              </span>
+            </li>
+          )}
         </ul>
       )}
       </div>
-      <p className="planner-venue__credit">
-        Place search by{' '}
-        <a href="https://photon.komoot.io/" target="_blank" rel="noopener noreferrer">
-          Photon
-        </a>{' '}
-        and{' '}
-        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">
-          OpenStreetMap
-        </a>
-        .
-      </p>
+      {provider === 'google' ? (
+        <p className="planner-venue__credit">
+          <span className="planner-venue__google" translate="no">
+            Google Maps
+          </span>
+        </p>
+      ) : (
+        <p className="planner-venue__credit">
+          Place search by{' '}
+          <a href="https://photon.komoot.io/" target="_blank" rel="noopener noreferrer">
+            Photon
+          </a>{' '}
+          and{' '}
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">
+            OpenStreetMap
+          </a>
+          .
+        </p>
+      )}
     </div>
   )
 }
