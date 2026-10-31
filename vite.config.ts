@@ -6,4 +6,12 @@ export default defineConfig({
   // Relative asset paths keep this template portable for GitHub Pages project sites.
   base: './',
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        planner: 'planner/index.html',
+      },
+    },
+  },
 })
