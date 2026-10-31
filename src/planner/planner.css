@@ -134,6 +134,14 @@
   margin: 0 0 0.9rem;
 }
 
+.planner-field__help {
+  margin: -0.1rem 0 0.4rem;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
 .planner-field span,
 .planner-field > label,
 .planner-dance__label,

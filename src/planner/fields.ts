@@ -5,6 +5,7 @@ export interface PlannerField {
   label: string
   kind: FieldKind
   placeholder?: string
+  help?: string
 }
 
 export interface PlannerSection {
@@ -82,6 +83,12 @@ export const plannerSections: PlannerSection[] = [
       { key: 'Bridal processional style', label: 'Bridal processional style', kind: 'style' },
       { key: 'Recessional song', label: 'Recessional song', kind: 'text' },
       { key: 'Recessional style', label: 'Recessional style', kind: 'style' },
+      {
+        key: 'Recessional cue',
+        label: 'Cue to start the recessional music',
+        kind: 'text',
+        help: "What's the last thing the officiant will say before we start the recessional? Usually the first kiss, or the pronouncement right after it.",
+      },
       { key: 'Live music requests', label: 'Live music requests', kind: 'textarea' },
     ],
   },
@@ -160,6 +167,7 @@ const LIVE_FIELDS = new Set([
   'Bridal processional style',
   'Recessional song',
   'Recessional style',
+  'Recessional cue',
   'Live music requests',
 ])
 
