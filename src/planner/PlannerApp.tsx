@@ -304,16 +304,13 @@ export default function PlannerApp() {
 
         {status.kind === 'ready' && (
           <>
-            <header className="planner-welcome">
-              <p className="planner-kicker">Your wedding with Anders Hyatt Music</p>
-              <h1>{couple.names || 'Wedding details'}</h1>
-              {welcomeBits.length > 0 && <p className="planner-meta">{welcomeBits.join(' · ')}</p>}
-              <p className="planner-lead">
-                Fill in what you know. You can come back to this same link and edit it any time.
-              </p>
-            </header>
-
-            <CouplePhoto token={token} savedValue={couplePhoto} savedDataUrl={couplePhotoUrl} />
+            <CouplePhoto
+              token={token}
+              savedValue={couplePhoto}
+              savedDataUrl={couplePhotoUrl}
+              title={couple.names || 'Wedding details'}
+              meta={welcomeBits.join(' · ')}
+            />
 
             <nav className="planner-jump" aria-label="Planner sections">
               {sections.map((section) => (

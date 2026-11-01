@@ -1,17 +1,50 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { uploadCouplePhoto } from './api'
 import { PhotoTooLargeError, blobToBase64, prepareCouplePhoto } from './preparePhoto'
 
 const REQUEST_TEXT =
   "We'd be delighted if you could share a photo of yourselves here on the app. While it's entirely optional, it adds a personal touch and helps us feel like we know you better during the planning process."
 
+const KICKER = 'Your wedding with Anders Hyatt Music'
+const LEAD = 'Fill in what you know. You can come back to this same link and edit it any time.'
+
 interface CouplePhotoProps {
   token: string
   savedValue: string
   savedDataUrl: string | null
+  title: string
+  meta: string
 }
 
-export default function CouplePhoto({ token, savedValue, savedDataUrl }: CouplePhotoProps) {
+function PhotoPicker({
+  label,
+  className,
+  disabled,
+  onFile,
+}: {
+  label: string
+  className: string
+  disabled: boolean
+  onFile: (file: File | undefined) => void
+}) {
+  return (
+    <label className={className}>
+      {label}
+      <input
+        type="file"
+        accept="image/*"
+        disabled={disabled}
+        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+          const file = event.target.files?.[0]
+          event.target.value = ''
+          onFile(file)
+        }}
+      />
+    </label>
+  )
+}
+
+export default function CouplePhoto({ token, savedValue, savedDataUrl, title, meta }: CouplePhotoProps) {
   const [localPreview, setLocalPreview] = useState<string | null>(null)
   const [uploadedDataUrl, setUploadedDataUrl] = useState<string | null>(null)
   const [acceptedRemote, setAcceptedRemote] = useState<string | null>(null)
@@ -96,14 +129,16 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl }: CoupleP
     })()
   }
 
-  return (
-    <section className="planner-section planner-photo" aria-labelledby="couple-photo-heading">
-      <h2 id="couple-photo-heading">Couple photo request</h2>
-      <p className="planner-section__blurb">{REQUEST_TEXT}</p>
-      {shown && (
-        <div className="planner-photo__frame">
+  const picker = (label: string, className: string) => (
+    <PhotoPicker label={label} className={className} disabled={phase === 'uploading'} onFile={onFile} />
+  )
+
+  if (shown) {
+    return (
+      <div className="planner-hero-wrap">
+        <section className="planner-hero" aria-label="Couple photo">
           <img
-            className="planner-photo__preview"
+            className="planner-hero__image"
             src={shown}
             alt="Photo of the couple"
             onError={() => {
@@ -111,29 +146,52 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl }: CoupleP
               else setRejectedRemote(shown)
             }}
           />
-        </div>
-      )}
-      {phase === 'uploading' && <p className="planner-photo__status">Sending your photo…</p>}
-      {phase === 'thankyou' && shown && <p className="planner-photo__status">{message}</p>}
-      {showReceived && <p className="planner-photo__status">Photo received</p>}
-      {phase === 'error' && (
-        <p className="planner-photo__status planner-photo__status--error" role="alert">
-          {message}
-        </p>
-      )}
-      <label className={`btn planner-photo__pick${phase === 'uploading' ? ' is-disabled' : ''}`}>
-        {phase === 'uploading' ? 'Sending…' : hasPhoto ? 'Replace photo' : 'Choose a photo'}
-        <input
-          type="file"
-          accept="image/*"
-          disabled={phase === 'uploading'}
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            event.target.value = ''
-            onFile(file)
-          }}
-        />
-      </label>
-    </section>
+          <div className="planner-hero__shade">
+            <div className="planner-hero__copy">
+              <p className="planner-kicker">{KICKER}</p>
+              <h1>{title}</h1>
+              {meta && <p className="planner-meta">{meta}</p>}
+            </div>
+            {picker(
+              phase === 'uploading' ? 'Sending…' : 'Change photo',
+              `planner-hero__change${phase === 'uploading' ? ' is-disabled' : ''}`,
+            )}
+          </div>
+        </section>
+        {phase === 'error' && (
+          <p className="planner-photo__status planner-photo__status--error" role="alert">
+            {message}
+          </p>
+        )}
+        <p className="planner-lead">{LEAD}</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <header className="planner-welcome">
+        <p className="planner-kicker">{KICKER}</p>
+        <h1>{title}</h1>
+        {meta && <p className="planner-meta">{meta}</p>}
+        <p className="planner-lead">{LEAD}</p>
+      </header>
+      <section className="planner-section planner-photo" aria-labelledby="couple-photo-heading">
+        <h2 id="couple-photo-heading">Couple photo request</h2>
+        <p className="planner-section__blurb">{REQUEST_TEXT}</p>
+        {phase === 'uploading' && <p className="planner-photo__status">Sending your photo…</p>}
+        {phase === 'thankyou' && <p className="planner-photo__status">Photo received, thank you!</p>}
+        {showReceived && phase !== 'thankyou' && <p className="planner-photo__status">Photo received</p>}
+        {phase === 'error' && (
+          <p className="planner-photo__status planner-photo__status--error" role="alert">
+            {message}
+          </p>
+        )}
+        {picker(
+          phase === 'uploading' ? 'Sending…' : hasPhoto ? 'Replace photo' : 'Choose a photo',
+          `btn planner-photo__pick${phase === 'uploading' ? ' is-disabled' : ''}`,
+        )}
+      </section>
+    </>
   )
 }
