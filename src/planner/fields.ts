@@ -457,9 +457,14 @@ export function fieldVisible(key: string, services: BookedServices): boolean {
 }
 
 export const CELL_RECEPTION_FIELD = 'Cell reception'
+export const WEBSITE_PASSWORD_FIELD = 'Wedding website password'
 
 export function cellReceptionVisible(fields: Record<string, string>): boolean {
   return (fields['Internet access'] ?? '').trim().toLowerCase() === 'no'
+}
+
+export function websitePasswordVisible(fields: Record<string, string>): boolean {
+  return (fields['Wedding website'] ?? '').trim() !== ''
 }
 
 /** Hidden follow-ups stay out of the section so they are not shown or counted. */
@@ -470,6 +475,7 @@ export function fieldAnswerVisible(
 ): boolean {
   if (!fieldVisible(key, services)) return false
   if (key === CELL_RECEPTION_FIELD) return cellReceptionVisible(fields)
+  if (key === WEBSITE_PASSWORD_FIELD) return websitePasswordVisible(fields)
   return true
 }
 
