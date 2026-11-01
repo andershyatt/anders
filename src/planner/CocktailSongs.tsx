@@ -22,6 +22,9 @@ interface CocktailSongsProps {
   onChange: (value: string) => void
   maxSongs?: number
   maxMustPlays?: number
+  /** Open the editor on its own screen, and keep a short list on the planner. */
+  picker?: boolean
+  pickerKey?: string
 }
 
 function songId(): string {
@@ -42,6 +45,8 @@ export default function CocktailSongs({
   onChange,
   maxSongs = MAX_COCKTAIL_SONGS,
   maxMustPlays = MAX_COCKTAIL_MUST_PLAYS,
+  picker = false,
+  pickerKey = '',
 }: CocktailSongsProps) {
   const listId = useId()
   const [rows, setRows] = useState<CocktailRow[]>(() => rowsFromValue(value, maxSongs))
@@ -57,10 +62,39 @@ export default function CocktailSongs({
   const [activeIndex, setActiveIndex] = useState(0)
   const [message, setMessage] = useState('')
   const [openNotes, setOpenNotes] = useState<Record<string, boolean>>({})
+  const [screen, setScreen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const backRef = useRef<HTMLButtonElement>(null)
   const full = rows.length >= maxSongs
   const mustPlays = rows.filter((song) => song.mustPlay).length
   const showMustPlay = maxMustPlays > 0
+
+  useEffect(() => {
+    if (!picker) return
+    const onPop = () => setScreen(window.history.state?.plannerSongPicker === pickerKey)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [picker, pickerKey])
+
+  useEffect(() => {
+    if (!screen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    backRef.current?.focus()
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [screen])
+
+  const openScreen = () => {
+    window.history.pushState({ ...(window.history.state ?? {}), plannerSongPicker: pickerKey }, '')
+    setScreen(true)
+  }
+
+  const closeScreen = () => {
+    if (window.history.state?.plannerSongPicker === pickerKey) window.history.back()
+    else setScreen(false)
+  }
 
   useEffect(() => {
     if (!open || query.trim().length < MIN_QUERY) return
@@ -161,7 +195,11 @@ export default function CocktailSongs({
     }
   }
 
-  return (
+  const countLabel = showMustPlay
+    ? `${rows.length} of ${maxSongs} songs, ${mustPlays} must-plays`
+    : `${rows.length} of ${maxSongs} songs`
+
+  const editor = (
     <div className="planner-songlist" ref={rootRef}>
       <div className="planner-songlist__heading">
         <p className="planner-dance__label" id={`${listId}-label`}>
@@ -342,6 +380,44 @@ export default function CocktailSongs({
           })}
         </ol>
       )}
+    </div>
+  )
+
+  if (!picker) return editor
+
+  const summary = (
+    <div className="planner-songcompact">
+      <p className="planner-songcompact__count">{countLabel}</p>
+      {rows.length > 0 && (
+        <ul>
+          {rows.map((song) => (
+            <li key={song.id}>
+              <span>
+                {song.title}
+                {song.artist ? ` – ${song.artist}` : ''}
+              </span>
+              {song.mustPlay && <span className="planner-songcompact__must">Must-play</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      <button type="button" className="planner-songcompact__open" onClick={openScreen}>
+        {rows.length > 0 ? 'Edit songs' : 'Select Songs'}
+      </button>
+    </div>
+  )
+
+  if (!screen) return summary
+
+  return (
+    <div className="planner-picker" role="dialog" aria-modal="true" aria-label={label}>
+      <div className="planner-picker__bar">
+        <button ref={backRef} type="button" className="planner-picker__back" onClick={closeScreen}>
+          Back
+        </button>
+        <p>{label}</p>
+      </div>
+      <div className="planner-picker__body">{editor}</div>
     </div>
   )
 }
