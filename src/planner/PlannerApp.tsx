@@ -249,17 +249,25 @@ function FieldControl({
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
 
   if (field.kind === 'style' || field.kind === 'yesno') {
-    const base = field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services)
-    const options = choicesWithSaved(base, value)
-    const selected = options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? ''
+    const base = field.options ?? (field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services))
+    const known =
+      field.key === 'Internet access'
+        ? (base.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
+        : (base.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
+    const options = field.key === 'Internet access' ? [...base] : choicesWithSaved(base, value)
+    const selected = field.key === 'Internet access' ? known : (options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
+    const legacy = field.key === 'Internet access' && value.trim() && !known ? value.trim() : ''
     return (
-      <ChoiceGroup
-        name={id}
-        legend={field.label}
-        options={options}
-        value={selected}
-        onChange={onChange}
-      />
+      <div>
+        <ChoiceGroup
+          name={id}
+          legend={field.label}
+          options={options}
+          value={selected}
+          onChange={onChange}
+        />
+        {legacy && <p className="planner-legacy">Saved answer: {legacy}</p>}
+      </div>
     )
   }
 
@@ -580,7 +588,7 @@ export default function PlannerApp() {
     setSaveMessage('Saved')
   }, [fields, saving, services, token])
 
-  const sections = useMemo(() => visibleSections(services), [services])
+  const sections = useMemo(() => visibleSections(services, fields), [services, fields])
   const savedLabel = formatSavedAt(lastUpdated)
   const welcomeDate = basics.date.trim() ? formatCoupleDate(basics.date) : ''
   const welcomeBits = [welcomeDate, basics.venue.trim()].filter(Boolean)

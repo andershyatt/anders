@@ -29,6 +29,8 @@ export const COCKTAIL_LOCATION_OPTIONS = [
   'Same area as the reception',
 ] as const
 
+export const CELL_RECEPTION_OPTIONS = ['Yes', 'No', 'Not sure'] as const
+
 export const plannerSections: PlannerSection[] = [
   {
     id: 'basics',
@@ -103,9 +105,14 @@ export const plannerSections: PlannerSection[] = [
       },
       {
         key: 'Internet access',
-        label:
-          'Internet Access - Is there a WiFi network available for use at the venue? If not, is there reliable cell reception?',
-        kind: 'text',
+        label: 'Is there a WiFi network available for use at the venue?',
+        kind: 'yesno',
+      },
+      {
+        key: 'Cell reception',
+        label: 'Is there reliable cell reception?',
+        kind: 'yesno',
+        options: CELL_RECEPTION_OPTIONS,
       },
       {
         key: 'Ceremony location',
@@ -400,6 +407,7 @@ const VENUE_QUESTION_FIELDS = new Set([
   'Venue contact info',
   'Floor plan PDF',
   'Internet access',
+  'Cell reception',
   'Ceremony location',
   'Ceremony power',
   'Ceremony rain plan',
@@ -439,10 +447,30 @@ export function fieldVisible(key: string, services: BookedServices): boolean {
   return true
 }
 
+export const CELL_RECEPTION_FIELD = 'Cell reception'
+
+export function cellReceptionVisible(fields: Record<string, string>): boolean {
+  return (fields['Internet access'] ?? '').trim().toLowerCase() === 'no'
+}
+
+/** Hidden follow-ups stay out of the section so they are not shown or counted. */
+export function fieldAnswerVisible(
+  key: string,
+  services: BookedServices,
+  fields: Record<string, string>,
+): boolean {
+  if (!fieldVisible(key, services)) return false
+  if (key === CELL_RECEPTION_FIELD) return cellReceptionVisible(fields)
+  return true
+}
+
 /** Sections with every field hidden are dropped, so their headings are not shown. */
-export function visibleSections(services: BookedServices): PlannerSection[] {
+export function visibleSections(
+  services: BookedServices,
+  answers: Record<string, string> = {},
+): PlannerSection[] {
   return plannerSections.flatMap((section) => {
-    const fields = section.fields.filter((field) => fieldVisible(field.key, services))
+    const fields = section.fields.filter((field) => fieldAnswerVisible(field.key, services, answers))
     if (fields.length === 0) return []
     return [{ ...section, fields }]
   })
@@ -465,7 +493,7 @@ export function fieldsForSave(
         key !== COUPLE_PHOTO_FIELD &&
         key !== FLOOR_PLAN_FIELD &&
         !LOCKED_BASICS_KEYS.has(key) &&
-        fieldVisible(key, services),
+        fieldAnswerVisible(key, services, fields),
     ),
   )
 }
