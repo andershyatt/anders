@@ -30,6 +30,7 @@ import {
   parseDanceFormat,
   toIsoDate,
 } from './format'
+import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
 import SongField from './SongField'
@@ -134,105 +135,6 @@ function choicesWithSaved(options: readonly string[], value: string): string[] {
   if (!saved) return [...options]
   const known = options.some((option) => option.toLowerCase() === saved.toLowerCase())
   return known ? [...options] : [saved, ...options]
-}
-
-function matchesOption(options: readonly string[], value: string): string | undefined {
-  const trimmed = value.trim().toLowerCase()
-  return options.find((option) => option.toLowerCase() === trimmed)
-}
-
-function ChoiceWithOther({
-  name,
-  legend,
-  options,
-  value,
-  onChange,
-}: {
-  name: string
-  legend: string
-  options: readonly string[]
-  value: string
-  onChange: (next: string) => void
-}) {
-  const match = matchesOption(options, value)
-  const [otherOn, setOtherOn] = useState(() => value.trim() !== '' && !match)
-
-  return (
-    <fieldset className="planner-choices planner-choices--stack">
-      <legend>{legend}</legend>
-      <div className="planner-choices__row">
-        {options.map((option) => {
-          const selected = !otherOn && match === option
-          return (
-            <label key={option} className={selected ? 'is-selected' : undefined}>
-              <input
-                type="radio"
-                name={name}
-                value={option}
-                checked={selected}
-                onChange={() => {
-                  if (!selected) {
-                    setOtherOn(false)
-                    onChange(option)
-                  }
-                }}
-                onClick={() => {
-                  if (selected) {
-                    setOtherOn(false)
-                    onChange('')
-                  }
-                }}
-                onKeyDown={(event) => {
-                  if (choiceAlreadyOn(event, selected)) {
-                    setOtherOn(false)
-                    onChange('')
-                  }
-                }}
-              />
-              <span>{option}</span>
-            </label>
-          )
-        })}
-        <label className={otherOn ? 'is-selected' : undefined}>
-          <input
-            type="radio"
-            name={name}
-            value="Other"
-            checked={otherOn}
-            onChange={() => {
-              if (!otherOn) {
-                setOtherOn(true)
-                if (match) onChange('')
-              }
-            }}
-            onClick={() => {
-              if (otherOn) {
-                setOtherOn(false)
-                onChange('')
-              }
-            }}
-            onKeyDown={(event) => {
-              if (choiceAlreadyOn(event, otherOn)) {
-                setOtherOn(false)
-                onChange('')
-              }
-            }}
-          />
-          <span>Other</span>
-        </label>
-      </div>
-      {otherOn && (
-        <input
-          className="planner-other"
-          type="text"
-          aria-label={`${legend} (other)`}
-          value={otherOn ? value : ''}
-          placeholder="Add your own answer"
-          onChange={(event) => onChange(event.target.value)}
-        />
-      )}
-    </fieldset>
-  )
 }
 
 function FieldControl({
