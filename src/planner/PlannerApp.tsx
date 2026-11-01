@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf } from './api'
 import {
   DANCE_LENGTH,
@@ -76,6 +76,12 @@ function tokenFromLocation(): string {
   return new URLSearchParams(window.location.search).get('c')?.trim() ?? ''
 }
 
+function choiceAlreadyOn(event: KeyboardEvent<HTMLInputElement>, selected: boolean): boolean {
+  if (!selected || (event.key !== ' ' && event.key !== 'Enter')) return false
+  event.preventDefault()
+  return true
+}
+
 function ChoiceGroup({
   name,
   legend,
@@ -92,19 +98,30 @@ function ChoiceGroup({
   return (
     <fieldset className="planner-choices">
       <legend>{legend}</legend>
-      <div className="planner-choices__row">
-        {options.map((option) => (
-          <label key={option} className={value === option ? 'is-selected' : undefined}>
-            <input
-              type="radio"
-              name={name}
-              value={option}
-              checked={value === option}
-              onChange={() => onChange(option)}
-            />
-            <span>{option}</span>
-          </label>
-        ))}
+      <div className="planner-choices__row" role="radiogroup" aria-label={legend}>
+        {options.map((option) => {
+          const selected = value === option
+          return (
+            <label key={option} className={selected ? 'is-selected' : undefined}>
+              <input
+                type="radio"
+                name={name}
+                value={option}
+                checked={selected}
+                onChange={() => {
+                  if (!selected) onChange(option)
+                }}
+                onClick={() => {
+                  if (selected) onChange('')
+                }}
+                onKeyDown={(event) => {
+                  if (choiceAlreadyOn(event, selected)) onChange('')
+                }}
+              />
+              <span>{option}</span>
+            </label>
+          )
+        })}
       </div>
     </fieldset>
   )
@@ -142,21 +159,38 @@ function ChoiceWithOther({
     <fieldset className="planner-choices planner-choices--stack">
       <legend>{legend}</legend>
       <div className="planner-choices__row">
-        {options.map((option) => (
-          <label key={option} className={!otherOn && match === option ? 'is-selected' : undefined}>
-            <input
-              type="radio"
-              name={name}
-              value={option}
-              checked={!otherOn && match === option}
-              onChange={() => {
-                setOtherOn(false)
-                onChange(option)
-              }}
-            />
-            <span>{option}</span>
-          </label>
-        ))}
+        {options.map((option) => {
+          const selected = !otherOn && match === option
+          return (
+            <label key={option} className={selected ? 'is-selected' : undefined}>
+              <input
+                type="radio"
+                name={name}
+                value={option}
+                checked={selected}
+                onChange={() => {
+                  if (!selected) {
+                    setOtherOn(false)
+                    onChange(option)
+                  }
+                }}
+                onClick={() => {
+                  if (selected) {
+                    setOtherOn(false)
+                    onChange('')
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (choiceAlreadyOn(event, selected)) {
+                    setOtherOn(false)
+                    onChange('')
+                  }
+                }}
+              />
+              <span>{option}</span>
+            </label>
+          )
+        })}
         <label className={otherOn ? 'is-selected' : undefined}>
           <input
             type="radio"
@@ -164,8 +198,22 @@ function ChoiceWithOther({
             value="Other"
             checked={otherOn}
             onChange={() => {
-              setOtherOn(true)
-              if (match) onChange('')
+              if (!otherOn) {
+                setOtherOn(true)
+                if (match) onChange('')
+              }
+            }}
+            onClick={() => {
+              if (otherOn) {
+                setOtherOn(false)
+                onChange('')
+              }
+            }}
+            onKeyDown={(event) => {
+              if (choiceAlreadyOn(event, otherOn)) {
+                setOtherOn(false)
+                onChange('')
+              }
             }}
           />
           <span>Other</span>
@@ -260,17 +308,20 @@ function FieldControl({
           {field.label}
         </p>
         <div className="planner-rating__row" role="radiogroup" aria-labelledby={`${id}-label`}>
-          {scores.map((score) => (
-            <button
-              key={score}
-              type="button"
-              className={value === score ? 'is-selected' : undefined}
-              aria-pressed={value === score}
-              onClick={() => onChange(score)}
-            >
-              {score}
-            </button>
-          ))}
+          {scores.map((score) => {
+            const selected = value === score
+            return (
+              <button
+                key={score}
+                type="button"
+                className={selected ? 'is-selected' : undefined}
+                aria-pressed={selected}
+                onClick={() => onChange(selected ? '' : score)}
+              >
+                {score}
+              </button>
+            )
+          })}
         </div>
       </div>
     )
