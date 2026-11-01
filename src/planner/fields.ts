@@ -392,8 +392,10 @@ export interface BookedServices {
  */
 export const ALL_SERVICES: BookedServices = { live: true, dj: true, photobooth: true, venueQuestions: false }
 
-const LIVE_FIELDS = new Set([
-  'Songs to learn',
+const LIVE_FIELDS = new Set(['Songs to learn'])
+
+/** Ceremony songs and styles. Shown for live music and for DJ-only couples. */
+const CEREMONY_FIELDS = new Set([
   'Pre-ceremony music',
   'Wedding party processional song',
   'Wedding party processional style (instrumental/vocals)',
@@ -458,6 +460,7 @@ export function fieldVisible(key: string, services: BookedServices): boolean {
   if (key.startsWith('Photo Booth')) return services.photobooth
   if (LIVE_AND_DJ_FIELDS.has(key)) return services.live && services.dj
   if (VENUE_QUESTION_FIELDS.has(key)) return services.venueQuestions
+  if (CEREMONY_FIELDS.has(key)) return services.live || services.dj
   if (COCKTAIL_FIELDS.has(key)) return services.live || services.dj
   return true
 }
@@ -550,6 +553,9 @@ export const CEREMONY_STYLE_WITH_DJ = [
   'DJ - vocals',
 ] as const
 
+/** DJ-only couples keep the recorded options. Live vocal and instrumental choices stay hidden. */
+export const CEREMONY_STYLE_DJ_ONLY = ['DJ - instrumental', 'DJ - vocals'] as const
+
 const CEREMONY_STYLE_KEYS = new Set([
   'Wedding party processional style (instrumental/vocals)',
   'Bridal processional style',
@@ -557,7 +563,9 @@ const CEREMONY_STYLE_KEYS = new Set([
 ])
 
 export function ceremonyStyleOptions(key: string, services: BookedServices): readonly string[] {
-  if (CEREMONY_STYLE_KEYS.has(key) && services.live && services.dj) return CEREMONY_STYLE_WITH_DJ
+  if (!CEREMONY_STYLE_KEYS.has(key)) return STYLE_OPTIONS
+  if (services.live && services.dj) return CEREMONY_STYLE_WITH_DJ
+  if (!services.live && services.dj) return CEREMONY_STYLE_DJ_ONLY
   return STYLE_OPTIONS
 }
 
