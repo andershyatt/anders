@@ -55,6 +55,11 @@ export const plannerSections: PlannerSection[] = [
       },
       { key: 'Wedding colors', label: 'Wedding colors?', kind: 'text' },
       {
+        key: 'Dress code',
+        label: 'Anything we should know about dress code?',
+        kind: 'text',
+      },
+      {
         key: 'Crowd party rating',
         label: "Rate your crowd on a scale of 1–10 (1 doesn't like to party / 10 loves to party)",
         kind: 'rating',
