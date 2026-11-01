@@ -109,6 +109,11 @@ export const plannerSections: PlannerSection[] = [
         kind: 'yesno',
       },
       {
+        key: 'WiFi network and password',
+        label: 'WiFi network name and password (if known)',
+        kind: 'text',
+      },
+      {
         key: 'Cell reception',
         label: 'Is there reliable cell reception?',
         kind: 'yesno',
@@ -416,6 +421,7 @@ const VENUE_QUESTION_FIELDS = new Set([
   'Venue contact info',
   'Floor plan PDF',
   'Internet access',
+  'WiFi network and password',
   'Cell reception',
   'Ceremony location',
   'Ceremony power',
@@ -456,11 +462,11 @@ export function fieldVisible(key: string, services: BookedServices): boolean {
   return true
 }
 
-export const CELL_RECEPTION_FIELD = 'Cell reception'
+export const WIFI_DETAILS_FIELD = 'WiFi network and password'
 export const WEBSITE_PASSWORD_FIELD = 'Wedding website password'
 
-export function cellReceptionVisible(fields: Record<string, string>): boolean {
-  return (fields['Internet access'] ?? '').trim().toLowerCase() === 'no'
+export function wifiDetailsVisible(fields: Record<string, string>): boolean {
+  return (fields['Internet access'] ?? '').trim().toLowerCase() === 'yes'
 }
 
 export function websitePasswordVisible(fields: Record<string, string>): boolean {
@@ -474,7 +480,7 @@ export function fieldAnswerVisible(
   fields: Record<string, string>,
 ): boolean {
   if (!fieldVisible(key, services)) return false
-  if (key === CELL_RECEPTION_FIELD) return cellReceptionVisible(fields)
+  if (key === WIFI_DETAILS_FIELD) return wifiDetailsVisible(fields)
   if (key === WEBSITE_PASSWORD_FIELD) return websitePasswordVisible(fields)
   return true
 }
