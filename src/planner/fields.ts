@@ -86,6 +86,7 @@ export const plannerSections: PlannerSection[] = [
       { key: 'Venue manager', label: 'Venue manager', kind: 'text' },
       { key: 'Photographer', label: 'Photographer', kind: 'text' },
       { key: 'Videographer', label: 'Videographer', kind: 'text' },
+      { key: 'Caterer info', label: 'Caterer', kind: 'text' },
     ],
   },
   {
@@ -94,7 +95,6 @@ export const plannerSections: PlannerSection[] = [
     blurb: '',
     fields: [
       { key: 'Venue contact info', label: 'Venue Contact info (Phone + Email)', kind: 'text' },
-      { key: 'Caterer info', label: 'Caterer info', kind: 'text' },
       {
         key: 'Floor plan PDF',
         label:
@@ -398,7 +398,6 @@ const LIVE_AND_DJ_FIELDS = new Set([
 
 const VENUE_QUESTION_FIELDS = new Set([
   'Venue contact info',
-  'Caterer info',
   'Floor plan PDF',
   'Internet access',
   'Ceremony location',
