@@ -1,4 +1,4 @@
-export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'rating'
+export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'choice-other' | 'floorplan' | 'rating'
 
 export interface PlannerField {
   key: string
@@ -6,6 +6,7 @@ export interface PlannerField {
   kind: FieldKind
   placeholder?: string
   help?: string
+  options?: readonly string[]
   /** single replaces the field; list replaces only the current line or comma entry. */
   song?: 'single' | 'list'
 }
@@ -16,6 +17,17 @@ export interface PlannerSection {
   blurb: string
   fields: PlannerField[]
 }
+
+export const POWER_OPTIONS = [
+  'Yes, there is power available.',
+  'No, the musician/DJ will need a battery powered option.',
+  'Please check with the venue.',
+] as const
+
+export const COCKTAIL_LOCATION_OPTIONS = [
+  'Same area as the ceremony',
+  'Same area as the reception',
+] as const
 
 export const plannerSections: PlannerSection[] = [
   {
@@ -69,6 +81,66 @@ export const plannerSections: PlannerSection[] = [
       { key: 'Venue manager', label: 'Venue manager', kind: 'text' },
       { key: 'Photographer', label: 'Photographer', kind: 'text' },
       { key: 'Videographer', label: 'Videographer', kind: 'text' },
+    ],
+  },
+  {
+    id: 'venue-questions',
+    title: 'Venue related questions',
+    blurb: '',
+    fields: [
+      { key: 'Venue contact info', label: 'Venue Contact info (Phone + Email)', kind: 'text' },
+      { key: 'Caterer info', label: 'Caterer info', kind: 'text' },
+      {
+        key: 'Floor plan PDF',
+        label:
+          'Please provide the floor plan for the reception area as well as the venue layout, if available.',
+        kind: 'floorplan',
+      },
+      {
+        key: 'Internet access',
+        label:
+          'Internet Access - Is there a WiFi network available for use at the venue? If not, is there reliable cell reception?',
+        kind: 'text',
+      },
+      {
+        key: 'Ceremony location',
+        label: 'Location of ceremony - Where will the wedding ceremony be taking place?',
+        kind: 'text',
+      },
+      {
+        key: 'Ceremony power',
+        label: 'Is there power available where the ceremony is being held?',
+        kind: 'choice-other',
+        options: POWER_OPTIONS,
+      },
+      {
+        key: 'Ceremony rain plan',
+        label: 'If you are having your ceremony outside, what is your rain plan?',
+        kind: 'text',
+      },
+      {
+        key: 'Cocktail hour location',
+        label: 'Where will cocktail hour be taking place?',
+        kind: 'choice-other',
+        options: COCKTAIL_LOCATION_OPTIONS,
+      },
+      {
+        key: 'Cocktail hour power',
+        label: 'Is there power available where cocktail hour is being held?',
+        kind: 'choice-other',
+        options: POWER_OPTIONS,
+      },
+      {
+        key: 'Cocktail hour rain plan',
+        label: 'If you are having your cocktail hour outside, what is your rain plan?',
+        kind: 'text',
+      },
+      {
+        key: 'Dinner location',
+        label:
+          'Is dinner happening in the same room where the dancing will take place? If not, please describe where dinner will be.',
+        kind: 'text',
+      },
     ],
   },
   {
@@ -261,10 +333,14 @@ export interface BookedServices {
   live: boolean
   dj: boolean
   photobooth: boolean
+  venueQuestions: boolean
 }
 
-/** Used when the backend omits `services` (older responses). */
-export const ALL_SERVICES: BookedServices = { live: true, dj: true, photobooth: true }
+/**
+ * Used when the backend omits `services` (older responses).
+ * Venue questions stay off until the backend sets `venueQuestions: true`.
+ */
+export const ALL_SERVICES: BookedServices = { live: true, dj: true, photobooth: true, venueQuestions: false }
 
 const LIVE_FIELDS = new Set([
   'Songs to learn',
@@ -292,11 +368,26 @@ const LIVE_AND_DJ_FIELDS = new Set([
   'Mother/son format',
 ])
 
+const VENUE_QUESTION_FIELDS = new Set([
+  'Venue contact info',
+  'Caterer info',
+  'Floor plan PDF',
+  'Internet access',
+  'Ceremony location',
+  'Ceremony power',
+  'Ceremony rain plan',
+  'Cocktail hour location',
+  'Cocktail hour power',
+  'Cocktail hour rain plan',
+  'Dinner location',
+])
+
 export function fieldVisible(key: string, services: BookedServices): boolean {
   if (LIVE_FIELDS.has(key)) return services.live
   if (DJ_FIELDS.has(key)) return services.dj
   if (key.startsWith('Photo Booth')) return services.photobooth
   if (LIVE_AND_DJ_FIELDS.has(key)) return services.live && services.dj
+  if (VENUE_QUESTION_FIELDS.has(key)) return services.venueQuestions
   return true
 }
 
@@ -312,6 +403,9 @@ export function visibleSections(services: BookedServices): PlannerSection[] {
 /** Not a form field. Uploaded separately and never included in a normal save. */
 export const COUPLE_PHOTO_FIELD = 'Couple photo'
 
+/** Not a form answer. Uploaded separately and never included in a normal save. */
+export const FLOOR_PLAN_FIELD = 'Floor plan PDF'
+
 /** Hidden answers are omitted so a save does not wipe them with empty strings. */
 export function fieldsForSave(
   fields: Record<string, string>,
@@ -319,14 +413,18 @@ export function fieldsForSave(
 ): Record<string, string> {
   return Object.fromEntries(
     Object.entries(fields).filter(
-      ([key]) => key !== COUPLE_PHOTO_FIELD && !LOCKED_BASICS_KEYS.has(key) && fieldVisible(key, services),
+      ([key]) =>
+        key !== COUPLE_PHOTO_FIELD &&
+        key !== FLOOR_PLAN_FIELD &&
+        !LOCKED_BASICS_KEYS.has(key) &&
+        fieldVisible(key, services),
     ),
   )
 }
 
 /**
  * Dev preview. `?preview=live,dj` overrides booked services only when the
- * query param is present. Tokens are `live`, `dj`, and `photobooth`.
+ * query param is present. Tokens are `live`, `dj`, `photobooth`, and `venue`.
  */
 export function servicesFromPreview(search: string): BookedServices | null {
   const params = new URLSearchParams(search)
@@ -341,6 +439,7 @@ export function servicesFromPreview(search: string): BookedServices | null {
     live: parts.has('live'),
     dj: parts.has('dj'),
     photobooth: parts.has('photobooth'),
+    venueQuestions: parts.has('venue'),
   }
 }
 

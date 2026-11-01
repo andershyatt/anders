@@ -18,6 +18,8 @@ export interface PlannerLoadSuccess {
   services: BookedServices
   /** Inline image for the planner. Null when the couple has not sent one. */
   photo: { dataUrl: string } | null
+  /** Reception floor plan. Null when the couple has not sent one. */
+  floorPlan: { name: string; url: string } | null
   lastUpdated?: string | number
 }
 
@@ -64,6 +66,7 @@ function parseServices(value: unknown): BookedServices {
     live: record.live === true,
     dj: record.dj === true,
     photobooth: record.photobooth === true,
+    venueQuestions: record.venueQuestions === true,
   }
 }
 
@@ -89,14 +92,22 @@ function parseBasics(value: unknown): PlannerBasics | null {
   }
 }
 
-function parsePlannerFile(value: unknown): { name: string; url: string } | null {
+function parseNamedFile(value: unknown, fallbackName: string): { name: string; url: string } | null {
   if (value == null) return null
   const record = asRecord(value)
   if (!record) return null
   const name = typeof record.name === 'string' ? record.name.trim() : ''
   const url = typeof record.url === 'string' ? record.url.trim() : ''
   if (!name && !url) return null
-  return { name: name || 'Timeline.pdf', url }
+  return { name: name || fallbackName, url }
+}
+
+function parseFloorPlan(value: unknown): { name: string; url: string } | null {
+  return parseNamedFile(value, 'Floor plan.pdf')
+}
+
+function parsePlannerFile(value: unknown): { name: string; url: string } | null {
+  return parseNamedFile(value, 'Timeline.pdf')
 }
 
 function parseLoadedPhoto(value: unknown): { dataUrl: string } | null {
@@ -129,6 +140,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     timelinePdf: parsePlannerFile(record.timelinePdf),
     services: parseServices(record.services),
     photo: parseLoadedPhoto(record.photo),
+    floorPlan: parseFloorPlan(record.floorPlan),
     lastUpdated:
       typeof lastUpdated === 'string' || typeof lastUpdated === 'number' ? lastUpdated : undefined,
   }
@@ -253,8 +265,9 @@ export async function uploadCouplePhoto(
   }
 }
 
-export async function uploadTimelinePdf(
+async function uploadNamedPdf(
   token: string,
+  action: 'uploadFloorPlan' | 'uploadTimeline',
   file: { name: string; dataUrl: string },
 ): Promise<{ ok: true; name: string; url: string } | PlannerFailure> {
   try {
@@ -262,7 +275,7 @@ export async function uploadTimelinePdf(
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
-        action: 'uploadTimeline',
+        action,
         c: token,
         name: file.name,
         dataUrl: file.dataUrl,
@@ -281,6 +294,20 @@ export async function uploadTimelinePdf(
   } catch {
     return { ok: false, error: 'server_error' }
   }
+}
+
+export function uploadFloorPlan(
+  token: string,
+  file: { name: string; dataUrl: string },
+): Promise<{ ok: true; name: string; url: string } | PlannerFailure> {
+  return uploadNamedPdf(token, 'uploadFloorPlan', file)
+}
+
+export function uploadTimelinePdf(
+  token: string,
+  file: { name: string; dataUrl: string },
+): Promise<{ ok: true; name: string; url: string } | PlannerFailure> {
+  return uploadNamedPdf(token, 'uploadTimeline', file)
 }
 
 export function saveErrorMessage(error: string): string {
