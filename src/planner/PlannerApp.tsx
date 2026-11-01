@@ -30,6 +30,7 @@ import {
   parseDanceFormat,
   toIsoDate,
 } from './format'
+import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
 import SongField from './SongField'
@@ -136,105 +137,6 @@ function choicesWithSaved(options: readonly string[], value: string): string[] {
   return known ? [...options] : [saved, ...options]
 }
 
-function matchesOption(options: readonly string[], value: string): string | undefined {
-  const trimmed = value.trim().toLowerCase()
-  return options.find((option) => option.toLowerCase() === trimmed)
-}
-
-function ChoiceWithOther({
-  name,
-  legend,
-  options,
-  value,
-  onChange,
-}: {
-  name: string
-  legend: string
-  options: readonly string[]
-  value: string
-  onChange: (next: string) => void
-}) {
-  const match = matchesOption(options, value)
-  const [otherOn, setOtherOn] = useState(() => value.trim() !== '' && !match)
-
-  return (
-    <fieldset className="planner-choices planner-choices--stack">
-      <legend>{legend}</legend>
-      <div className="planner-choices__row">
-        {options.map((option) => {
-          const selected = !otherOn && match === option
-          return (
-            <label key={option} className={selected ? 'is-selected' : undefined}>
-              <input
-                type="radio"
-                name={name}
-                value={option}
-                checked={selected}
-                onChange={() => {
-                  if (!selected) {
-                    setOtherOn(false)
-                    onChange(option)
-                  }
-                }}
-                onClick={() => {
-                  if (selected) {
-                    setOtherOn(false)
-                    onChange('')
-                  }
-                }}
-                onKeyDown={(event) => {
-                  if (choiceAlreadyOn(event, selected)) {
-                    setOtherOn(false)
-                    onChange('')
-                  }
-                }}
-              />
-              <span>{option}</span>
-            </label>
-          )
-        })}
-        <label className={otherOn ? 'is-selected' : undefined}>
-          <input
-            type="radio"
-            name={name}
-            value="Other"
-            checked={otherOn}
-            onChange={() => {
-              if (!otherOn) {
-                setOtherOn(true)
-                if (match) onChange('')
-              }
-            }}
-            onClick={() => {
-              if (otherOn) {
-                setOtherOn(false)
-                onChange('')
-              }
-            }}
-            onKeyDown={(event) => {
-              if (choiceAlreadyOn(event, otherOn)) {
-                setOtherOn(false)
-                onChange('')
-              }
-            }}
-          />
-          <span>Other</span>
-        </label>
-      </div>
-      {otherOn && (
-        <input
-          className="planner-other"
-          type="text"
-          aria-label={`${legend} (other)`}
-          value={otherOn ? value : ''}
-          placeholder="Add your own answer"
-          onChange={(event) => onChange(event.target.value)}
-        />
-      )}
-    </fieldset>
-  )
-}
-
 function FieldControl({
   field,
   value,
@@ -249,17 +151,25 @@ function FieldControl({
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
 
   if (field.kind === 'style' || field.kind === 'yesno') {
-    const base = field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services)
-    const options = choicesWithSaved(base, value)
-    const selected = options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? ''
+    const base = field.options ?? (field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services))
+    const known =
+      field.key === 'Internet access'
+        ? (base.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
+        : (base.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
+    const options = field.key === 'Internet access' ? [...base] : choicesWithSaved(base, value)
+    const selected = field.key === 'Internet access' ? known : (options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
+    const legacy = field.key === 'Internet access' && value.trim() && !known ? value.trim() : ''
     return (
-      <ChoiceGroup
-        name={id}
-        legend={field.label}
-        options={options}
-        value={selected}
-        onChange={onChange}
-      />
+      <div>
+        <ChoiceGroup
+          name={id}
+          legend={field.label}
+          options={options}
+          value={selected}
+          onChange={onChange}
+        />
+        {legacy && <p className="planner-legacy">Saved answer: {legacy}</p>}
+      </div>
     )
   }
 
@@ -580,7 +490,7 @@ export default function PlannerApp() {
     setSaveMessage('Saved')
   }, [fields, saving, services, token])
 
-  const sections = useMemo(() => visibleSections(services), [services])
+  const sections = useMemo(() => visibleSections(services, fields), [services, fields])
   const savedLabel = formatSavedAt(lastUpdated)
   const welcomeDate = basics.date.trim() ? formatCoupleDate(basics.date) : ''
   const welcomeBits = [welcomeDate, basics.venue.trim()].filter(Boolean)

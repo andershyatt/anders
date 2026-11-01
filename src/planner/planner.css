@@ -495,6 +495,13 @@
   line-height: 1.4;
 }
 
+.planner-legacy {
+  margin: -0.35rem 0 0.9rem;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .planner-field textarea {
   resize: vertical;
   min-height: 6.5rem;
