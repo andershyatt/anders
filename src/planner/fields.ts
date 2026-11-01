@@ -21,14 +21,6 @@ export const plannerSections: PlannerSection[] = [
     title: 'Basics',
     blurb: 'The details Anders needs to find your day on the calendar.',
     fields: [
-      { key: 'Names', label: 'Names', kind: 'text', placeholder: 'Alex and Jordan' },
-      { key: 'Event type', label: 'Event type', kind: 'text', placeholder: 'Wedding' },
-      { key: 'Event date', label: 'Event date', kind: 'date' },
-      { key: 'Venue', label: 'Venue', kind: 'text', placeholder: 'Venue name' },
-      { key: 'Venue address', label: 'Venue address', kind: 'textarea', placeholder: 'Street, city' },
-      { key: 'Start time', label: 'Start time', kind: 'text', placeholder: '4:00 PM' },
-      { key: 'Length of service', label: 'Length of service', kind: 'text', placeholder: '30 minutes' },
-      { key: 'Guest count', label: 'Guest count', kind: 'text', placeholder: '120' },
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
       {
         key: 'Social media permission',
@@ -149,6 +141,79 @@ export const plannerFieldKeys: string[] = plannerSections.flatMap((section) =>
   section.fields.map((field) => field.key),
 )
 
+/** Shown on the Basics card. Couples cannot edit these, and saves omit them. */
+export interface PlannerBasics {
+  names: string
+  eventType: string
+  date: string
+  venue: string
+  venueAddress: string
+  startTime: string
+  length: string
+  guestCount: string
+  booked: string
+}
+
+export const EMPTY_BASICS: PlannerBasics = {
+  names: '',
+  eventType: '',
+  date: '',
+  venue: '',
+  venueAddress: '',
+  startTime: '',
+  length: '',
+  guestCount: '',
+  booked: '',
+}
+
+export const BOOKED_FIELD = 'Who did you book?'
+
+export const LOCKED_BASICS_KEYS = new Set([
+  'Names',
+  'Event type',
+  'Event date',
+  'Venue',
+  'Venue address',
+  'Start time',
+  'Length of service',
+  'Guest count',
+  BOOKED_FIELD,
+])
+
+function fieldText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  return ''
+}
+
+function preferField(fieldValue: string, fallback: string | undefined): string {
+  return fieldValue.trim() ? fieldValue : (fallback ?? '')
+}
+
+/**
+ * Use the load response's `basics` object when the backend sends one.
+ * Older responses omit it, so those values come from the saved fields,
+ * then from couple.names / couple.date / couple.venue.
+ */
+export function resolveBasics(
+  basics: PlannerBasics | null,
+  fields: Record<string, unknown>,
+  couple: { names?: string; date?: string; venue?: string },
+): PlannerBasics {
+  if (basics) return basics
+  return {
+    names: preferField(fieldText(fields.Names), couple.names),
+    eventType: fieldText(fields['Event type']),
+    date: preferField(fieldText(fields['Event date']), couple.date),
+    venue: preferField(fieldText(fields.Venue), couple.venue),
+    venueAddress: fieldText(fields['Venue address']),
+    startTime: fieldText(fields['Start time']),
+    length: fieldText(fields['Length of service']),
+    guestCount: fieldText(fields['Guest count']),
+    booked: fieldText(fields[BOOKED_FIELD]),
+  }
+}
+
 export interface BookedServices {
   live: boolean
   dj: boolean
@@ -210,7 +275,9 @@ export function fieldsForSave(
   services: BookedServices,
 ): Record<string, string> {
   return Object.fromEntries(
-    Object.entries(fields).filter(([key]) => key !== COUPLE_PHOTO_FIELD && fieldVisible(key, services)),
+    Object.entries(fields).filter(
+      ([key]) => key !== COUPLE_PHOTO_FIELD && !LOCKED_BASICS_KEYS.has(key) && fieldVisible(key, services),
+    ),
   )
 }
 

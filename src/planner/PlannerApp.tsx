@@ -7,11 +7,14 @@ import {
   ceremonyStyleOptions,
   ALL_SERVICES,
   COUPLE_PHOTO_FIELD,
+  EMPTY_BASICS,
   fieldsForSave,
   plannerFieldKeys,
+  resolveBasics,
   servicesFromPreview,
   visibleSections,
   type BookedServices,
+  type PlannerBasics,
   type PlannerField,
 } from './fields'
 import {
@@ -26,7 +29,6 @@ import {
   toIsoDate,
 } from './format'
 import CouplePhoto from './CouplePhoto'
-import VenueField from './VenueField'
 import './planner.css'
 
 const LINK_MESSAGE = "This planner link doesn't look right, please check the link Anders sent you."
@@ -36,6 +38,36 @@ type Status =
   | { kind: 'invalid' }
   | { kind: 'unavailable' }
   | { kind: 'ready' }
+
+function BasicsCard({ basics }: { basics: PlannerBasics }) {
+  const rows = [
+    { label: 'Names', value: basics.names },
+    { label: 'Event type', value: basics.eventType },
+    { label: 'Event date', value: basics.date.trim() ? formatCoupleDate(basics.date) : '' },
+    { label: 'Venue', value: basics.venue },
+    { label: 'Venue address', value: basics.venueAddress },
+    { label: 'Start time', value: basics.startTime },
+    { label: 'Length of service', value: basics.length },
+    { label: 'Guest count', value: basics.guestCount },
+    { label: 'Who did you book?', value: basics.booked },
+  ].filter((row) => row.value.trim() !== '')
+
+  return (
+    <div className="planner-basics">
+      {rows.length > 0 && (
+        <dl>
+          {rows.map((row) => (
+            <div className="planner-basics__row" key={row.label}>
+              <dt>{row.label}</dt>
+              <dd>{row.value.trim()}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      <p className="planner-basics__note">Need to change something here? Just let Anders know.</p>
+    </div>
+  )
+}
 
 function tokenFromLocation(): string {
   return new URLSearchParams(window.location.search).get('c')?.trim() ?? ''
@@ -196,7 +228,7 @@ export default function PlannerApp() {
   const previewServices = useMemo(() => servicesFromPreview(window.location.search), [])
   const [status, setStatus] = useState<Status>({ kind: token ? 'loading' : 'invalid' })
   const [services, setServices] = useState<BookedServices>(previewServices ?? ALL_SERVICES)
-  const [couple, setCouple] = useState({ names: '', date: '', venue: '' })
+  const [basics, setBasics] = useState<PlannerBasics>(EMPTY_BASICS)
   const [fields, setFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [couplePhoto, setCouplePhoto] = useState('')
@@ -219,14 +251,11 @@ export default function PlannerApp() {
         return
       }
       const next = coerceFields(plannerFieldKeys, result.fields)
-      setCouple({
-        names: result.couple.names ?? '',
-        date: result.couple.date ?? '',
-        venue: result.couple.venue ?? '',
-      })
+      const loadedBasics = resolveBasics(result.basics, result.fields, result.couple)
       const photo = result.fields[COUPLE_PHOTO_FIELD]
       setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
       setCouplePhotoUrl(result.photo?.dataUrl ?? null)
+      setBasics(loadedBasics)
       setFields(next)
       setSavedFields(next)
       setServices(previewServices ?? result.services)
@@ -275,8 +304,8 @@ export default function PlannerApp() {
 
   const sections = useMemo(() => visibleSections(services), [services])
   const savedLabel = formatSavedAt(lastUpdated)
-  const welcomeDate = couple.date ? formatCoupleDate(couple.date) : ''
-  const welcomeBits = [welcomeDate, couple.venue].filter(Boolean)
+  const welcomeDate = basics.date.trim() ? formatCoupleDate(basics.date) : ''
+  const welcomeBits = [welcomeDate, basics.venue.trim()].filter(Boolean)
 
   return (
     <div className="planner">
@@ -308,7 +337,7 @@ export default function PlannerApp() {
               token={token}
               savedValue={couplePhoto}
               savedDataUrl={couplePhotoUrl}
-              title={couple.names || 'Wedding details'}
+              title={basics.names.trim() || 'Wedding details'}
               meta={welcomeBits.join(' · ')}
             />
 
@@ -331,28 +360,16 @@ export default function PlannerApp() {
                 <section key={section.id} id={section.id} className="planner-section">
                   <h2>{section.title}</h2>
                   <p className="planner-section__blurb">{section.blurb}</p>
-                  {section.fields.map((field) =>
-                    field.key === 'Venue' ? (
-                      <VenueField
-                        key={field.key}
-                        id="field-Venue"
-                        value={fields.Venue ?? ''}
-                        onChange={(value) => updateField('Venue', value)}
-                        onPick={(place) => {
-                          updateField('Venue', place.name)
-                          if (place.address) updateField('Venue address', place.address)
-                        }}
-                      />
-                    ) : (
-                      <FieldControl
-                        key={field.key}
-                        field={field}
-                        value={fields[field.key] ?? ''}
-                        services={services}
-                        onChange={(value) => updateField(field.key, value)}
-                      />
-                    ),
-                  )}
+                  {section.id === 'basics' && <BasicsCard basics={basics} />}
+                  {section.fields.map((field) => (
+                    <FieldControl
+                      key={field.key}
+                      field={field}
+                      value={fields[field.key] ?? ''}
+                      services={services}
+                      onChange={(value) => updateField(field.key, value)}
+                    />
+                  ))}
                 </section>
               ))}
 

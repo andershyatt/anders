@@ -1,5 +1,5 @@
 import { PLANNER_API_URL } from './config'
-import { ALL_SERVICES, type BookedServices } from './fields'
+import { ALL_SERVICES, type BookedServices, type PlannerBasics } from './fields'
 
 export interface CoupleInfo {
   names?: string
@@ -11,6 +11,8 @@ export interface PlannerLoadSuccess {
   ok: true
   couple: CoupleInfo
   fields: Record<string, unknown>
+  /** Null when an older backend omits `basics`. */
+  basics: PlannerBasics | null
   services: BookedServices
   /** Inline image for the planner. Null when the couple has not sent one. */
   photo: { dataUrl: string } | null
@@ -63,6 +65,28 @@ function parseServices(value: unknown): BookedServices {
   }
 }
 
+function basicsText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  return ''
+}
+
+function parseBasics(value: unknown): PlannerBasics | null {
+  const record = asRecord(value)
+  if (!record) return null
+  return {
+    names: basicsText(record.names),
+    eventType: basicsText(record.eventType),
+    date: basicsText(record.date),
+    venue: basicsText(record.venue),
+    venueAddress: basicsText(record.venueAddress),
+    startTime: basicsText(record.startTime),
+    length: basicsText(record.length),
+    guestCount: basicsText(record.guestCount),
+    booked: basicsText(record.booked),
+  }
+}
+
 function parseLoadedPhoto(value: unknown): { dataUrl: string } | null {
   if (value == null) return null
   const record = asRecord(value)
@@ -89,6 +113,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     ok: true,
     couple,
     fields,
+    basics: parseBasics(record.basics),
     services: parseServices(record.services),
     photo: parseLoadedPhoto(record.photo),
     lastUpdated:
