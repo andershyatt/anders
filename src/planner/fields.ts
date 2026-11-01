@@ -1,4 +1,4 @@
-export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'choice-other' | 'floorplan'
+export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'choice-other' | 'floorplan' | 'rating'
 
 export interface PlannerField {
   key: string
@@ -7,6 +7,8 @@ export interface PlannerField {
   placeholder?: string
   help?: string
   options?: readonly string[]
+  /** single replaces the field; list replaces only the current line or comma entry. */
+  song?: 'single' | 'list'
 }
 
 export interface PlannerSection {
@@ -33,15 +35,12 @@ export const plannerSections: PlannerSection[] = [
     title: 'Basics',
     blurb: 'The details Anders needs to find your day on the calendar.',
     fields: [
-      { key: 'Names', label: 'Names', kind: 'text', placeholder: 'Alex and Jordan' },
-      { key: 'Event type', label: 'Event type', kind: 'text', placeholder: 'Wedding' },
-      { key: 'Event date', label: 'Event date', kind: 'date' },
-      { key: 'Venue', label: 'Venue', kind: 'text', placeholder: 'Venue name' },
-      { key: 'Venue address', label: 'Venue address', kind: 'textarea', placeholder: 'Street, city' },
-      { key: 'Start time', label: 'Start time', kind: 'text', placeholder: '4:00 PM' },
-      { key: 'Length of service', label: 'Length of service', kind: 'text', placeholder: '30 minutes' },
-      { key: 'Guest count', label: 'Guest count', kind: 'text', placeholder: '120' },
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
+      {
+        key: 'Wedding website password',
+        label: 'Wedding website password (if needed)',
+        kind: 'text',
+      },
       {
         key: 'Social media permission',
         label:
@@ -49,6 +48,23 @@ export const plannerSections: PlannerSection[] = [
         kind: 'yesno',
       },
       { key: 'IG handle', label: 'IG handle', kind: 'text', placeholder: '@' },
+      {
+        key: 'High school graduation year(s)',
+        label: 'What year(s) did the couple graduate high school?',
+        kind: 'text',
+      },
+      { key: 'Wedding colors', label: 'Wedding colors?', kind: 'text' },
+      {
+        key: 'Crowd party rating',
+        label: "Rate your crowd on a scale of 1–10 (1 doesn't like to party / 10 loves to party)",
+        kind: 'rating',
+      },
+      {
+        key: 'Basic notes',
+        label: 'Notes',
+        kind: 'textarea',
+        placeholder: "Anything else you'd like us to know",
+      },
     ],
   },
   {
@@ -128,6 +144,13 @@ export const plannerSections: PlannerSection[] = [
     ],
   },
   {
+    id: 'timeline',
+    title: 'Timeline',
+    blurb:
+      "Please provide your timeline in as much detail as possible. You may upload a PDF or put it in the notes section. You can start by drafting a rough or estimated timeline of events in the notes below, which can be finalized closer to the wedding. We're also happy to provide suggestions for the order of events tailored to your specific needs and preferences.",
+    fields: [{ key: 'Timeline', label: 'Timeline', kind: 'textarea' }],
+  },
+  {
     id: 'photo-booth',
     title: 'Photo Booth',
     blurb: 'Only fill this in if you are booking the photo booth.',
@@ -144,16 +167,16 @@ export const plannerSections: PlannerSection[] = [
     title: 'Ceremony',
     blurb: 'Songs and how you want them played.',
     fields: [
-      { key: 'Pre-ceremony music', label: 'Pre-ceremony music', kind: 'textarea' },
-      { key: 'Wedding party processional song', label: 'Wedding party processional song', kind: 'text' },
+      { key: 'Pre-ceremony music', label: 'Pre-ceremony music', kind: 'textarea', song: 'list' },
+      { key: 'Wedding party processional song', label: 'Wedding party processional song', kind: 'text', song: 'single' },
       {
         key: 'Wedding party processional style (instrumental/vocals)',
         label: 'Wedding party processional style',
         kind: 'style',
       },
-      { key: 'Bridal processional song', label: 'Bridal processional song', kind: 'text' },
+      { key: 'Bridal processional song', label: 'Bridal processional song', kind: 'text', song: 'single' },
       { key: 'Bridal processional style', label: 'Bridal processional style', kind: 'style' },
-      { key: 'Recessional song', label: 'Recessional song', kind: 'text' },
+      { key: 'Recessional song', label: 'Recessional song', kind: 'text', song: 'single' },
       { key: 'Recessional style', label: 'Recessional style', kind: 'style' },
       {
         key: 'Recessional cue',
@@ -161,7 +184,7 @@ export const plannerSections: PlannerSection[] = [
         kind: 'text',
         help: "What's the last thing the officiant will say before we start the recessional? Usually the first kiss, or the pronouncement right after it.",
       },
-      { key: 'Live music requests', label: 'Live music requests', kind: 'textarea' },
+      { key: 'Live music requests', label: 'Live music requests', kind: 'textarea', song: 'list' },
     ],
   },
   {
@@ -171,9 +194,8 @@ export const plannerSections: PlannerSection[] = [
     fields: [
       { key: 'Introductions', label: 'Introductions', kind: 'textarea' },
       { key: 'Toasts/speeches', label: 'Toasts/speeches', kind: 'textarea' },
-      { key: 'Timeline', label: 'Timeline', kind: 'textarea' },
       { key: 'Things to remember', label: 'Things to remember', kind: 'textarea' },
-      { key: 'Songs to learn', label: 'Songs to learn', kind: 'textarea' },
+      { key: 'Songs to learn', label: 'Songs to learn', kind: 'textarea', song: 'list' },
     ],
   },
   {
@@ -181,15 +203,15 @@ export const plannerSections: PlannerSection[] = [
     title: 'Dances',
     blurb: 'Song, who plays it, and whether you want the full track or a shortened version.',
     fields: [
-      { key: "Couple's first dance song", label: "Couple's first dance song", kind: 'text' },
+      { key: "Couple's first dance song", label: "Couple's first dance song", kind: 'text', song: 'single' },
       {
         key: 'First dance format (live/DJ, full/shortened)',
         label: 'First dance format',
         kind: 'dance',
       },
-      { key: 'Father/daughter dance song', label: 'Father/daughter dance song', kind: 'text' },
+      { key: 'Father/daughter dance song', label: 'Father/daughter dance song', kind: 'text', song: 'single' },
       { key: 'Father/daughter format', label: 'Father/daughter format', kind: 'dance' },
-      { key: 'Mother/son dance song', label: 'Mother/son dance song', kind: 'text' },
+      { key: 'Mother/son dance song', label: 'Mother/son dance song', kind: 'text', song: 'single' },
       { key: 'Mother/son format', label: 'Mother/son format', kind: 'dance' },
     ],
   },
@@ -198,16 +220,16 @@ export const plannerSections: PlannerSection[] = [
     title: 'DJ',
     blurb: 'Requests for the dancing portion of the night.',
     fields: [
-      { key: 'DJ music requests', label: 'DJ music requests', kind: 'textarea' },
-      { key: 'Last song of the night with guests', label: 'Last song of the night with guests', kind: 'text' },
-      { key: 'Private last dance', label: 'Private last dance', kind: 'text' },
+      { key: 'DJ music requests', label: 'DJ music requests', kind: 'textarea', song: 'list' },
+      { key: 'Last song of the night with guests', label: 'Last song of the night with guests', kind: 'text', song: 'single' },
+      { key: 'Private last dance', label: 'Private last dance', kind: 'text', song: 'single' },
     ],
   },
   {
     id: 'do-not-play',
     title: 'Do-not-play',
     blurb: 'Songs or artists you do not want to hear.',
-    fields: [{ key: 'Do-not-play list', label: 'Do-not-play list', kind: 'textarea' }],
+    fields: [{ key: 'Do-not-play list', label: 'Do-not-play list', kind: 'textarea', song: 'list' }],
   },
   {
     id: 'notes',
@@ -220,6 +242,92 @@ export const plannerSections: PlannerSection[] = [
 export const plannerFieldKeys: string[] = plannerSections.flatMap((section) =>
   section.fields.map((field) => field.key),
 )
+
+/** Shown on the Basics card. Couples cannot edit these, and saves omit them. */
+export interface PlannerBasics {
+  names: string
+  eventType: string
+  date: string
+  venue: string
+  venueAddress: string
+  startTime: string
+  length: string
+  guestCount: string
+  booked: string
+}
+
+export const EMPTY_BASICS: PlannerBasics = {
+  names: '',
+  eventType: '',
+  date: '',
+  venue: '',
+  venueAddress: '',
+  startTime: '',
+  length: '',
+  guestCount: '',
+  booked: '',
+}
+
+export const BOOKED_FIELD = 'Who did you book?'
+
+export const TIMELINE_PREFILL = `Sample timeline - edit as much as you'd like & DELETE this top line after you begin editing
+
+X:XX - Guest arrival
+X:XX - Ceremony
+X:XX - Cocktail hour
+X:XX - Reception room opens, introductions, first dance
+X:XX - First course, welcome toast
+X:XX - Entrees, speeches
+X:XX - Parent dances, group photo
+X:XX - Open dance floor
+X:XX - Cake cutting, dessert stations open
+X:XX - End`
+
+export const LOCKED_BASICS_KEYS = new Set([
+  'Names',
+  'Event type',
+  'Event date',
+  'Venue',
+  'Venue address',
+  'Start time',
+  'Length of service',
+  'Guest count',
+  BOOKED_FIELD,
+])
+
+function fieldText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  return ''
+}
+
+function preferField(fieldValue: string, fallback: string | undefined): string {
+  return fieldValue.trim() ? fieldValue : (fallback ?? '')
+}
+
+/**
+ * Use the load response's `basics` object when the backend sends one.
+ * Older responses omit it, so those values come from the saved fields,
+ * then from couple.names / couple.date / couple.venue.
+ */
+export function resolveBasics(
+  basics: PlannerBasics | null,
+  fields: Record<string, unknown>,
+  couple: { names?: string; date?: string; venue?: string },
+): PlannerBasics {
+  if (basics) return basics
+  return {
+    names: preferField(fieldText(fields.Names), couple.names),
+    eventType: fieldText(fields['Event type']),
+    date: preferField(fieldText(fields['Event date']), couple.date),
+    venue: preferField(fieldText(fields.Venue), couple.venue),
+    venueAddress: fieldText(fields['Venue address']),
+    startTime: fieldText(fields['Start time']),
+    length: fieldText(fields['Length of service']),
+    guestCount: fieldText(fields['Guest count']),
+    booked: fieldText(fields[BOOKED_FIELD]),
+  }
+}
 
 export interface BookedServices {
   live: boolean
@@ -305,7 +413,11 @@ export function fieldsForSave(
 ): Record<string, string> {
   return Object.fromEntries(
     Object.entries(fields).filter(
-      ([key]) => key !== COUPLE_PHOTO_FIELD && key !== FLOOR_PLAN_FIELD && fieldVisible(key, services),
+      ([key]) =>
+        key !== COUPLE_PHOTO_FIELD &&
+        key !== FLOOR_PLAN_FIELD &&
+        !LOCKED_BASICS_KEYS.has(key) &&
+        fieldVisible(key, services),
     ),
   )
 }
