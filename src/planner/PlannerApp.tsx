@@ -33,6 +33,7 @@ import {
   parseDanceFormat,
   toIsoDate,
 } from './format'
+import CheckAll from './CheckAll'
 import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
@@ -94,15 +95,17 @@ function ChoiceGroup({
   options,
   value,
   onChange,
+  stack = false,
 }: {
   name: string
   legend: string
   options: readonly string[]
   value: string
   onChange: (next: string) => void
+  stack?: boolean
 }) {
   return (
-    <fieldset className="planner-choices">
+    <fieldset className={stack ? 'planner-choices planner-choices--stack' : 'planner-choices'}>
       <legend>{legend}</legend>
       <div className="planner-choices__row" role="radiogroup" aria-label={legend}>
         {options.map((option) => {
@@ -170,10 +173,35 @@ function FieldControl({
           legend={field.label}
           options={options}
           value={selected}
+          stack={field.stack}
           onChange={onChange}
         />
         {legacy && <p className="planner-legacy">Saved answer: {legacy}</p>}
       </div>
+    )
+  }
+
+  if (field.kind === 'checks') {
+    return (
+      <CheckAll
+        name={id}
+        legend={field.label}
+        options={field.options ?? []}
+        value={value}
+        onChange={onChange}
+      />
+    )
+  }
+
+  if (field.kind === 'songlist' || field.kind === 'cocktail-songs') {
+    return (
+      <CocktailSongs
+        label={field.label}
+        value={value}
+        onChange={onChange}
+        maxSongs={field.maxSongs}
+        maxMustPlays={field.maxMustPlays}
+      />
     )
   }
 
@@ -296,6 +324,7 @@ function FieldControl({
             field.label
           )}
         </span>
+        {field.help && <p className="planner-field__help">{field.help}</p>}
         <textarea
           id={id}
           rows={
@@ -602,9 +631,20 @@ export default function PlannerApp() {
                       {timelineMessage && <p className="planner-pdf__error">{timelineMessage}</p>}
                     </div>
                   )}
-                  {section.fields.map((field) =>
-                    field.kind === 'floorplan' ? (
-                      <div className="planner-pdf" key={field.key}>
+                  {section.fields.map((field) => (
+                    <Fragment key={field.key}>
+                      {field.heading && <h3 className="planner-subhead">{field.heading}</h3>}
+                      {field.callout && (
+                        <p className="planner-callout">
+                          <span className="planner-callout__mark" aria-hidden="true">
+                            !
+                          </span>
+                          <span>{field.callout}</span>
+                        </p>
+                      )}
+                      {field.note && <p className="planner-note">{field.note}</p>}
+                      {field.kind === 'floorplan' ? (
+                      <div className="planner-pdf">
                         <p className="planner-dance__label">{field.label}</p>
                         {floorPlan && (
                           <p>
@@ -628,15 +668,8 @@ export default function PlannerApp() {
                         </label>
                         {floorPlanMessage && <p className="planner-pdf__error">{floorPlanMessage}</p>}
                       </div>
-                    ) : field.kind === 'cocktail-songs' ? (
-                      <CocktailSongs
-                        key={field.key}
-                        label={field.label}
-                        value={fields[field.key] ?? ''}
-                        onChange={(value) => updateField(field.key, value)}
-                      />
                     ) : field.key === 'Cocktail hour music type' ? (
-                      <Fragment key={field.key}>
+                      <>
                         <p className="planner-callout">
                           <span className="planner-callout__mark" aria-hidden="true">
                             !
@@ -655,9 +688,9 @@ export default function PlannerApp() {
                             onChange={(value) => updateField(field.key, value)}
                           />
                         )}
-                      </Fragment>
+                      </>
                     ) : (
-                      <Fragment key={field.key}>
+                      <>
                         <FieldControl
                           field={field}
                           value={fields[field.key] ?? ''}
@@ -679,9 +712,17 @@ export default function PlannerApp() {
                             </a>
                           </p>
                         )}
-                      </Fragment>
-                    ),
-                  )}
+                      </>
+                    )}
+                      {field.image === 'chauvet' && (
+                        <img
+                          className="planner-lighting"
+                          src={`${import.meta.env.BASE_URL}../chauvet-freedom-par.jpg`}
+                          alt="Chauvet DJ uplights placed around a dance floor"
+                        />
+                      )}
+                    </Fragment>
+                  ))}
                 </section>
               ))}
 

@@ -9,12 +9,13 @@ export interface CocktailSong {
 export const MAX_COCKTAIL_SONGS = 30
 export const MAX_COCKTAIL_MUST_PLAYS = 10
 
-export function parseCocktailSongs(raw: string): CocktailSong[] {
+export function parseCocktailSongs(raw: string, maxSongs = MAX_COCKTAIL_SONGS): CocktailSong[] {
   if (!raw.trim()) return []
   try {
     const data = JSON.parse(raw) as unknown
     if (!Array.isArray(data)) return []
     const songs: CocktailSong[] = []
+    const cap = maxSongs > 0 ? maxSongs : MAX_COCKTAIL_SONGS
     for (const item of data) {
       if (!item || typeof item !== 'object') continue
       const record = item as Record<string, unknown>
@@ -27,7 +28,7 @@ export function parseCocktailSongs(raw: string): CocktailSong[] {
         mustPlay: record.mustPlay === true,
         note: typeof record.note === 'string' ? record.note : '',
       })
-      if (songs.length === MAX_COCKTAIL_SONGS) break
+      if (songs.length === cap) break
     }
     return songs
   } catch {

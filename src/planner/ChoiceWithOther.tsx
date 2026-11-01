@@ -49,8 +49,24 @@ export default function ChoiceWithOther({ name, legend, options, value, onChange
       <div className="planner-choices__row" role="radiogroup" aria-label={legend}>
         {options.map((option) => {
           const selected = !otherOn && match === option
+          const choose = () => {
+            if (selected) {
+              setOtherOn(false)
+              onChange('')
+              return
+            }
+            setOtherOn(false)
+            onChange(option)
+          }
           return (
-            <label key={option} className={selected ? 'is-selected' : undefined}>
+            <label
+              key={option}
+              className={selected ? 'is-selected' : undefined}
+              onClick={(event) => {
+                event.preventDefault()
+                choose()
+              }}
+            >
               <input
                 type="radio"
                 name={name}
@@ -60,12 +76,6 @@ export default function ChoiceWithOther({ name, legend, options, value, onChange
                   if (!selected) {
                     setOtherOn(false)
                     onChange(option)
-                  }
-                }}
-                onClick={() => {
-                  if (selected) {
-                    setOtherOn(false)
-                    onChange('')
                   }
                 }}
                 onKeyDown={(event) => {
@@ -79,7 +89,14 @@ export default function ChoiceWithOther({ name, legend, options, value, onChange
             </label>
           )
         })}
-        <label className={otherOn ? 'is-selected' : undefined}>
+        <label
+          className={otherOn ? 'is-selected' : undefined}
+          onClick={(event) => {
+            event.preventDefault()
+            if (otherOn) closeOther()
+            else openOther()
+          }}
+        >
           <input
             type="radio"
             name={name}
@@ -87,9 +104,6 @@ export default function ChoiceWithOther({ name, legend, options, value, onChange
             checked={otherOn}
             onChange={() => {
               if (!otherOn) openOther()
-            }}
-            onClick={() => {
-              if (otherOn) closeOther()
             }}
             onKeyDown={(event) => {
               if (choiceAlreadyOn(event, otherOn)) closeOther()

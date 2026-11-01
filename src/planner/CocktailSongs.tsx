@@ -20,27 +20,35 @@ interface CocktailSongsProps {
   label: string
   value: string
   onChange: (value: string) => void
+  maxSongs?: number
+  maxMustPlays?: number
 }
 
 function songId(): string {
   return crypto.randomUUID()
 }
 
-function rowsFromValue(raw: string): CocktailRow[] {
-  return parseCocktailSongs(raw).map((song) => ({ ...song, id: songId() }))
+function rowsFromValue(raw: string, maxSongs: number): CocktailRow[] {
+  return parseCocktailSongs(raw, maxSongs).map((song) => ({ ...song, id: songId() }))
 }
 
 function sameSong(left: CocktailSong, right: CocktailSong): boolean {
   return left.title.toLowerCase() === right.title.toLowerCase() && left.artist.toLowerCase() === right.artist.toLowerCase()
 }
 
-export default function CocktailSongs({ label, value, onChange }: CocktailSongsProps) {
+export default function CocktailSongs({
+  label,
+  value,
+  onChange,
+  maxSongs = MAX_COCKTAIL_SONGS,
+  maxMustPlays = MAX_COCKTAIL_MUST_PLAYS,
+}: CocktailSongsProps) {
   const listId = useId()
-  const [rows, setRows] = useState<CocktailRow[]>(() => rowsFromValue(value))
+  const [rows, setRows] = useState<CocktailRow[]>(() => rowsFromValue(value, maxSongs))
   const [source, setSource] = useState(value)
   if (value !== source) {
     setSource(value)
-    setRows(rowsFromValue(value))
+    setRows(rowsFromValue(value, maxSongs))
   }
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SongMatch[]>([])
@@ -50,8 +58,9 @@ export default function CocktailSongs({ label, value, onChange }: CocktailSongsP
   const [message, setMessage] = useState('')
   const [openNotes, setOpenNotes] = useState<Record<string, boolean>>({})
   const rootRef = useRef<HTMLDivElement>(null)
-  const full = rows.length >= MAX_COCKTAIL_SONGS
+  const full = rows.length >= maxSongs
   const mustPlays = rows.filter((song) => song.mustPlay).length
+  const showMustPlay = maxMustPlays > 0
 
   useEffect(() => {
     if (!open || query.trim().length < MIN_QUERY) return
@@ -97,7 +106,7 @@ export default function CocktailSongs({ label, value, onChange }: CocktailSongsP
 
   const addSong = (song: CocktailSong) => {
     if (full) {
-      setMessage('You can add up to 30 songs.')
+      setMessage(`You can add up to ${maxSongs} songs.`)
       return
     }
     if (rows.some((row) => sameSong(row, song))) {
@@ -159,7 +168,9 @@ export default function CocktailSongs({ label, value, onChange }: CocktailSongsP
           {label}
         </p>
         <p className="planner-songlist__count">
-          {rows.length}/{MAX_COCKTAIL_SONGS} songs · {mustPlays}/{MAX_COCKTAIL_MUST_PLAYS} must-plays
+          {showMustPlay
+            ? `${rows.length}/${maxSongs} songs · ${mustPlays}/${maxMustPlays} must-plays`
+            : `${rows.length}/${maxSongs} songs`}
         </p>
       </div>
       <div className="planner-venue__control">
@@ -228,7 +239,7 @@ export default function CocktailSongs({ label, value, onChange }: CocktailSongsP
           {typed.artist ? ` – ${typed.artist}` : ''}” as typed
         </button>
       )}
-      {full && <p className="planner-songlist__message">You can add up to 30 songs.</p>}
+      {full && <p className="planner-songlist__message">You can add up to {maxSongs} songs.</p>}
       {message && (
         <p className="planner-songlist__message" role="status">
           {message}
@@ -252,21 +263,23 @@ export default function CocktailSongs({ label, value, onChange }: CocktailSongsP
                   </span>
                 </span>
                 <div className="planner-songlist__actions">
-                  <button
-                    type="button"
-                    className={song.mustPlay ? 'is-selected' : undefined}
-                    aria-pressed={song.mustPlay}
-                    onClick={() => {
-                      if (!song.mustPlay && mustPlays >= MAX_COCKTAIL_MUST_PLAYS) {
-                        setMessage('You can mark up to 10 must-plays.')
-                        return
-                      }
-                      setMessage('')
-                      commit(rows.map((row) => (row.id === song.id ? { ...row, mustPlay: !row.mustPlay } : row)))
-                    }}
-                  >
-                    Must-play
-                  </button>
+                  {showMustPlay && (
+                    <button
+                      type="button"
+                      className={song.mustPlay ? 'is-selected' : undefined}
+                      aria-pressed={song.mustPlay}
+                      onClick={() => {
+                        if (!song.mustPlay && mustPlays >= maxMustPlays) {
+                          setMessage(`You can mark up to ${maxMustPlays} must-plays.`)
+                          return
+                        }
+                        setMessage('')
+                        commit(rows.map((row) => (row.id === song.id ? { ...row, mustPlay: !row.mustPlay } : row)))
+                      }}
+                    >
+                      Must-play
+                    </button>
+                  )}
                   <button
                     type="button"
                     aria-expanded={noteOpen}
