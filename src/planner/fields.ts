@@ -6,6 +6,8 @@ export interface PlannerField {
   kind: FieldKind
   placeholder?: string
   help?: string
+  /** single replaces the field; list replaces only the current line or comma entry. */
+  song?: 'single' | 'list'
 }
 
 export interface PlannerSection {
@@ -72,16 +74,16 @@ export const plannerSections: PlannerSection[] = [
     title: 'Ceremony',
     blurb: 'Songs and how you want them played.',
     fields: [
-      { key: 'Pre-ceremony music', label: 'Pre-ceremony music', kind: 'textarea' },
-      { key: 'Wedding party processional song', label: 'Wedding party processional song', kind: 'text' },
+      { key: 'Pre-ceremony music', label: 'Pre-ceremony music', kind: 'textarea', song: 'list' },
+      { key: 'Wedding party processional song', label: 'Wedding party processional song', kind: 'text', song: 'single' },
       {
         key: 'Wedding party processional style (instrumental/vocals)',
         label: 'Wedding party processional style',
         kind: 'style',
       },
-      { key: 'Bridal processional song', label: 'Bridal processional song', kind: 'text' },
+      { key: 'Bridal processional song', label: 'Bridal processional song', kind: 'text', song: 'single' },
       { key: 'Bridal processional style', label: 'Bridal processional style', kind: 'style' },
-      { key: 'Recessional song', label: 'Recessional song', kind: 'text' },
+      { key: 'Recessional song', label: 'Recessional song', kind: 'text', song: 'single' },
       { key: 'Recessional style', label: 'Recessional style', kind: 'style' },
       {
         key: 'Recessional cue',
@@ -89,7 +91,7 @@ export const plannerSections: PlannerSection[] = [
         kind: 'text',
         help: "What's the last thing the officiant will say before we start the recessional? Usually the first kiss, or the pronouncement right after it.",
       },
-      { key: 'Live music requests', label: 'Live music requests', kind: 'textarea' },
+      { key: 'Live music requests', label: 'Live music requests', kind: 'textarea', song: 'list' },
     ],
   },
   {
@@ -101,7 +103,7 @@ export const plannerSections: PlannerSection[] = [
       { key: 'Toasts/speeches', label: 'Toasts/speeches', kind: 'textarea' },
       { key: 'Timeline', label: 'Timeline', kind: 'textarea' },
       { key: 'Things to remember', label: 'Things to remember', kind: 'textarea' },
-      { key: 'Songs to learn', label: 'Songs to learn', kind: 'textarea' },
+      { key: 'Songs to learn', label: 'Songs to learn', kind: 'textarea', song: 'list' },
     ],
   },
   {
@@ -109,15 +111,15 @@ export const plannerSections: PlannerSection[] = [
     title: 'Dances',
     blurb: 'Song, who plays it, and whether you want the full track or a shortened version.',
     fields: [
-      { key: "Couple's first dance song", label: "Couple's first dance song", kind: 'text' },
+      { key: "Couple's first dance song", label: "Couple's first dance song", kind: 'text', song: 'single' },
       {
         key: 'First dance format (live/DJ, full/shortened)',
         label: 'First dance format',
         kind: 'dance',
       },
-      { key: 'Father/daughter dance song', label: 'Father/daughter dance song', kind: 'text' },
+      { key: 'Father/daughter dance song', label: 'Father/daughter dance song', kind: 'text', song: 'single' },
       { key: 'Father/daughter format', label: 'Father/daughter format', kind: 'dance' },
-      { key: 'Mother/son dance song', label: 'Mother/son dance song', kind: 'text' },
+      { key: 'Mother/son dance song', label: 'Mother/son dance song', kind: 'text', song: 'single' },
       { key: 'Mother/son format', label: 'Mother/son format', kind: 'dance' },
     ],
   },
@@ -126,16 +128,16 @@ export const plannerSections: PlannerSection[] = [
     title: 'DJ',
     blurb: 'Requests for the dancing portion of the night.',
     fields: [
-      { key: 'DJ music requests', label: 'DJ music requests', kind: 'textarea' },
-      { key: 'Last song of the night with guests', label: 'Last song of the night with guests', kind: 'text' },
-      { key: 'Private last dance', label: 'Private last dance', kind: 'text' },
+      { key: 'DJ music requests', label: 'DJ music requests', kind: 'textarea', song: 'list' },
+      { key: 'Last song of the night with guests', label: 'Last song of the night with guests', kind: 'text', song: 'single' },
+      { key: 'Private last dance', label: 'Private last dance', kind: 'text', song: 'single' },
     ],
   },
   {
     id: 'do-not-play',
     title: 'Do-not-play',
     blurb: 'Songs or artists you do not want to hear.',
-    fields: [{ key: 'Do-not-play list', label: 'Do-not-play list', kind: 'textarea' }],
+    fields: [{ key: 'Do-not-play list', label: 'Do-not-play list', kind: 'textarea', song: 'list' }],
   },
   {
     id: 'notes',
