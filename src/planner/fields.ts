@@ -1,4 +1,4 @@
-export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date'
+export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'choice-other' | 'floorplan' | 'rating'
 
 export interface PlannerField {
   key: string
@@ -6,6 +6,7 @@ export interface PlannerField {
   kind: FieldKind
   placeholder?: string
   help?: string
+  options?: readonly string[]
   /** single replaces the field; list replaces only the current line or comma entry. */
   song?: 'single' | 'list'
 }
@@ -17,6 +18,17 @@ export interface PlannerSection {
   fields: PlannerField[]
 }
 
+export const POWER_OPTIONS = [
+  'Yes, there is power available.',
+  'No, the musician/DJ will need a battery powered option.',
+  'Please check with the venue.',
+] as const
+
+export const COCKTAIL_LOCATION_OPTIONS = [
+  'Same area as the ceremony',
+  'Same area as the reception',
+] as const
+
 export const plannerSections: PlannerSection[] = [
   {
     id: 'basics',
@@ -25,12 +37,34 @@ export const plannerSections: PlannerSection[] = [
     fields: [
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
       {
+        key: 'Wedding website password',
+        label: 'Wedding website password (if needed)',
+        kind: 'text',
+      },
+      {
         key: 'Social media permission',
         label:
           'Can we share tasteful photos or videos from your wedding on our social media accounts for promotional purposes?',
         kind: 'yesno',
       },
       { key: 'IG handle', label: 'IG handle', kind: 'text', placeholder: '@' },
+      {
+        key: 'High school graduation year(s)',
+        label: 'What year(s) did the couple graduate high school?',
+        kind: 'text',
+      },
+      { key: 'Wedding colors', label: 'Wedding colors?', kind: 'text' },
+      {
+        key: 'Crowd party rating',
+        label: "Rate your crowd on a scale of 1–10 (1 doesn't like to party / 10 loves to party)",
+        kind: 'rating',
+      },
+      {
+        key: 'Basic notes',
+        label: 'Notes',
+        kind: 'textarea',
+        placeholder: "Anything else you'd like us to know",
+      },
     ],
   },
   {
@@ -48,6 +82,73 @@ export const plannerSections: PlannerSection[] = [
       { key: 'Photographer', label: 'Photographer', kind: 'text' },
       { key: 'Videographer', label: 'Videographer', kind: 'text' },
     ],
+  },
+  {
+    id: 'venue-questions',
+    title: 'Venue related questions',
+    blurb: '',
+    fields: [
+      { key: 'Venue contact info', label: 'Venue Contact info (Phone + Email)', kind: 'text' },
+      { key: 'Caterer info', label: 'Caterer info', kind: 'text' },
+      {
+        key: 'Floor plan PDF',
+        label:
+          'Please provide the floor plan for the reception area as well as the venue layout, if available.',
+        kind: 'floorplan',
+      },
+      {
+        key: 'Internet access',
+        label:
+          'Internet Access - Is there a WiFi network available for use at the venue? If not, is there reliable cell reception?',
+        kind: 'text',
+      },
+      {
+        key: 'Ceremony location',
+        label: 'Location of ceremony - Where will the wedding ceremony be taking place?',
+        kind: 'text',
+      },
+      {
+        key: 'Ceremony power',
+        label: 'Is there power available where the ceremony is being held?',
+        kind: 'choice-other',
+        options: POWER_OPTIONS,
+      },
+      {
+        key: 'Ceremony rain plan',
+        label: 'If you are having your ceremony outside, what is your rain plan?',
+        kind: 'text',
+      },
+      {
+        key: 'Cocktail hour location',
+        label: 'Where will cocktail hour be taking place?',
+        kind: 'choice-other',
+        options: COCKTAIL_LOCATION_OPTIONS,
+      },
+      {
+        key: 'Cocktail hour power',
+        label: 'Is there power available where cocktail hour is being held?',
+        kind: 'choice-other',
+        options: POWER_OPTIONS,
+      },
+      {
+        key: 'Cocktail hour rain plan',
+        label: 'If you are having your cocktail hour outside, what is your rain plan?',
+        kind: 'text',
+      },
+      {
+        key: 'Dinner location',
+        label:
+          'Is dinner happening in the same room where the dancing will take place? If not, please describe where dinner will be.',
+        kind: 'text',
+      },
+    ],
+  },
+  {
+    id: 'timeline',
+    title: 'Timeline',
+    blurb:
+      "Please provide your timeline in as much detail as possible. You may upload a PDF or put it in the notes section. You can start by drafting a rough or estimated timeline of events in the notes below, which can be finalized closer to the wedding. We're also happy to provide suggestions for the order of events tailored to your specific needs and preferences.",
+    fields: [{ key: 'Timeline', label: 'Timeline', kind: 'textarea' }],
   },
   {
     id: 'photo-booth',
@@ -93,7 +194,6 @@ export const plannerSections: PlannerSection[] = [
     fields: [
       { key: 'Introductions', label: 'Introductions', kind: 'textarea' },
       { key: 'Toasts/speeches', label: 'Toasts/speeches', kind: 'textarea' },
-      { key: 'Timeline', label: 'Timeline', kind: 'textarea' },
       { key: 'Things to remember', label: 'Things to remember', kind: 'textarea' },
       { key: 'Songs to learn', label: 'Songs to learn', kind: 'textarea', song: 'list' },
     ],
@@ -170,6 +270,19 @@ export const EMPTY_BASICS: PlannerBasics = {
 
 export const BOOKED_FIELD = 'Who did you book?'
 
+export const TIMELINE_PREFILL = `Sample timeline - edit as much as you'd like & DELETE this top line after you begin editing
+
+X:XX - Guest arrival
+X:XX - Ceremony
+X:XX - Cocktail hour
+X:XX - Reception room opens, introductions, first dance
+X:XX - First course, welcome toast
+X:XX - Entrees, speeches
+X:XX - Parent dances, group photo
+X:XX - Open dance floor
+X:XX - Cake cutting, dessert stations open
+X:XX - End`
+
 export const LOCKED_BASICS_KEYS = new Set([
   'Names',
   'Event type',
@@ -220,10 +333,14 @@ export interface BookedServices {
   live: boolean
   dj: boolean
   photobooth: boolean
+  venueQuestions: boolean
 }
 
-/** Used when the backend omits `services` (older responses). */
-export const ALL_SERVICES: BookedServices = { live: true, dj: true, photobooth: true }
+/**
+ * Used when the backend omits `services` (older responses).
+ * Venue questions stay off until the backend sets `venueQuestions: true`.
+ */
+export const ALL_SERVICES: BookedServices = { live: true, dj: true, photobooth: true, venueQuestions: false }
 
 const LIVE_FIELDS = new Set([
   'Songs to learn',
@@ -251,11 +368,26 @@ const LIVE_AND_DJ_FIELDS = new Set([
   'Mother/son format',
 ])
 
+const VENUE_QUESTION_FIELDS = new Set([
+  'Venue contact info',
+  'Caterer info',
+  'Floor plan PDF',
+  'Internet access',
+  'Ceremony location',
+  'Ceremony power',
+  'Ceremony rain plan',
+  'Cocktail hour location',
+  'Cocktail hour power',
+  'Cocktail hour rain plan',
+  'Dinner location',
+])
+
 export function fieldVisible(key: string, services: BookedServices): boolean {
   if (LIVE_FIELDS.has(key)) return services.live
   if (DJ_FIELDS.has(key)) return services.dj
   if (key.startsWith('Photo Booth')) return services.photobooth
   if (LIVE_AND_DJ_FIELDS.has(key)) return services.live && services.dj
+  if (VENUE_QUESTION_FIELDS.has(key)) return services.venueQuestions
   return true
 }
 
@@ -271,6 +403,9 @@ export function visibleSections(services: BookedServices): PlannerSection[] {
 /** Not a form field. Uploaded separately and never included in a normal save. */
 export const COUPLE_PHOTO_FIELD = 'Couple photo'
 
+/** Not a form answer. Uploaded separately and never included in a normal save. */
+export const FLOOR_PLAN_FIELD = 'Floor plan PDF'
+
 /** Hidden answers are omitted so a save does not wipe them with empty strings. */
 export function fieldsForSave(
   fields: Record<string, string>,
@@ -278,14 +413,18 @@ export function fieldsForSave(
 ): Record<string, string> {
   return Object.fromEntries(
     Object.entries(fields).filter(
-      ([key]) => key !== COUPLE_PHOTO_FIELD && !LOCKED_BASICS_KEYS.has(key) && fieldVisible(key, services),
+      ([key]) =>
+        key !== COUPLE_PHOTO_FIELD &&
+        key !== FLOOR_PLAN_FIELD &&
+        !LOCKED_BASICS_KEYS.has(key) &&
+        fieldVisible(key, services),
     ),
   )
 }
 
 /**
  * Dev preview. `?preview=live,dj` overrides booked services only when the
- * query param is present. Tokens are `live`, `dj`, and `photobooth`.
+ * query param is present. Tokens are `live`, `dj`, `photobooth`, and `venue`.
  */
 export function servicesFromPreview(search: string): BookedServices | null {
   const params = new URLSearchParams(search)
@@ -300,6 +439,7 @@ export function servicesFromPreview(search: string): BookedServices | null {
     live: parts.has('live'),
     dj: parts.has('dj'),
     photobooth: parts.has('photobooth'),
+    venueQuestions: parts.has('venue'),
   }
 }
 

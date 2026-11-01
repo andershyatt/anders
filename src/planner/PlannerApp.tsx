@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner } from './api'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf } from './api'
 import {
   DANCE_LENGTH,
   DANCE_PERFORMANCE,
@@ -12,6 +12,7 @@ import {
   plannerFieldKeys,
   resolveBasics,
   servicesFromPreview,
+  TIMELINE_PREFILL,
   visibleSections,
   type BookedServices,
   type PlannerBasics,
@@ -30,6 +31,7 @@ import {
 } from './format'
 import CouplePhoto from './CouplePhoto'
 import SongField from './SongField'
+import WelcomeInfo from './WelcomeInfo'
 import './planner.css'
 
 const LINK_MESSAGE = "This planner link doesn't look right, please check the link Anders sent you."
@@ -115,6 +117,74 @@ function choicesWithSaved(options: readonly string[], value: string): string[] {
   return known ? [...options] : [saved, ...options]
 }
 
+function matchesOption(options: readonly string[], value: string): string | undefined {
+  const trimmed = value.trim().toLowerCase()
+  return options.find((option) => option.toLowerCase() === trimmed)
+}
+
+function ChoiceWithOther({
+  name,
+  legend,
+  options,
+  value,
+  onChange,
+}: {
+  name: string
+  legend: string
+  options: readonly string[]
+  value: string
+  onChange: (next: string) => void
+}) {
+  const match = matchesOption(options, value)
+  const [otherOn, setOtherOn] = useState(() => value.trim() !== '' && !match)
+
+  return (
+    <fieldset className="planner-choices planner-choices--stack">
+      <legend>{legend}</legend>
+      <div className="planner-choices__row">
+        {options.map((option) => (
+          <label key={option} className={!otherOn && match === option ? 'is-selected' : undefined}>
+            <input
+              type="radio"
+              name={name}
+              value={option}
+              checked={!otherOn && match === option}
+              onChange={() => {
+                setOtherOn(false)
+                onChange(option)
+              }}
+            />
+            <span>{option}</span>
+          </label>
+        ))}
+        <label className={otherOn ? 'is-selected' : undefined}>
+          <input
+            type="radio"
+            name={name}
+            value="Other"
+            checked={otherOn}
+            onChange={() => {
+              setOtherOn(true)
+              if (match) onChange('')
+            }}
+          />
+          <span>Other</span>
+        </label>
+      </div>
+      {otherOn && (
+        <input
+          className="planner-other"
+          type="text"
+          aria-label={`${legend} (other)`}
+          value={otherOn ? value : ''}
+          placeholder="Add your own answer"
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
+    </fieldset>
+  )
+}
+
 function FieldControl({
   field,
   value,
@@ -143,6 +213,20 @@ function FieldControl({
     )
   }
 
+  if (field.kind === 'choice-other') {
+    return (
+      <ChoiceWithOther
+        name={id}
+        legend={field.label}
+        options={field.options ?? []}
+        value={value}
+        onChange={onChange}
+      />
+    )
+  }
+
+  if (field.kind === 'floorplan') return null
+
   if (field.kind === 'dance') {
     const parsed = parseDanceFormat(value)
     return (
@@ -164,6 +248,30 @@ function FieldControl({
           value={parsed.length}
           onChange={(length) => onChange(formatDance(parsed.performance, length))}
         />
+      </div>
+    )
+  }
+
+  if (field.kind === 'rating') {
+    const scores = Array.from({ length: 10 }, (_, index) => String(index + 1))
+    return (
+      <div className="planner-rating">
+        <p className="planner-dance__label" id={`${id}-label`}>
+          {field.label}
+        </p>
+        <div className="planner-rating__row" role="radiogroup" aria-labelledby={`${id}-label`}>
+          {scores.map((score) => (
+            <button
+              key={score}
+              type="button"
+              className={value === score ? 'is-selected' : undefined}
+              aria-pressed={value === score}
+              onClick={() => onChange(score)}
+            >
+              {score}
+            </button>
+          ))}
+        </div>
       </div>
     )
   }
@@ -214,7 +322,7 @@ function FieldControl({
         <span>{field.label}</span>
         <textarea
           id={id}
-          rows={field.key === 'Notes' || field.key === 'Timeline' ? 6 : 4}
+          rows={field.key === 'Timeline' ? 12 : field.key === 'Notes' || field.key === 'Basic notes' ? 6 : 4}
           value={value}
           placeholder={field.placeholder}
           onChange={(event) => onChange(event.target.value)}
@@ -249,6 +357,13 @@ export default function PlannerApp() {
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [couplePhoto, setCouplePhoto] = useState('')
   const [couplePhotoUrl, setCouplePhotoUrl] = useState<string | null>(null)
+  const [floorPlan, setFloorPlan] = useState<{ name: string; url: string } | null>(null)
+  const [floorPlanMessage, setFloorPlanMessage] = useState('')
+  const [uploadingFloorPlan, setUploadingFloorPlan] = useState(false)
+  const [timelinePdf, setTimelinePdf] = useState<{ name: string; url: string } | null>(null)
+  const [timelineMessage, setTimelineMessage] = useState('')
+  const [uploadingTimeline, setUploadingTimeline] = useState(false)
+  const timelineWasEmpty = useRef(false)
   const [lastUpdated, setLastUpdated] = useState<string | number | undefined>(undefined)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
@@ -267,10 +382,15 @@ export default function PlannerApp() {
         return
       }
       const next = coerceFields(plannerFieldKeys, result.fields)
+      const timelineEmpty = next.Timeline.trim() === ''
+      if (timelineEmpty) next.Timeline = TIMELINE_PREFILL
+      timelineWasEmpty.current = timelineEmpty
       const loadedBasics = resolveBasics(result.basics, result.fields, result.couple)
       const photo = result.fields[COUPLE_PHOTO_FIELD]
       setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
       setCouplePhotoUrl(result.photo?.dataUrl ?? null)
+      setFloorPlan(result.floorPlan)
+      setTimelinePdf(result.timelinePdf)
       setBasics(loadedBasics)
       setFields(next)
       setSavedFields(next)
@@ -300,12 +420,90 @@ export default function PlannerApp() {
     setSaveMessage('')
   }, [])
 
+  const onFloorPlan = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      event.target.value = ''
+      if (!file || !token) return
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+      if (!isPdf) {
+        setFloorPlanMessage('Please choose a PDF.')
+        return
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setFloorPlanMessage('Please choose a PDF under 10 MB.')
+        return
+      }
+      setUploadingFloorPlan(true)
+      setFloorPlanMessage('')
+      const reader = new FileReader()
+      reader.onload = () => {
+        const dataUrl = typeof reader.result === 'string' ? reader.result : ''
+        void uploadFloorPlan(token, { name: file.name, dataUrl }).then((result) => {
+          setUploadingFloorPlan(false)
+          if (!result.ok) {
+            setFloorPlanMessage("We couldn't upload that PDF. Please try again.")
+            return
+          }
+          setFloorPlan({ name: result.name, url: result.url })
+          setFloorPlanMessage('')
+        })
+      }
+      reader.onerror = () => {
+        setUploadingFloorPlan(false)
+        setFloorPlanMessage("We couldn't read that PDF. Please try again.")
+      }
+      reader.readAsDataURL(file)
+    },
+    [token],
+  )
+
+  const onTimelineFile = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      event.target.value = ''
+      if (!file || !token) return
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+      if (!isPdf) {
+        setTimelineMessage('Please choose a PDF.')
+        return
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setTimelineMessage('Please choose a PDF under 10 MB.')
+        return
+      }
+      setUploadingTimeline(true)
+      setTimelineMessage('')
+      const reader = new FileReader()
+      reader.onload = () => {
+        const dataUrl = typeof reader.result === 'string' ? reader.result : ''
+        void uploadTimelinePdf(token, { name: file.name, dataUrl }).then((result) => {
+          setUploadingTimeline(false)
+          if (!result.ok) {
+            setTimelineMessage("We couldn't upload that PDF. Please try again.")
+            return
+          }
+          setTimelinePdf({ name: result.name, url: result.url })
+          setTimelineMessage('')
+        })
+      }
+      reader.onerror = () => {
+        setUploadingTimeline(false)
+        setTimelineMessage("We couldn't read that PDF. Please try again.")
+      }
+      reader.readAsDataURL(file)
+    },
+    [token],
+  )
+
   const onSave = useCallback(async () => {
     if (!token || saving) return
     setSaving(true)
     setSaveFailed(false)
     setSaveMessage('')
-    const result = await savePlanner(token, fieldsForSave(fields, services))
+    const payload = fieldsForSave(fields, services)
+    if (timelineWasEmpty.current && fields.Timeline === TIMELINE_PREFILL) delete payload.Timeline
+    const result = await savePlanner(token, payload)
     setSaving(false)
     if (!result.ok) {
       setSaveFailed(true)
@@ -357,6 +555,8 @@ export default function PlannerApp() {
               meta={welcomeBits.join(' · ')}
             />
 
+            <WelcomeInfo live={services.live} dj={services.dj} />
+
             <nav className="planner-jump" aria-label="Planner sections">
               {sections.map((section) => (
                 <a key={section.id} href={`#${section.id}`}>
@@ -375,17 +575,88 @@ export default function PlannerApp() {
               {sections.map((section) => (
                 <section key={section.id} id={section.id} className="planner-section">
                   <h2>{section.title}</h2>
-                  <p className="planner-section__blurb">{section.blurb}</p>
+                  {section.blurb && <p className="planner-section__blurb">{section.blurb}</p>}
                   {section.id === 'basics' && <BasicsCard basics={basics} />}
-                  {section.fields.map((field) => (
-                    <FieldControl
-                      key={field.key}
-                      field={field}
-                      value={fields[field.key] ?? ''}
-                      services={services}
-                      onChange={(value) => updateField(field.key, value)}
-                    />
-                  ))}
+                  {section.id === 'venue-questions' && (
+                    <p className="planner-callout">
+                      <span className="planner-callout__mark" aria-hidden="true">
+                        !
+                      </span>
+                      <span>
+                        These are some good questions to ask during your next visit to your venue or during your
+                        next conversation with the venue.
+                      </span>
+                    </p>
+                  )}
+                  {section.id === 'timeline' && (
+                    <div className="planner-pdf">
+                      {timelinePdf && (
+                        <p>
+                          {timelinePdf.url ? (
+                            <a href={timelinePdf.url} target="_blank" rel="noopener noreferrer">
+                              {timelinePdf.name}
+                            </a>
+                          ) : (
+                            timelinePdf.name
+                          )}
+                        </p>
+                      )}
+                      <label className={`planner-pdf__pick${uploadingTimeline ? ' is-disabled' : ''}`}>
+                        {timelinePdf ? 'Replace PDF' : 'Add PDF'}
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          disabled={uploadingTimeline}
+                          onChange={onTimelineFile}
+                        />
+                      </label>
+                      {timelineMessage && <p className="planner-pdf__error">{timelineMessage}</p>}
+                    </div>
+                  )}
+                  {section.fields.map((field) =>
+                    field.kind === 'floorplan' ? (
+                      <div className="planner-pdf" key={field.key}>
+                        <p className="planner-dance__label">{field.label}</p>
+                        {floorPlan && (
+                          <p>
+                            {floorPlan.url ? (
+                              <a href={floorPlan.url} target="_blank" rel="noopener noreferrer">
+                                {floorPlan.name}
+                              </a>
+                            ) : (
+                              floorPlan.name
+                            )}
+                          </p>
+                        )}
+                        <label className={`planner-pdf__pick${uploadingFloorPlan ? ' is-disabled' : ''}`}>
+                          {floorPlan ? 'Replace PDF' : 'Add PDF'}
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            disabled={uploadingFloorPlan}
+                            onChange={onFloorPlan}
+                          />
+                        </label>
+                        {floorPlanMessage && <p className="planner-pdf__error">{floorPlanMessage}</p>}
+                      </div>
+                    ) : (
+                      <Fragment key={field.key}>
+                        <FieldControl
+                          field={field}
+                          value={fields[field.key] ?? ''}
+                          services={services}
+                          onChange={(value) => updateField(field.key, value)}
+                        />
+                        {field.key === 'IG handle' && (
+                          <p className="planner-ig-link">
+                            <a href="https://instagram.com/andershyattmusic" target="_blank" rel="noopener noreferrer">
+                              Connect with Anders on Instagram!
+                            </a>
+                          </p>
+                        )}
+                      </Fragment>
+                    ),
+                  )}
                 </section>
               ))}
 
