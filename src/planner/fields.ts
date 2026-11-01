@@ -299,9 +299,9 @@ export const EMPTY_BASICS: PlannerBasics = {
 
 export const BOOKED_FIELD = 'Who did you book?'
 
-export const TIMELINE_PREFILL = `Sample timeline - edit as much as you'd like & DELETE this top line after you begin editing
+export const TIMELINE_HEADER = 'Sample timeline - edit as much as you\'d like & DELETE this top line after you begin editing'
 
-X:XX - Guest arrival
+export const TIMELINE_PREFILL = `X:XX - Guest arrival
 X:XX - Ceremony
 X:XX - Cocktail hour
 X:XX - Reception room opens, introductions, first dance
@@ -311,6 +311,15 @@ X:XX - Parent dances, group photo
 X:XX - Open dance floor
 X:XX - Cake cutting, dessert stations open
 X:XX - End`
+
+/** Drop the retired instruction line, and the blank line under it, without editing the rest. */
+export function stripOldTimelineHeader(value: string): string {
+  if (!value.startsWith(TIMELINE_HEADER)) return value
+  let rest = value.slice(TIMELINE_HEADER.length)
+  rest = rest.replace(/^(?:\r\n|\n)/, '')
+  rest = rest.replace(/^(?:\r\n|\n)/, '')
+  return rest
+}
 
 export const LOCKED_BASICS_KEYS = new Set([
   'Names',

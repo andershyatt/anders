@@ -14,6 +14,7 @@ import {
   resolveBasics,
   servicesFromPreview,
   TIMELINE_PREFILL,
+  stripOldTimelineHeader,
   visibleSections,
   type BookedServices,
   type PlannerBasics,
@@ -372,7 +373,16 @@ function FieldControl({
   if (field.kind === 'textarea') {
     return (
       <label className="planner-field" htmlFor={id}>
-        <span>{field.label}</span>
+        <span>
+          {field.key === 'Timeline' ? (
+            <>
+              Timeline
+              <span className="planner-field__aside"> — sample timeline below, edit as needed</span>
+            </>
+          ) : (
+            field.label
+          )}
+        </span>
         <textarea
           id={id}
           rows={
@@ -443,8 +453,9 @@ export default function PlannerApp() {
         return
       }
       const next = coerceFields(plannerFieldKeys, result.fields)
+      const strippedTimeline = stripOldTimelineHeader(next.Timeline)
       const timelineEmpty = next.Timeline.trim() === ''
-      if (timelineEmpty) next.Timeline = TIMELINE_PREFILL
+      next.Timeline = timelineEmpty ? TIMELINE_PREFILL : strippedTimeline
       timelineWasEmpty.current = timelineEmpty
       const bookedServices = previewServices ?? result.services
       const musicChoices = cocktailMusicChoices(bookedServices)

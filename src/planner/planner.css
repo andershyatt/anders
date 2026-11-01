@@ -300,6 +300,16 @@
   margin: 0 0 0.9rem;
 }
 
+.planner-field span.planner-field__aside {
+  display: inline;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .planner-field__help {
   margin: -0.1rem 0 0.4rem;
   color: var(--color-muted);
