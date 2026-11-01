@@ -134,6 +134,57 @@
   margin: 0 0 0.9rem;
 }
 
+.planner-field__help {
+  margin: -0.1rem 0 0.4rem;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.planner-photo__frame {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 0.85rem;
+}
+
+.planner-photo__preview {
+  display: block;
+  width: min(100%, 320px);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.planner-photo__status {
+  margin: 0 0 0.75rem;
+}
+
+.planner-photo__status--error {
+  color: #8a2b2b;
+}
+
+.planner-photo__pick {
+  position: relative;
+  cursor: pointer;
+}
+
+.planner-photo__pick input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.planner-photo__pick.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .planner-field span,
 .planner-field > label,
 .planner-dance__label,

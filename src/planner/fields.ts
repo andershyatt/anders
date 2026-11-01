@@ -5,6 +5,7 @@ export interface PlannerField {
   label: string
   kind: FieldKind
   placeholder?: string
+  help?: string
 }
 
 export interface PlannerSection {
@@ -82,6 +83,12 @@ export const plannerSections: PlannerSection[] = [
       { key: 'Bridal processional style', label: 'Bridal processional style', kind: 'style' },
       { key: 'Recessional song', label: 'Recessional song', kind: 'text' },
       { key: 'Recessional style', label: 'Recessional style', kind: 'style' },
+      {
+        key: 'Recessional cue',
+        label: 'Cue to start the recessional music',
+        kind: 'text',
+        help: "What's the last thing the officiant will say before we start the recessional? Usually the first kiss, or the pronouncement right after it.",
+      },
       { key: 'Live music requests', label: 'Live music requests', kind: 'textarea' },
     ],
   },
@@ -160,6 +167,7 @@ const LIVE_FIELDS = new Set([
   'Bridal processional style',
   'Recessional song',
   'Recessional style',
+  'Recessional cue',
   'Live music requests',
 ])
 
@@ -193,12 +201,17 @@ export function visibleSections(services: BookedServices): PlannerSection[] {
   })
 }
 
+/** Not a form field. Uploaded separately and never included in a normal save. */
+export const COUPLE_PHOTO_FIELD = 'Couple photo'
+
 /** Hidden answers are omitted so a save does not wipe them with empty strings. */
 export function fieldsForSave(
   fields: Record<string, string>,
   services: BookedServices,
 ): Record<string, string> {
-  return Object.fromEntries(Object.entries(fields).filter(([key]) => fieldVisible(key, services)))
+  return Object.fromEntries(
+    Object.entries(fields).filter(([key]) => key !== COUPLE_PHOTO_FIELD && fieldVisible(key, services)),
+  )
 }
 
 /**
@@ -222,6 +235,26 @@ export function servicesFromPreview(search: string): BookedServices | null {
 }
 
 export const STYLE_OPTIONS = ['Instrumental', 'Vocals'] as const
+
+/** Ceremony style choices when the couple booked both live music and a DJ. */
+export const CEREMONY_STYLE_WITH_DJ = [
+  'Live - instrumental',
+  'Live - vocals',
+  'DJ - instrumental',
+  'DJ - vocals',
+] as const
+
+const CEREMONY_STYLE_KEYS = new Set([
+  'Wedding party processional style (instrumental/vocals)',
+  'Bridal processional style',
+  'Recessional style',
+])
+
+export function ceremonyStyleOptions(key: string, services: BookedServices): readonly string[] {
+  if (CEREMONY_STYLE_KEYS.has(key) && services.live && services.dj) return CEREMONY_STYLE_WITH_DJ
+  return STYLE_OPTIONS
+}
+
 export const YES_NO_OPTIONS = ['Yes', 'No'] as const
 export const DANCE_PERFORMANCE = ['Live', 'DJ'] as const
 export const DANCE_LENGTH = ['Full', 'Shortened'] as const

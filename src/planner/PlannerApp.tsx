@@ -3,9 +3,10 @@ import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner } from './api
 import {
   DANCE_LENGTH,
   DANCE_PERFORMANCE,
-  STYLE_OPTIONS,
   YES_NO_OPTIONS,
+  ceremonyStyleOptions,
   ALL_SERVICES,
+  COUPLE_PHOTO_FIELD,
   fieldsForSave,
   plannerFieldKeys,
   servicesFromPreview,
@@ -24,6 +25,7 @@ import {
   parseDanceFormat,
   toIsoDate,
 } from './format'
+import CouplePhoto from './CouplePhoto'
 import VenueField from './VenueField'
 import './planner.css'
 
@@ -73,25 +75,36 @@ function ChoiceGroup({
   )
 }
 
+function choicesWithSaved(options: readonly string[], value: string): string[] {
+  const saved = value.trim()
+  if (!saved) return [...options]
+  const known = options.some((option) => option.toLowerCase() === saved.toLowerCase())
+  return known ? [...options] : [saved, ...options]
+}
+
 function FieldControl({
   field,
   value,
+  services,
   onChange,
 }: {
   field: PlannerField
   value: string
+  services: BookedServices
   onChange: (next: string) => void
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
 
   if (field.kind === 'style' || field.kind === 'yesno') {
-    const options = field.kind === 'yesno' ? YES_NO_OPTIONS : STYLE_OPTIONS
+    const base = field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services)
+    const options = choicesWithSaved(base, value)
+    const selected = options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? ''
     return (
       <ChoiceGroup
         name={id}
         legend={field.label}
         options={options}
-        value={options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? ''}
+        value={selected}
         onChange={onChange}
       />
     )
@@ -163,17 +176,18 @@ function FieldControl({
   }
 
   return (
-    <label className="planner-field" htmlFor={id}>
-      <span>{field.label}</span>
-      <input
-        id={id}
-        type="text"
-        value={value}
-        placeholder={field.placeholder}
-        autoComplete="off"
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </label>
+      <label className="planner-field" htmlFor={id}>
+        <span>{field.label}</span>
+        {field.help && <p className="planner-field__help">{field.help}</p>}
+        <input
+          id={id}
+          type="text"
+          value={value}
+          placeholder={field.placeholder}
+          autoComplete="off"
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </label>
   )
 }
 
@@ -185,6 +199,8 @@ export default function PlannerApp() {
   const [couple, setCouple] = useState({ names: '', date: '', venue: '' })
   const [fields, setFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
+  const [couplePhoto, setCouplePhoto] = useState('')
+  const [couplePhotoUrl, setCouplePhotoUrl] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | number | undefined>(undefined)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
@@ -208,6 +224,9 @@ export default function PlannerApp() {
         date: result.couple.date ?? '',
         venue: result.couple.venue ?? '',
       })
+      const photo = result.fields[COUPLE_PHOTO_FIELD]
+      setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
+      setCouplePhotoUrl(result.photo?.dataUrl ?? null)
       setFields(next)
       setSavedFields(next)
       setServices(previewServices ?? result.services)
@@ -294,6 +313,8 @@ export default function PlannerApp() {
               </p>
             </header>
 
+            <CouplePhoto token={token} savedValue={couplePhoto} savedDataUrl={couplePhotoUrl} />
+
             <nav className="planner-jump" aria-label="Planner sections">
               {sections.map((section) => (
                 <a key={section.id} href={`#${section.id}`}>
@@ -330,6 +351,7 @@ export default function PlannerApp() {
                         key={field.key}
                         field={field}
                         value={fields[field.key] ?? ''}
+                        services={services}
                         onChange={(value) => updateField(field.key, value)}
                       />
                     ),
