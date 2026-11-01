@@ -8,6 +8,7 @@ import {
   ALL_SERVICES,
   COUPLE_PHOTO_FIELD,
   EMPTY_BASICS,
+  cocktailMusicChoices,
   fieldsForSave,
   plannerFieldKeys,
   resolveBasics,
@@ -29,6 +30,7 @@ import {
   parseDanceFormat,
   toIsoDate,
 } from './format'
+import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
 import SongField from './SongField'
 import WelcomeInfo from './WelcomeInfo'
@@ -373,7 +375,15 @@ function FieldControl({
         <span>{field.label}</span>
         <textarea
           id={id}
-          rows={field.key === 'Timeline' ? 12 : field.key === 'Notes' || field.key === 'Basic notes' ? 6 : 4}
+          rows={
+            field.key === 'Timeline'
+              ? 12
+              : field.key === 'Cocktail hour timing notes'
+                ? 3
+                : field.key === 'Notes' || field.key === 'Basic notes' || field.key === 'Cocktail hour vibe'
+                  ? 6
+                  : 4
+          }
           value={value}
           placeholder={field.placeholder}
           onChange={(event) => onChange(event.target.value)}
@@ -436,6 +446,9 @@ export default function PlannerApp() {
       const timelineEmpty = next.Timeline.trim() === ''
       if (timelineEmpty) next.Timeline = TIMELINE_PREFILL
       timelineWasEmpty.current = timelineEmpty
+      const bookedServices = previewServices ?? result.services
+      const musicChoices = cocktailMusicChoices(bookedServices)
+      if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
       const loadedBasics = resolveBasics(result.basics, result.fields, result.couple)
       const photo = result.fields[COUPLE_PHOTO_FIELD]
       setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
@@ -445,7 +458,7 @@ export default function PlannerApp() {
       setBasics(loadedBasics)
       setFields(next)
       setSavedFields(next)
-      setServices(previewServices ?? result.services)
+      setServices(bookedServices)
       setLastUpdated(result.lastUpdated)
       setStatus({ kind: 'ready' })
     })
@@ -690,6 +703,34 @@ export default function PlannerApp() {
                         </label>
                         {floorPlanMessage && <p className="planner-pdf__error">{floorPlanMessage}</p>}
                       </div>
+                    ) : field.kind === 'cocktail-songs' ? (
+                      <CocktailSongs
+                        key={field.key}
+                        label={field.label}
+                        value={fields[field.key] ?? ''}
+                        onChange={(value) => updateField(field.key, value)}
+                      />
+                    ) : field.key === 'Cocktail hour music type' ? (
+                      <Fragment key={field.key}>
+                        <p className="planner-callout">
+                          <span className="planner-callout__mark" aria-hidden="true">
+                            !
+                          </span>
+                          <span>
+                            Cocktail hour music is typically more upbeat, but not quite dance party energy. This is a
+                            great time to fit in songs you love that aren&apos;t dancefloor-friendly.
+                          </span>
+                        </p>
+                        {cocktailMusicChoices(services).length > 1 && (
+                          <ChoiceGroup
+                            name={`field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`}
+                            legend={field.label}
+                            options={cocktailMusicChoices(services)}
+                            value={fields[field.key] ?? ''}
+                            onChange={(value) => updateField(field.key, value)}
+                          />
+                        )}
+                      </Fragment>
                     ) : (
                       <Fragment key={field.key}>
                         <FieldControl
