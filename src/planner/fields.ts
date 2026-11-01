@@ -511,13 +511,14 @@ export function fieldsForSave(
   fields: Record<string, string>,
   services: BookedServices,
 ): Record<string, string> {
+  const normalized = applyDjCeremonyStyleLabels(fields, services)
   return Object.fromEntries(
-    Object.entries(fields).filter(
+    Object.entries(normalized).filter(
       ([key]) =>
         key !== COUPLE_PHOTO_FIELD &&
         key !== FLOOR_PLAN_FIELD &&
         !LOCKED_BASICS_KEYS.has(key) &&
-        fieldAnswerVisible(key, services, fields),
+        fieldAnswerVisible(key, services, normalized),
     ),
   )
 }
@@ -553,14 +554,42 @@ export const CEREMONY_STYLE_WITH_DJ = [
   'DJ - vocals',
 ] as const
 
-/** DJ-only couples keep the recorded options. Live vocal and instrumental choices stay hidden. */
-export const CEREMONY_STYLE_DJ_ONLY = ['DJ - instrumental', 'DJ - vocals'] as const
+/** DJ-only couples already know the music is DJ'd, so the prefix is left off. */
+export const CEREMONY_STYLE_DJ_ONLY = ['Instrumental', 'Vocals'] as const
 
 const CEREMONY_STYLE_KEYS = new Set([
   'Wedding party processional style (instrumental/vocals)',
   'Bridal processional style',
   'Recessional style',
 ])
+
+const DJ_CEREMONY_STYLE_ALIASES: Record<string, (typeof CEREMONY_STYLE_DJ_ONLY)[number]> = {
+  'dj - instrumental': 'Instrumental',
+  'dj - vocals': 'Vocals',
+}
+
+/** Older DJ-only saves used the prefixed labels. Those are the same choices as the short labels. */
+export function ceremonyStyleValue(key: string, value: string, services: BookedServices): string {
+  if (services.live || !services.dj || !CEREMONY_STYLE_KEYS.has(key)) return value
+  return DJ_CEREMONY_STYLE_ALIASES[value.trim().toLowerCase()] ?? value
+}
+
+/** Rewrite prefixed DJ-only ceremony answers so the form matches the labels it shows. */
+export function applyDjCeremonyStyleLabels(
+  fields: Record<string, string>,
+  services: BookedServices,
+): Record<string, string> {
+  if (services.live || !services.dj) return fields
+  let copy: Record<string, string> | null = null
+  for (const key of CEREMONY_STYLE_KEYS) {
+    const current = fields[key] ?? ''
+    const mapped = ceremonyStyleValue(key, current, services)
+    if (mapped === current) continue
+    if (!copy) copy = { ...fields }
+    copy[key] = mapped
+  }
+  return copy ?? fields
+}
 
 export function ceremonyStyleOptions(key: string, services: BookedServices): readonly string[] {
   if (!CEREMONY_STYLE_KEYS.has(key)) return STYLE_OPTIONS

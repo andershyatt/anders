@@ -5,6 +5,8 @@ import {
   DANCE_PERFORMANCE,
   YES_NO_OPTIONS,
   ceremonyStyleOptions,
+  ceremonyStyleValue,
+  applyDjCeremonyStyleLabels,
   ALL_SERVICES,
   COUPLE_PHOTO_FIELD,
   EMPTY_BASICS,
@@ -152,13 +154,14 @@ function FieldControl({
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
 
   if (field.kind === 'style' || field.kind === 'yesno') {
+    const answer = field.kind === 'style' ? ceremonyStyleValue(field.key, value, services) : value
     const base = field.options ?? (field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services))
     const known =
       field.key === 'Internet access'
-        ? (base.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
-        : (base.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
-    const options = field.key === 'Internet access' ? [...base] : choicesWithSaved(base, value)
-    const selected = field.key === 'Internet access' ? known : (options.find((option) => option.toLowerCase() === value.trim().toLowerCase()) ?? '')
+        ? (base.find((option) => option.toLowerCase() === answer.trim().toLowerCase()) ?? '')
+        : (base.find((option) => option.toLowerCase() === answer.trim().toLowerCase()) ?? '')
+    const options = field.key === 'Internet access' ? [...base] : choicesWithSaved(base, answer)
+    const selected = field.key === 'Internet access' ? known : (options.find((option) => option.toLowerCase() === answer.trim().toLowerCase()) ?? '')
     const legacy = field.key === 'Internet access' && value.trim() && !known ? value.trim() : ''
     return (
       <div>
@@ -370,6 +373,7 @@ export default function PlannerApp() {
       const bookedServices = previewServices ?? result.services
       const musicChoices = cocktailMusicChoices(bookedServices)
       if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
+      const ready = applyDjCeremonyStyleLabels(next, bookedServices)
       const loadedBasics = resolveBasics(result.basics, result.fields, result.couple)
       const photo = result.fields[COUPLE_PHOTO_FIELD]
       setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
@@ -377,8 +381,8 @@ export default function PlannerApp() {
       setFloorPlan(result.floorPlan)
       setTimelinePdf(result.timelinePdf)
       setBasics(loadedBasics)
-      setFields(next)
-      setSavedFields(next)
+      setFields(ready)
+      setSavedFields(ready)
       setServices(bookedServices)
       setLastUpdated(result.lastUpdated)
       setStatus({ kind: 'ready' })
