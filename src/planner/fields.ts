@@ -1,4 +1,4 @@
-export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date'
+export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'rating'
 
 export interface PlannerField {
   key: string
@@ -23,12 +23,34 @@ export const plannerSections: PlannerSection[] = [
     fields: [
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
       {
+        key: 'Wedding website password',
+        label: 'Wedding website password (if needed)',
+        kind: 'text',
+      },
+      {
         key: 'Social media permission',
         label:
           'Can we share tasteful photos or videos from your wedding on our social media accounts for promotional purposes?',
         kind: 'yesno',
       },
       { key: 'IG handle', label: 'IG handle', kind: 'text', placeholder: '@' },
+      {
+        key: 'High school graduation year(s)',
+        label: 'What year(s) did the couple graduate high school?',
+        kind: 'text',
+      },
+      { key: 'Wedding colors', label: 'Wedding colors?', kind: 'text' },
+      {
+        key: 'Crowd party rating',
+        label: "Rate your crowd on a scale of 1–10 (1 doesn't like to party / 10 loves to party)",
+        kind: 'rating',
+      },
+      {
+        key: 'Basic notes',
+        label: 'Notes',
+        kind: 'textarea',
+        placeholder: "Anything else you'd like us to know",
+      },
     ],
   },
   {
@@ -46,6 +68,13 @@ export const plannerSections: PlannerSection[] = [
       { key: 'Photographer', label: 'Photographer', kind: 'text' },
       { key: 'Videographer', label: 'Videographer', kind: 'text' },
     ],
+  },
+  {
+    id: 'timeline',
+    title: 'Timeline',
+    blurb:
+      "Please provide your timeline in as much detail as possible. You may upload a PDF or put it in the notes section. You can start by drafting a rough or estimated timeline of events in the notes below, which can be finalized closer to the wedding. We're also happy to provide suggestions for the order of events tailored to your specific needs and preferences.",
+    fields: [{ key: 'Timeline', label: 'Timeline', kind: 'textarea' }],
   },
   {
     id: 'photo-booth',
@@ -91,7 +120,6 @@ export const plannerSections: PlannerSection[] = [
     fields: [
       { key: 'Introductions', label: 'Introductions', kind: 'textarea' },
       { key: 'Toasts/speeches', label: 'Toasts/speeches', kind: 'textarea' },
-      { key: 'Timeline', label: 'Timeline', kind: 'textarea' },
       { key: 'Things to remember', label: 'Things to remember', kind: 'textarea' },
       { key: 'Songs to learn', label: 'Songs to learn', kind: 'textarea' },
     ],
@@ -167,6 +195,19 @@ export const EMPTY_BASICS: PlannerBasics = {
 }
 
 export const BOOKED_FIELD = 'Who did you book?'
+
+export const TIMELINE_PREFILL = `Sample timeline - edit as much as you'd like & DELETE this top line after you begin editing
+
+X:XX - Guest arrival
+X:XX - Ceremony
+X:XX - Cocktail hour
+X:XX - Reception room opens, introductions, first dance
+X:XX - First course, welcome toast
+X:XX - Entrees, speeches
+X:XX - Parent dances, group photo
+X:XX - Open dance floor
+X:XX - Cake cutting, dessert stations open
+X:XX - End`
 
 export const LOCKED_BASICS_KEYS = new Set([
   'Names',

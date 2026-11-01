@@ -13,6 +13,8 @@ export interface PlannerLoadSuccess {
   fields: Record<string, unknown>
   /** Null when an older backend omits `basics`. */
   basics: PlannerBasics | null
+  /** Uploaded timeline PDF, when the backend has one. */
+  timelinePdf: { name: string; url: string } | null
   services: BookedServices
   /** Inline image for the planner. Null when the couple has not sent one. */
   photo: { dataUrl: string } | null
@@ -87,6 +89,16 @@ function parseBasics(value: unknown): PlannerBasics | null {
   }
 }
 
+function parsePlannerFile(value: unknown): { name: string; url: string } | null {
+  if (value == null) return null
+  const record = asRecord(value)
+  if (!record) return null
+  const name = typeof record.name === 'string' ? record.name.trim() : ''
+  const url = typeof record.url === 'string' ? record.url.trim() : ''
+  if (!name && !url) return null
+  return { name: name || 'Timeline.pdf', url }
+}
+
 function parseLoadedPhoto(value: unknown): { dataUrl: string } | null {
   if (value == null) return null
   const record = asRecord(value)
@@ -114,6 +126,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     couple,
     fields,
     basics: parseBasics(record.basics),
+    timelinePdf: parsePlannerFile(record.timelinePdf),
     services: parseServices(record.services),
     photo: parseLoadedPhoto(record.photo),
     lastUpdated:
@@ -235,6 +248,36 @@ export async function uploadCouplePhoto(
     const parsed = parsePhotoUpload(await readJson(response))
     if (parsed) return parsed
     return { ok: false, error: 'server_error' }
+  } catch {
+    return { ok: false, error: 'server_error' }
+  }
+}
+
+export async function uploadTimelinePdf(
+  token: string,
+  file: { name: string; dataUrl: string },
+): Promise<{ ok: true; name: string; url: string } | PlannerFailure> {
+  try {
+    const response = await fetch(PLANNER_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'uploadTimeline',
+        c: token,
+        name: file.name,
+        dataUrl: file.dataUrl,
+      }),
+    })
+    const record = asRecord(await readJson(response))
+    if (!record || typeof record.ok !== 'boolean') return { ok: false, error: 'server_error' }
+    if (!record.ok) {
+      return { ok: false, error: typeof record.error === 'string' ? record.error : 'server_error' }
+    }
+    return {
+      ok: true,
+      name: typeof record.name === 'string' && record.name.trim() ? record.name : file.name,
+      url: typeof record.url === 'string' ? record.url : '',
+    }
   } catch {
     return { ok: false, error: 'server_error' }
   }

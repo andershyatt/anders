@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner } from './api'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadTimelinePdf } from './api'
 import {
   DANCE_LENGTH,
   DANCE_PERFORMANCE,
@@ -12,6 +12,7 @@ import {
   plannerFieldKeys,
   resolveBasics,
   servicesFromPreview,
+  TIMELINE_PREFILL,
   visibleSections,
   type BookedServices,
   type PlannerBasics,
@@ -29,6 +30,7 @@ import {
   toIsoDate,
 } from './format'
 import CouplePhoto from './CouplePhoto'
+import WelcomeInfo from './WelcomeInfo'
 import './planner.css'
 
 const LINK_MESSAGE = "This planner link doesn't look right, please check the link Anders sent you."
@@ -167,6 +169,30 @@ function FieldControl({
     )
   }
 
+  if (field.kind === 'rating') {
+    const scores = Array.from({ length: 10 }, (_, index) => String(index + 1))
+    return (
+      <div className="planner-rating">
+        <p className="planner-dance__label" id={`${id}-label`}>
+          {field.label}
+        </p>
+        <div className="planner-rating__row" role="radiogroup" aria-labelledby={`${id}-label`}>
+          {scores.map((score) => (
+            <button
+              key={score}
+              type="button"
+              className={value === score ? 'is-selected' : undefined}
+              aria-pressed={value === score}
+              onClick={() => onChange(score)}
+            >
+              {score}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   if (field.kind === 'date') {
     const iso = toIsoDate(value)
     const showRaw = value.trim() !== '' && !isIsoDate(value)
@@ -198,7 +224,7 @@ function FieldControl({
         <span>{field.label}</span>
         <textarea
           id={id}
-          rows={field.key === 'Notes' || field.key === 'Timeline' ? 6 : 4}
+          rows={field.key === 'Timeline' ? 12 : field.key === 'Notes' || field.key === 'Basic notes' ? 6 : 4}
           value={value}
           placeholder={field.placeholder}
           onChange={(event) => onChange(event.target.value)}
@@ -233,6 +259,10 @@ export default function PlannerApp() {
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [couplePhoto, setCouplePhoto] = useState('')
   const [couplePhotoUrl, setCouplePhotoUrl] = useState<string | null>(null)
+  const [timelinePdf, setTimelinePdf] = useState<{ name: string; url: string } | null>(null)
+  const [timelineMessage, setTimelineMessage] = useState('')
+  const [uploadingTimeline, setUploadingTimeline] = useState(false)
+  const timelineWasEmpty = useRef(false)
   const [lastUpdated, setLastUpdated] = useState<string | number | undefined>(undefined)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
@@ -251,10 +281,14 @@ export default function PlannerApp() {
         return
       }
       const next = coerceFields(plannerFieldKeys, result.fields)
+      const timelineEmpty = next.Timeline.trim() === ''
+      if (timelineEmpty) next.Timeline = TIMELINE_PREFILL
+      timelineWasEmpty.current = timelineEmpty
       const loadedBasics = resolveBasics(result.basics, result.fields, result.couple)
       const photo = result.fields[COUPLE_PHOTO_FIELD]
       setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
       setCouplePhotoUrl(result.photo?.dataUrl ?? null)
+      setTimelinePdf(result.timelinePdf)
       setBasics(loadedBasics)
       setFields(next)
       setSavedFields(next)
@@ -284,12 +318,52 @@ export default function PlannerApp() {
     setSaveMessage('')
   }, [])
 
+  const onTimelineFile = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      event.target.value = ''
+      if (!file || !token) return
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+      if (!isPdf) {
+        setTimelineMessage('Please choose a PDF.')
+        return
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setTimelineMessage('Please choose a PDF under 10 MB.')
+        return
+      }
+      setUploadingTimeline(true)
+      setTimelineMessage('')
+      const reader = new FileReader()
+      reader.onload = () => {
+        const dataUrl = typeof reader.result === 'string' ? reader.result : ''
+        void uploadTimelinePdf(token, { name: file.name, dataUrl }).then((result) => {
+          setUploadingTimeline(false)
+          if (!result.ok) {
+            setTimelineMessage("We couldn't upload that PDF. Please try again.")
+            return
+          }
+          setTimelinePdf({ name: result.name, url: result.url })
+          setTimelineMessage('')
+        })
+      }
+      reader.onerror = () => {
+        setUploadingTimeline(false)
+        setTimelineMessage("We couldn't read that PDF. Please try again.")
+      }
+      reader.readAsDataURL(file)
+    },
+    [token],
+  )
+
   const onSave = useCallback(async () => {
     if (!token || saving) return
     setSaving(true)
     setSaveFailed(false)
     setSaveMessage('')
-    const result = await savePlanner(token, fieldsForSave(fields, services))
+    const payload = fieldsForSave(fields, services)
+    if (timelineWasEmpty.current && fields.Timeline === TIMELINE_PREFILL) delete payload.Timeline
+    const result = await savePlanner(token, payload)
     setSaving(false)
     if (!result.ok) {
       setSaveFailed(true)
@@ -341,6 +415,8 @@ export default function PlannerApp() {
               meta={welcomeBits.join(' · ')}
             />
 
+            <WelcomeInfo live={services.live} dj={services.dj} />
+
             <nav className="planner-jump" aria-label="Planner sections">
               {sections.map((section) => (
                 <a key={section.id} href={`#${section.id}`}>
@@ -361,14 +437,47 @@ export default function PlannerApp() {
                   <h2>{section.title}</h2>
                   <p className="planner-section__blurb">{section.blurb}</p>
                   {section.id === 'basics' && <BasicsCard basics={basics} />}
+                  {section.id === 'timeline' && (
+                    <div className="planner-pdf">
+                      {timelinePdf && (
+                        <p>
+                          {timelinePdf.url ? (
+                            <a href={timelinePdf.url} target="_blank" rel="noopener noreferrer">
+                              {timelinePdf.name}
+                            </a>
+                          ) : (
+                            timelinePdf.name
+                          )}
+                        </p>
+                      )}
+                      <label className={`planner-pdf__pick${uploadingTimeline ? ' is-disabled' : ''}`}>
+                        {timelinePdf ? 'Replace PDF' : 'Add PDF'}
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          disabled={uploadingTimeline}
+                          onChange={onTimelineFile}
+                        />
+                      </label>
+                      {timelineMessage && <p className="planner-pdf__error">{timelineMessage}</p>}
+                    </div>
+                  )}
                   {section.fields.map((field) => (
-                    <FieldControl
-                      key={field.key}
-                      field={field}
-                      value={fields[field.key] ?? ''}
-                      services={services}
-                      onChange={(value) => updateField(field.key, value)}
-                    />
+                    <Fragment key={field.key}>
+                      <FieldControl
+                        field={field}
+                        value={fields[field.key] ?? ''}
+                        services={services}
+                        onChange={(value) => updateField(field.key, value)}
+                      />
+                      {field.key === 'IG handle' && (
+                        <p className="planner-ig-link">
+                          <a href="https://instagram.com/andershyattmusic" target="_blank" rel="noopener noreferrer">
+                            Connect with Anders on Instagram!
+                          </a>
+                        </p>
+                      )}
+                    </Fragment>
                   ))}
                 </section>
               ))}

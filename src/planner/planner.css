@@ -176,6 +176,125 @@
   line-height: 1.45;
 }
 
+.planner-welcome-info {
+  margin: 0 0 1rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+}
+
+.planner-welcome-info__toggle {
+  display: block;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent-dark);
+  font-family: var(--font-nav);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.planner-welcome-info__body {
+  padding: 0 1rem 1rem;
+}
+
+.planner-welcome-info__body h2 {
+  margin: 0.9rem 0 0.35rem;
+  color: var(--color-accent-dark);
+  font-family: var(--font-nav);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.planner-welcome-info__body h2:first-child {
+  margin-top: 0;
+}
+
+.planner-welcome-info__body p {
+  margin: 0 0 0.65rem;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.planner-welcome-info__schedule {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.planner-ig-link {
+  margin: -0.35rem 0 0.9rem;
+  font-size: 14px;
+}
+
+.planner-rating__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.planner-rating__row button {
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  font: inherit;
+  cursor: pointer;
+}
+
+.planner-rating__row button.is-selected {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.planner-pdf {
+  margin: 0 0 0.9rem;
+}
+
+.planner-pdf p {
+  margin: 0 0 0.45rem;
+}
+
+.planner-pdf__pick {
+  position: relative;
+  display: inline-block;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent-dark);
+  font-family: var(--font-nav);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.planner-pdf__pick input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.planner-pdf__pick.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.planner-pdf__error {
+  margin: 0.45rem 0 0;
+  color: #8a2b2b;
+  font-size: 13px;
+}
+
 .planner-field {
   display: block;
   margin: 0 0 0.9rem;
