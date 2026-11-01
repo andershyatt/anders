@@ -1,4 +1,18 @@
-export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'choice-other' | 'floorplan' | 'rating' | 'cocktail-songs'
+import { LIVE_DJ_EXTRA, liveDjCeremony, liveDjCocktail, liveDjReception } from './liveDj'
+
+export type FieldKind =
+  | 'text'
+  | 'textarea'
+  | 'style'
+  | 'dance'
+  | 'yesno'
+  | 'date'
+  | 'choice-other'
+  | 'floorplan'
+  | 'rating'
+  | 'cocktail-songs'
+  | 'checks'
+  | 'songlist'
 
 export interface PlannerField {
   key: string
@@ -9,6 +23,13 @@ export interface PlannerField {
   options?: readonly string[]
   /** single replaces the field; list replaces only the current line or comma entry. */
   song?: 'single' | 'list'
+  heading?: string
+  note?: string
+  callout?: string
+  image?: 'chauvet'
+  stack?: boolean
+  maxSongs?: number
+  maxMustPlays?: number
 }
 
 export interface PlannerSection {
@@ -35,7 +56,7 @@ export const plannerSections: PlannerSection[] = [
   {
     id: 'basics',
     title: 'Basics',
-    blurb: 'The details Anders needs to find your day on the calendar.',
+    blurb: '',
     fields: [
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
       {
@@ -52,7 +73,7 @@ export const plannerSections: PlannerSection[] = [
       { key: 'IG handle', label: 'IG handle', kind: 'text', placeholder: '@' },
       {
         key: 'High school graduation year(s)',
-        label: 'What year(s) did the couple graduate high school?',
+        label: 'What year(s) did you graduate high school?',
         kind: 'text',
       },
       { key: 'Wedding colors', label: 'Wedding colors?', kind: 'text' },
@@ -280,9 +301,10 @@ export const plannerSections: PlannerSection[] = [
   },
 ]
 
-export const plannerFieldKeys: string[] = plannerSections.flatMap((section) =>
-  section.fields.map((field) => field.key),
-)
+export const plannerFieldKeys: string[] = [
+  ...plannerSections.flatMap((section) => section.fields.map((field) => field.key)),
+  ...LIVE_DJ_EXTRA.map((field) => field.key),
+]
 
 /** Shown on the Basics card. Couples cannot edit these, and saves omit them. */
 export interface PlannerBasics {
@@ -441,6 +463,21 @@ const COCKTAIL_FIELDS = new Set([
   'Cocktail hour songs',
 ])
 
+const LIVE_DJ_ONLY = new Set(LIVE_DJ_EXTRA.map((field) => field.key))
+
+const YES_GATED: Record<string, string> = {
+  'First dance start cue': 'First dance choreographed',
+  'First dance stop cue': 'First dance choreographed',
+  'Father of the bride start cue': 'Father of the bride dance choreographed',
+  'Father of the bride stop cue': 'Father of the bride dance choreographed',
+  'Mother of the groom start cue': 'Mother of the groom dance choreographed',
+  'Mother of the groom stop cue': 'Mother of the groom dance choreographed',
+}
+
+function answerIsYes(fields: Record<string, string>, key: string): boolean {
+  return (fields[key] ?? '').trim().toLowerCase() === 'yes'
+}
+
 export const COCKTAIL_MUSIC_LIVE = 'Live music'
 export const COCKTAIL_MUSIC_DJ = "DJ'ed music"
 export const COCKTAIL_MUSIC_MIX = "A mixture of Live & DJ'ed music"
@@ -455,6 +492,8 @@ export function cocktailMusicChoices(services: BookedServices): readonly string[
 }
 
 export function fieldVisible(key: string, services: BookedServices): boolean {
+  if (key === 'Cocktail hour timing notes' && services.live && services.dj) return false
+  if (LIVE_DJ_ONLY.has(key)) return services.live && services.dj
   if (LIVE_FIELDS.has(key)) return services.live
   if (DJ_FIELDS.has(key)) return services.dj
   if (key.startsWith('Photo Booth')) return services.photobooth
@@ -485,18 +524,50 @@ export function fieldAnswerVisible(
   if (!fieldVisible(key, services)) return false
   if (key === WIFI_DETAILS_FIELD) return wifiDetailsVisible(fields)
   if (key === WEBSITE_PASSWORD_FIELD) return websitePasswordVisible(fields)
+  const gate = YES_GATED[key]
+  if (gate && !answerIsYes(fields, gate)) return false
+  if (key === 'Private last dance' && services.live && services.dj && !answerIsYes(fields, 'Private last dance wanted')) {
+    return false
+  }
   return true
 }
 
+function findPlannerField(key: string): PlannerField {
+  for (const section of plannerSections) {
+    const found = section.fields.find((field) => field.key === key)
+    if (found) return found
+  }
+  const extra = LIVE_DJ_EXTRA.find((field) => field.key === key)
+  if (extra) return extra
+  throw new Error(`Unknown planner field: ${key}`)
+}
+
+const LIVE_DJ_SKIP = new Set(['dances', 'dj', 'do-not-play'])
+
 /** Sections with every field hidden are dropped, so their headings are not shown. */
+function sectionWithVisibleFields(
+  section: PlannerSection,
+  services: BookedServices,
+  answers: Record<string, string>,
+): PlannerSection[] {
+  const fields = section.fields.filter((field) => fieldAnswerVisible(field.key, services, answers))
+  if (fields.length === 0) return []
+  return [{ ...section, fields }]
+}
+
 export function visibleSections(
   services: BookedServices,
   answers: Record<string, string> = {},
 ): PlannerSection[] {
+  if (!(services.live && services.dj)) {
+    return plannerSections.flatMap((section) => sectionWithVisibleFields(section, services, answers))
+  }
   return plannerSections.flatMap((section) => {
-    const fields = section.fields.filter((field) => fieldAnswerVisible(field.key, services, answers))
-    if (fields.length === 0) return []
-    return [{ ...section, fields }]
+    if (LIVE_DJ_SKIP.has(section.id)) return []
+    if (section.id === 'ceremony') return sectionWithVisibleFields(liveDjCeremony(findPlannerField), services, answers)
+    if (section.id === 'cocktail-hour') return sectionWithVisibleFields(liveDjCocktail(findPlannerField), services, answers)
+    if (section.id === 'reception') return sectionWithVisibleFields(liveDjReception(findPlannerField), services, answers)
+    return sectionWithVisibleFields(section, services, answers)
   })
 }
 

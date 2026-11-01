@@ -26,28 +26,6 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
       </button>
       {open && (
         <div className="planner-welcome-info__body">
-          <h2>Planning calls</h2>
-          <p>
-            We're happy to have as many planning calls as you'd like before the wedding. The app makes it easy
-            to collaborate, and it isn't meant to replace a real conversation. We recommend at least one call
-            to walk through the day and answer questions. Get in touch any time.
-          </p>
-          {PLANNING_CALL_URL && (
-            <p>
-              <a className="btn planner-welcome-info__schedule" href={PLANNING_CALL_URL} target="_blank" rel="noopener noreferrer">
-                Schedule a planning call
-              </a>
-            </p>
-          )}
-          <p>
-            Email <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-          </p>
-          <p>
-            For a quick or time-sensitive question, call{' '}
-            <a href={`tel:${PHONE}`}>{PHONE}</a> or text <a href={`sms:${PHONE}`}>{PHONE}</a>. If Anders
-            doesn't pick up, leave a voicemail or send a text and he'll get back to you as soon as he can.
-          </p>
-
           <h2>Make it yours</h2>
           <p>
             This flow is based on what we most commonly see, and every wedding is unique. It's fully
@@ -75,10 +53,30 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
                 For a must-play song that isn't in the repertoire, we're typically willing to learn up to three
                 new songs at no extra charge. Not every song is within our capabilities, but most are. Email
                 those requests to <a href={`mailto:${EMAIL}`}>{EMAIL}</a> at least one month before the wedding
-                so there's time to learn them well.
+                so there's time to learn them.
               </p>
             </>
           )}
+
+          <h2>Planning calls</h2>
+          <p>
+            We're happy to have as many planning calls as you'd like before the wedding. The app makes it easy
+            to collaborate, and it isn't meant to replace a real conversation. We recommend at least one call
+            to walk through the day and answer questions. Get in touch any time.
+          </p>
+          {PLANNING_CALL_URL && (
+            <p>
+              <a className="btn planner-welcome-info__schedule" href={PLANNING_CALL_URL} target="_blank" rel="noopener noreferrer">
+                Schedule a planning call
+              </a>
+            </p>
+          )}
+          <p>
+            Email <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+          </p>
+          <p>
+            For a quick or time-sensitive question, you can text Anders at <a href={`sms:${PHONE}`}>{PHONE}</a>.
+          </p>
         </div>
       )}
     </section>

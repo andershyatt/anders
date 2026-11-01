@@ -5,8 +5,9 @@ import { PhotoTooLargeError, blobToBase64, prepareCouplePhoto } from './prepareP
 const REQUEST_TEXT =
   "We'd be delighted if you could share a photo of yourselves here on the app. While it's entirely optional, it adds a personal touch and helps us feel like we know you better during the planning process."
 
-const KICKER = 'Your wedding with Anders Hyatt Music'
-const LEAD = "Let's dive into the music. Start with what you know, and we'll fill in the rest along the way."
+const SUBTITLE = 'Wedding Music'
+const LEAD =
+  "Let's dive into the music! And all the logistical details. Start with what you know, and fill in the rest along the way. Save your changes and come back anytime."
 
 interface CouplePhotoProps {
   token: string
@@ -148,8 +149,8 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
           />
           <div className="planner-hero__shade">
             <div className="planner-hero__copy">
-              <p className="planner-kicker">{KICKER}</p>
               <h1>{title}</h1>
+              <p className="planner-subtitle">{SUBTITLE}</p>
               {meta && <p className="planner-meta">{meta}</p>}
             </div>
             {picker(
@@ -171,8 +172,8 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
   return (
     <>
       <header className="planner-welcome">
-        <p className="planner-kicker">{KICKER}</p>
         <h1>{title}</h1>
+        <p className="planner-subtitle">{SUBTITLE}</p>
         {meta && <p className="planner-meta">{meta}</p>}
         <p className="planner-lead">{LEAD}</p>
       </header>
