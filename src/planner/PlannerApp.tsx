@@ -30,6 +30,7 @@ import {
   toIsoDate,
 } from './format'
 import CouplePhoto from './CouplePhoto'
+import SongField from './SongField'
 import WelcomeInfo from './WelcomeInfo'
 import './planner.css'
 
@@ -218,6 +219,21 @@ function FieldControl({
     )
   }
 
+  if (field.song) {
+    return (
+      <SongField
+        id={id}
+        label={field.label}
+        help={field.help}
+        value={value}
+        multiline={field.song === 'list'}
+        placeholder={field.placeholder}
+        rows={field.key === 'Notes' || field.key === 'Timeline' ? 6 : 4}
+        onChange={onChange}
+      />
+    )
+  }
+
   if (field.kind === 'textarea') {
     return (
       <label className="planner-field" htmlFor={id}>
@@ -234,18 +250,18 @@ function FieldControl({
   }
 
   return (
-      <label className="planner-field" htmlFor={id}>
-        <span>{field.label}</span>
-        {field.help && <p className="planner-field__help">{field.help}</p>}
-        <input
-          id={id}
-          type="text"
-          value={value}
-          placeholder={field.placeholder}
-          autoComplete="off"
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </label>
+    <label className="planner-field" htmlFor={id}>
+      <span>{field.label}</span>
+      {field.help && <p className="planner-field__help">{field.help}</p>}
+      <input
+        id={id}
+        type="text"
+        value={value}
+        placeholder={field.placeholder}
+        autoComplete="off"
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
   )
 }
 

@@ -633,6 +633,14 @@
   }
 }
 
+.planner-venue {
+  position: relative;
+}
+
+.planner-venue:focus-within {
+  z-index: 25;
+}
+
 .planner-venue__control {
   position: relative;
 }
@@ -667,6 +675,26 @@
 .planner-venue__option.is-active,
 .planner-venue__option:hover {
   background: #f3f6ef;
+}
+
+.planner-song__option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.planner-song__art {
+  display: block;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 2px;
+  background: #ececec;
+}
+
+.planner-song__text {
+  min-width: 0;
 }
 
 .planner-venue__name {
