@@ -52,7 +52,7 @@ function BasicsCard({ basics }: { basics: PlannerBasics }) {
     { label: 'Start time', value: basics.startTime },
     { label: 'Length of service', value: basics.length },
     { label: 'Guest count', value: basics.guestCount },
-    { label: 'Who did you book?', value: basics.booked },
+    { label: 'Your team', value: basics.booked },
   ].filter((row) => row.value.trim() !== '')
 
   return (
