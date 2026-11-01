@@ -14,6 +14,8 @@ export interface PlannerLoadSuccess {
   services: BookedServices
   /** Inline image for the planner. Null when the couple has not sent one. */
   photo: { dataUrl: string } | null
+  /** Reception floor plan. Null when the couple has not sent one. */
+  floorPlan: { name: string; url: string } | null
   lastUpdated?: string | number
 }
 
@@ -60,7 +62,18 @@ function parseServices(value: unknown): BookedServices {
     live: record.live === true,
     dj: record.dj === true,
     photobooth: record.photobooth === true,
+    venueQuestions: record.venueQuestions === true,
   }
+}
+
+function parseFloorPlan(value: unknown): { name: string; url: string } | null {
+  if (value == null) return null
+  const record = asRecord(value)
+  if (!record) return null
+  const name = typeof record.name === 'string' ? record.name.trim() : ''
+  const url = typeof record.url === 'string' ? record.url.trim() : ''
+  if (!name && !url) return null
+  return { name: name || 'Floor plan.pdf', url }
 }
 
 function parseLoadedPhoto(value: unknown): { dataUrl: string } | null {
@@ -91,6 +104,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     fields,
     services: parseServices(record.services),
     photo: parseLoadedPhoto(record.photo),
+    floorPlan: parseFloorPlan(record.floorPlan),
     lastUpdated:
       typeof lastUpdated === 'string' || typeof lastUpdated === 'number' ? lastUpdated : undefined,
   }
@@ -210,6 +224,36 @@ export async function uploadCouplePhoto(
     const parsed = parsePhotoUpload(await readJson(response))
     if (parsed) return parsed
     return { ok: false, error: 'server_error' }
+  } catch {
+    return { ok: false, error: 'server_error' }
+  }
+}
+
+export async function uploadFloorPlan(
+  token: string,
+  file: { name: string; dataUrl: string },
+): Promise<{ ok: true; name: string; url: string } | PlannerFailure> {
+  try {
+    const response = await fetch(PLANNER_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'uploadFloorPlan',
+        c: token,
+        name: file.name,
+        dataUrl: file.dataUrl,
+      }),
+    })
+    const record = asRecord(await readJson(response))
+    if (!record || typeof record.ok !== 'boolean') return { ok: false, error: 'server_error' }
+    if (!record.ok) {
+      return { ok: false, error: typeof record.error === 'string' ? record.error : 'server_error' }
+    }
+    return {
+      ok: true,
+      name: typeof record.name === 'string' && record.name.trim() ? record.name : file.name,
+      url: typeof record.url === 'string' ? record.url : '',
+    }
   } catch {
     return { ok: false, error: 'server_error' }
   }
