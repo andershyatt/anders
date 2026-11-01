@@ -6,7 +6,7 @@ const REQUEST_TEXT =
   "We'd be delighted if you could share a photo of yourselves here on the app. While it's entirely optional, it adds a personal touch and helps us feel like we know you better during the planning process."
 
 const KICKER = 'Your wedding with Anders Hyatt Music'
-const LEAD = "Let's dive into the music. Start with what you know, and the rest can come together over time."
+const LEAD = "Let's dive into the music. Start with what you know, and we'll fill in the details along the way."
 
 interface CouplePhotoProps {
   token: string
