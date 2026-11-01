@@ -792,6 +792,104 @@
   min-width: 0;
 }
 
+.planner-songlist .planner-venue__control input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  background: var(--color-white);
+  color: var(--color-text);
+  font: inherit;
+  line-height: 1.45;
+}
+
+.planner-songlist__heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  align-items: baseline;
+}
+
+.planner-songlist__count {
+  margin: 0 0 0.45rem;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.planner-songlist__add {
+  margin-top: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent-dark);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.planner-songlist__message {
+  margin: 0.4rem 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.planner-songlist__rows {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.planner-songlist__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.35rem 0.65rem;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.planner-songlist__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.planner-songlist__actions button {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.planner-songlist__actions button.is-selected {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.planner-songlist__actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.planner-songlist__note {
+  grid-column: 1 / -1;
+}
+
+.planner-songlist__note input {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-border);
+  font: inherit;
+}
+
 .planner-venue__name {
   display: block;
   font-family: var(--font-nav);

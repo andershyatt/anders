@@ -1,4 +1,4 @@
-export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'choice-other' | 'floorplan' | 'rating'
+export type FieldKind = 'text' | 'textarea' | 'style' | 'dance' | 'yesno' | 'date' | 'choice-other' | 'floorplan' | 'rating' | 'cocktail-songs'
 
 export interface PlannerField {
   key: string
@@ -189,7 +189,31 @@ export const plannerSections: PlannerSection[] = [
         kind: 'text',
         help: "What's the last thing the officiant will say before we start the recessional? Usually the first kiss, or the pronouncement right after it.",
       },
-      { key: 'Live music requests', label: 'Live music requests', kind: 'textarea', song: 'list' },
+    ],
+  },
+  {
+    id: 'cocktail-hour',
+    title: 'Cocktail Hour',
+    blurb:
+      'Cocktail hour usually begins immediately after the ceremony. Add a note if your timing is different from that. Add your favorite songs below. You can also paste a Spotify or Apple Music playlist link in the notes.',
+    fields: [
+      {
+        key: 'Cocktail hour timing notes',
+        label: 'Timing notes (if different from usual)',
+        kind: 'textarea',
+      },
+      {
+        key: 'Cocktail hour music type',
+        label: 'What type of music would you like at your cocktail hour?',
+        kind: 'text',
+      },
+      {
+        key: 'Cocktail hour vibe',
+        label:
+          "If you don't have specific song requests, what type of vibe/genres would you like to hear? Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option!",
+        kind: 'textarea',
+      },
+      { key: 'Cocktail hour songs', label: 'Songs', kind: 'cocktail-songs' },
     ],
   },
   {
@@ -357,7 +381,6 @@ const LIVE_FIELDS = new Set([
   'Recessional song',
   'Recessional style',
   'Recessional cue',
-  'Live music requests',
 ])
 
 const DJ_FIELDS = new Set([
@@ -387,12 +410,33 @@ const VENUE_QUESTION_FIELDS = new Set([
   'Dinner location',
 ])
 
+const COCKTAIL_FIELDS = new Set([
+  'Cocktail hour timing notes',
+  'Cocktail hour music type',
+  'Cocktail hour vibe',
+  'Cocktail hour songs',
+])
+
+export const COCKTAIL_MUSIC_LIVE = 'Live music'
+export const COCKTAIL_MUSIC_DJ = "DJ'ed music"
+export const COCKTAIL_MUSIC_MIX = "A mixture of Live & DJ'ed music"
+export const COCKTAIL_MUSIC_OPTIONS = [COCKTAIL_MUSIC_LIVE, COCKTAIL_MUSIC_DJ, COCKTAIL_MUSIC_MIX] as const
+
+/** Choices to show. A single option means the question stays hidden and that value is stored. */
+export function cocktailMusicChoices(services: BookedServices): readonly string[] {
+  if (services.live && services.dj) return COCKTAIL_MUSIC_OPTIONS
+  if (services.live) return [COCKTAIL_MUSIC_LIVE]
+  if (services.dj) return [COCKTAIL_MUSIC_DJ]
+  return []
+}
+
 export function fieldVisible(key: string, services: BookedServices): boolean {
   if (LIVE_FIELDS.has(key)) return services.live
   if (DJ_FIELDS.has(key)) return services.dj
   if (key.startsWith('Photo Booth')) return services.photobooth
   if (LIVE_AND_DJ_FIELDS.has(key)) return services.live && services.dj
   if (VENUE_QUESTION_FIELDS.has(key)) return services.venueQuestions
+  if (COCKTAIL_FIELDS.has(key)) return services.live || services.dj
   return true
 }
 
