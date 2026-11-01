@@ -13,6 +13,8 @@ export type FieldKind =
   | 'cocktail-songs'
   | 'checks'
   | 'songlist'
+  | 'intro-songs'
+  | 'fold'
 
 export interface PlannerField {
   key: string
@@ -30,6 +32,13 @@ export interface PlannerField {
   stack?: boolean
   maxSongs?: number
   maxMustPlays?: number
+  /** Check-all questions. Defaults to showing Other. */
+  allowOther?: boolean
+  /** Song lists that open a full-screen picker instead of an inline editor. */
+  picker?: boolean
+  hideLabel?: boolean
+  /** Slim label used when a declined section is collapsed. */
+  foldLabel?: string
 }
 
 export interface PlannerSection {
@@ -478,6 +487,62 @@ function answerIsYes(fields: Record<string, string>, key: string): boolean {
   return (fields[key] ?? '').trim().toLowerCase() === 'yes'
 }
 
+function answerIsNo(fields: Record<string, string>, key: string): boolean {
+  return (fields[key] ?? '').trim().toLowerCase() === 'no'
+}
+
+/** Hidden only after an explicit No. A blank answer keeps the questions visible. */
+const HIDE_WHEN_NO: Record<string, string> = {
+  "Couple's first dance song": 'Having a first dance',
+  'First dance format (live/DJ, full/shortened)': 'Having a first dance',
+  'First dance choreographed': 'Having a first dance',
+  'First dance start cue': 'Having a first dance',
+  'First dance stop cue': 'Having a first dance',
+  'First dance fade out': 'Having a first dance',
+  'Father of the bride name': 'Having a father-daughter dance',
+  'Father/daughter dance song': 'Having a father-daughter dance',
+  'Father/daughter format': 'Having a father-daughter dance',
+  'Father of the bride dance choreographed': 'Having a father-daughter dance',
+  'Father of the bride start cue': 'Having a father-daughter dance',
+  'Father of the bride stop cue': 'Having a father-daughter dance',
+  'Father of the bride fade out': 'Having a father-daughter dance',
+  'Mother of the groom name': 'Having a mother-son dance',
+  'Mother/son dance song': 'Having a mother-son dance',
+  'Mother/son format': 'Having a mother-son dance',
+  'Mother of the groom dance choreographed': 'Having a mother-son dance',
+  'Mother of the groom start cue': 'Having a mother-son dance',
+  'Mother of the groom stop cue': 'Having a mother-son dance',
+  'Mother of the groom fade out': 'Having a mother-son dance',
+}
+
+const HIDE_WHEN_REMOVED: Record<string, string> = {
+  'Having a first dance': 'First dance section',
+  "Couple's first dance song": 'First dance section',
+  'First dance format (live/DJ, full/shortened)': 'First dance section',
+  'First dance choreographed': 'First dance section',
+  'First dance start cue': 'First dance section',
+  'First dance stop cue': 'First dance section',
+  'First dance fade out': 'First dance section',
+  'Having a father-daughter dance': 'Father-daughter section',
+  'Father of the bride name': 'Father-daughter section',
+  'Father/daughter dance song': 'Father-daughter section',
+  'Father/daughter format': 'Father-daughter section',
+  'Father of the bride dance choreographed': 'Father-daughter section',
+  'Father of the bride start cue': 'Father-daughter section',
+  'Father of the bride stop cue': 'Father-daughter section',
+  'Father of the bride fade out': 'Father-daughter section',
+  'Having a mother-son dance': 'Mother-son section',
+  'Mother of the groom name': 'Mother-son section',
+  'Mother/son dance song': 'Mother-son section',
+  'Mother/son format': 'Mother-son section',
+  'Mother of the groom dance choreographed': 'Mother-son section',
+  'Mother of the groom start cue': 'Mother-son section',
+  'Mother of the groom stop cue': 'Mother-son section',
+  'Mother of the groom fade out': 'Mother-son section',
+  'Private last dance wanted': 'Private last dance section',
+  'Private last dance': 'Private last dance section',
+}
+
 export const COCKTAIL_MUSIC_LIVE = 'Live music'
 export const COCKTAIL_MUSIC_DJ = "DJ'ed music"
 export const COCKTAIL_MUSIC_MIX = "A mixture of Live & DJ'ed music"
@@ -492,6 +557,7 @@ export function cocktailMusicChoices(services: BookedServices): readonly string[
 }
 
 export function fieldVisible(key: string, services: BookedServices): boolean {
+  if ((key === 'Songs to learn' || key === 'Things to remember') && services.live && services.dj) return false
   if (key === 'Cocktail hour timing notes' && services.live && services.dj) return false
   if (LIVE_DJ_ONLY.has(key)) return services.live && services.dj
   if (LIVE_FIELDS.has(key)) return services.live
@@ -529,7 +595,29 @@ export function fieldAnswerVisible(
   if (key === 'Private last dance' && services.live && services.dj && !answerIsYes(fields, 'Private last dance wanted')) {
     return false
   }
+  const declined = HIDE_WHEN_NO[key]
+  if (declined && answerIsNo(fields, declined)) return false
+  const removed = HIDE_WHEN_REMOVED[key]
+  if (removed && (fields[removed] ?? '').trim().toLowerCase() === 'removed') return false
   return true
+}
+
+/** A collapsed section still saves its No answer. The hidden details are left stored. */
+const FOLDED_ANSWER: Record<string, string> = {
+  'Having a first dance': 'First dance section',
+  'Having a father-daughter dance': 'Father-daughter section',
+  'Having a mother-son dance': 'Mother-son section',
+  'Private last dance wanted': 'Private last dance section',
+}
+
+export function fieldIncludedInSave(
+  key: string,
+  services: BookedServices,
+  fields: Record<string, string>,
+): boolean {
+  if (fieldAnswerVisible(key, services, fields)) return true
+  const fold = FOLDED_ANSWER[key]
+  return Boolean(fold && (fields[fold] ?? '').trim().toLowerCase() === 'removed')
 }
 
 function findPlannerField(key: string): PlannerField {
@@ -589,7 +677,7 @@ export function fieldsForSave(
         key !== COUPLE_PHOTO_FIELD &&
         key !== FLOOR_PLAN_FIELD &&
         !LOCKED_BASICS_KEYS.has(key) &&
-        fieldAnswerVisible(key, services, normalized),
+        fieldIncludedInSave(key, services, normalized),
     ),
   )
 }

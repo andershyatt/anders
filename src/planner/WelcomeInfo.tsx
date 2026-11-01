@@ -72,7 +72,7 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
             </p>
           )}
           <p>
-            Email <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+            Email: <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
           </p>
           <p>
             For a quick or time-sensitive question, you can text Anders at <a href={`sms:${PHONE}`}>{PHONE}</a>.

@@ -1,6 +1,23 @@
 import type { PlannerField, PlannerSection } from './fields'
 
-const PLAYLIST_NOTE = 'You can also paste a link to a Spotify or Apple Music playlist in this box.'
+export const PLAYLIST_NOTE = 'You can also paste a link to a Spotify or Apple Music playlist'
+export const PERFORMANCE_OPTIONS = ['Live', 'DJ', 'Mixture of both'] as const
+
+const PRE_CEREMONY_MUSIC_TYPE_OLD =
+  "We have some song requests/suggestions that we'll add to the 'Notes' portion of this section"
+const PRE_CEREMONY_MUSIC_TYPE_NEW = "We have some song requests/suggestions that we'll add below"
+
+/** Keep a previously chosen pre-ceremony option selected after the label was shortened. */
+export function applyPreCeremonyMusicTypeLabel(
+  fields: Record<string, string>,
+  services: { live: boolean; dj: boolean },
+): Record<string, string> {
+  if (!services.live || !services.dj) return fields
+  const key = 'Pre-ceremony music type'
+  const value = fields[key] ?? ''
+  if (!value.includes(PRE_CEREMONY_MUSIC_TYPE_OLD)) return fields
+  return { ...fields, [key]: value.replaceAll(PRE_CEREMONY_MUSIC_TYPE_OLD, PRE_CEREMONY_MUSIC_TYPE_NEW) }
+}
 
 const COCKTAIL_VIBE =
   "If you don't have specific song requests, what type of vibe/genres would you like to hear? Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option! " +
@@ -17,18 +34,19 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     label: 'What kind of performance would you like during this time?',
     kind: 'checks',
     heading: 'Pre-ceremony music / Guest arrival',
-    note: 'Music to be played pre-ceremony while guests arrive. Music will begin 30 minutes prior to ceremony start time.',
+    note: 'Music to be played before ceremony while guests arrive. Music typically begins up to 30 minutes prior to ceremony start time.',
     options: ['DJ playing music', 'Instrumental live music', 'Live music with vocals', 'Up to Anders'],
   },
   {
     key: 'Pre-ceremony music type',
     label: 'What type of music would you like during this time?',
     kind: 'checks',
-    note: 'Light instrumental covers of popular songs is what we typically do at this time, but we are open to suggestions.',
+    help: 'Light instrumental covers of popular songs is what we typically do at this time, but we are open to your input.',
+    allowOther: false,
     options: [
       'Light instrumental music sounds great!',
       "Live music with vocals - musician's choice",
-      "We have some song requests/suggestions that we'll add to the 'Notes' portion of this section",
+      "We have some song requests/suggestions that we'll add below",
     ],
   },
   {
@@ -61,7 +79,6 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     key: 'Father of the bride name',
     label: "Father of the bride's name",
     kind: 'text',
-    heading: 'Parent Dances',
   },
   {
     key: 'Father of the bride dance choreographed',
@@ -88,7 +105,8 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   },
   {
     key: 'Other announcement notes',
-    label: 'Notes',
+    label: 'Other announcements',
+    hideLabel: true,
     kind: 'textarea',
     heading: 'Other Announcements',
     note: "If you would like us to make any other announcements, please provide any specific instructions in the notes section below. We are comfortable going with the flow and making announcements as needed throughout the night.",
@@ -98,12 +116,13 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     label: 'What type of performance would you like during dinner?',
     kind: 'yesno',
     heading: 'Dinner',
-    options: ['Live', 'DJ', 'Mixture of both'],
+    options: PERFORMANCE_OPTIONS,
   },
   {
     key: 'Dinner songs',
     label: 'Songs',
     kind: 'songlist',
+    picker: true,
     maxSongs: 50,
     maxMustPlays: 10,
   },
@@ -130,6 +149,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     key: 'Open dancing songs',
     label: 'Songs',
     kind: 'songlist',
+    picker: true,
     maxSongs: 100,
     maxMustPlays: 15,
   },
@@ -175,16 +195,64 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     label: 'Would you like to end the night with a private last dance?',
     kind: 'yesno',
     heading: 'Private last dance',
-    note: 'Some couples like to have a private dance after guests leave. Photographer usually stays. Your DJ may have to end the night a little early to make this accommodation if the venue has a strict ending time. This often works well in combination with a sparkler send off.',
+    note: 'Some couples like to have a private dance after guests leave. Photographer usually stays. Your DJ will have to play the last song of the night (with guests) a little early to make this accommodation as most venues have strict ending times. This often works well in combination with a sparkler send-off.',
   },
   {
     key: 'Do not play songs',
     label: 'Songs',
     kind: 'songlist',
+    picker: true,
     heading: 'Do Not Play',
     note: 'Often just as important as the play list. Please list any music or types of music that you do not want to hear at your wedding.',
     maxSongs: 50,
     maxMustPlays: 0,
+  },
+  {
+    key: 'Introduction songs',
+    label: 'Songs',
+    kind: 'intro-songs',
+    note: "Add songs below. For each song, let us know who it's for.",
+  },
+  {
+    key: 'First dance section',
+    label: 'First Dance',
+    kind: 'fold',
+    foldLabel: 'First Dance',
+  },
+  {
+    key: 'Having a first dance',
+    label: 'Are you having a first dance?',
+    kind: 'yesno',
+    heading: 'First Dance',
+  },
+  {
+    key: 'Father-daughter section',
+    label: 'Father-daughter dance',
+    kind: 'fold',
+    foldLabel: 'Father-daughter dance',
+    heading: 'Parent Dances',
+  },
+  {
+    key: 'Having a father-daughter dance',
+    label: 'Are you having a father-daughter dance?',
+    kind: 'yesno',
+  },
+  {
+    key: 'Mother-son section',
+    label: 'Mother-son dance',
+    kind: 'fold',
+    foldLabel: 'Mother-son dance',
+  },
+  {
+    key: 'Having a mother-son dance',
+    label: 'Are you having a mother-son dance?',
+    kind: 'yesno',
+  },
+  {
+    key: 'Private last dance section',
+    label: 'Private last dance',
+    kind: 'fold',
+    foldLabel: 'Private last dance',
   },
 ]
 
@@ -198,16 +266,16 @@ export function liveDjCeremony(find: FindField): PlannerSection {
   return {
     id: 'ceremony',
     title: 'Ceremony',
-    blurb: 'Songs and how you want them played.',
+    blurb: 'Music for walking down and back up the aisle, plus music before the ceremony to set the mood.',
     fields: [
       take(find, 'Pre-ceremony performance'),
       take(find, 'Pre-ceremony music type'),
       take(find, 'Pre-ceremony music', { label: 'Notes' }),
-      take(find, 'Wedding party processional song'),
+      take(find, 'Wedding party processional song', { heading: 'Wedding Party Processional Song', hideLabel: true }),
       take(find, 'Wedding party processional style (instrumental/vocals)'),
-      take(find, 'Bridal processional song'),
+      take(find, 'Bridal processional song', { heading: 'Bridal Processional Song', hideLabel: true }),
       take(find, 'Bridal processional style'),
-      take(find, 'Recessional song'),
+      take(find, 'Recessional song', { heading: 'Recessional', hideLabel: true }),
       take(find, 'Recessional style'),
       take(find, 'Recessional cue'),
     ],
@@ -222,7 +290,7 @@ export function liveDjCocktail(find: FindField): PlannerSection {
     fields: [
       take(find, 'Cocktail hour music type'),
       take(find, 'Cocktail hour vibe', { label: COCKTAIL_VIBE }),
-      take(find, 'Cocktail hour songs'),
+      take(find, 'Cocktail hour songs', { picker: true }),
     ],
   }
 }
@@ -236,16 +304,18 @@ export function liveDjReception(find: FindField): PlannerSection {
       take(find, 'Introductions happening'),
       take(find, 'Who is being introduced'),
       take(find, 'Couple introduction name'),
-      take(find, 'Introductions', {
-        label: 'Notes',
-        note: "If you'd like us to do your introductions, please provide a list of names in the order that they will be introduced, along with any special songs you'd like hear during your introductions. Please do this in the 'Notes' section below.",
-      }),
-      take(find, "Couple's first dance song", { heading: 'First Dance' }),
+      take(find, 'Introduction songs'),
+      take(find, 'Introductions', { label: 'Additional Notes' }),
+      take(find, 'First dance section'),
+      take(find, 'Having a first dance'),
+      take(find, "Couple's first dance song"),
       take(find, 'First dance format (live/DJ, full/shortened)'),
       take(find, 'First dance choreographed'),
       take(find, 'First dance start cue'),
       take(find, 'First dance stop cue'),
       take(find, 'First dance fade out'),
+      take(find, 'Father-daughter section'),
+      take(find, 'Having a father-daughter dance'),
       take(find, 'Father of the bride name'),
       take(find, 'Father/daughter dance song'),
       take(find, 'Father/daughter format'),
@@ -253,6 +323,8 @@ export function liveDjReception(find: FindField): PlannerSection {
       take(find, 'Father of the bride start cue'),
       take(find, 'Father of the bride stop cue'),
       take(find, 'Father of the bride fade out'),
+      take(find, 'Mother-son section'),
+      take(find, 'Having a mother-son dance'),
       take(find, 'Mother of the groom name'),
       take(find, 'Mother/son dance song'),
       take(find, 'Mother/son format'),
@@ -267,22 +339,22 @@ export function liveDjReception(find: FindField): PlannerSection {
           'Please provide names/roles of anyone who will be giving a toast, welcome speech or blessing so they can be properly introduced.',
       }),
       take(find, 'Other announcement notes'),
-      take(find, 'Things to remember'),
       take(find, 'Dinner music type'),
       take(find, 'Dinner songs'),
       take(find, 'Dinner music notes'),
       take(find, 'Clean music edits'),
       take(find, 'Open dancing songs'),
-      take(find, 'DJ music requests'),
-      take(find, 'Songs to learn'),
+      take(find, 'DJ music requests', { label: 'Notes', help: PLAYLIST_NOTE }),
       take(find, 'Slow songs preference'),
       take(find, 'Slow dance songs'),
       take(find, 'Dance floor lighting'),
       take(find, 'Last song of the night with guests', {
         heading: 'Last song of the night (with guests)',
+        hideLabel: true,
         note: 'This is your last dance song with your guests. End the night with a bang!',
         help: 'Please choose the last song you would like to hear on the dance floor with your guests. Upbeat dance songs help to end the night on a high note. Classic singalong songs always work well. A slow dance song can work too. Most importantly, it should be a song you love. This song will also signal the end of the evening.',
       }),
+      take(find, 'Private last dance section'),
       take(find, 'Private last dance wanted'),
       take(find, 'Private last dance'),
       take(find, 'Do not play songs'),

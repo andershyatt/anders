@@ -7,6 +7,8 @@ interface CheckAllProps {
   options: readonly string[]
   value: string
   onChange: (next: string) => void
+  help?: string
+  allowOther?: boolean
 }
 
 function onChoiceKey(event: KeyboardEvent<HTMLInputElement>, toggle: () => void) {
@@ -16,7 +18,7 @@ function onChoiceKey(event: KeyboardEvent<HTMLInputElement>, toggle: () => void)
 }
 
 /** Check-all-that-apply. Other reveals a short text field, and that text is what gets saved. */
-export default function CheckAll({ name, legend, options, value, onChange }: CheckAllProps) {
+export default function CheckAll({ name, legend, options, value, onChange, help, allowOther = true }: CheckAllProps) {
   const initial = parseChecks(value, options)
   const [source, setSource] = useState(value)
   const [selected, setSelected] = useState(initial.selected)
@@ -39,10 +41,11 @@ export default function CheckAll({ name, legend, options, value, onChange }: Che
   }, [otherOn])
 
   const commit = (nextSelected: string[], text: string, showOther: boolean) => {
-    const saved = serializeChecks(nextSelected, showOther ? text : '')
+    const extra = allowOther ? (showOther ? text : '') : text
+    const saved = serializeChecks(nextSelected, extra)
     setSelected(nextSelected)
-    setOtherOn(showOther)
-    setOtherText(showOther ? text : '')
+    setOtherOn(allowOther && showOther)
+    setOtherText(extra)
     setSource(saved)
     onChange(saved)
   }
@@ -50,6 +53,7 @@ export default function CheckAll({ name, legend, options, value, onChange }: Che
   return (
     <fieldset className="planner-choices planner-choices--stack">
       <legend>{legend}</legend>
+      {help && <p className="planner-field__help">{help}</p>}
       <div className="planner-choices__row" role="group" aria-label={legend}>
         {options.map((option) => {
           const on = selected.includes(option)
@@ -78,6 +82,7 @@ export default function CheckAll({ name, legend, options, value, onChange }: Che
             </label>
           )
         })}
+        {allowOther && (
         <label
           className={otherOn ? 'is-selected' : undefined}
           onClick={(event) => {
@@ -108,8 +113,10 @@ export default function CheckAll({ name, legend, options, value, onChange }: Che
           />
           <span>Other</span>
         </label>
+        )}
       </div>
-      {otherOn && (
+      {!allowOther && otherText.trim() !== '' && <p className="planner-legacy">Saved answer: {otherText}</p>}
+      {allowOther && otherOn && (
         <input
           ref={otherRef}
           className="planner-other"

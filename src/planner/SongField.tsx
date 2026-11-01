@@ -8,6 +8,7 @@ interface SongFieldProps {
   id: string
   label: string
   help?: string
+  hideLabel?: boolean
   value: string
   multiline: boolean
   placeholder?: string
@@ -19,6 +20,7 @@ export default function SongField({
   id,
   label,
   help,
+  hideLabel = false,
   value,
   multiline,
   placeholder,
@@ -217,7 +219,9 @@ export default function SongField({
 
   return (
     <div className="planner-field planner-venue" ref={rootRef}>
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id} className={hideLabel ? 'sr-only' : undefined}>
+        {label}
+      </label>
       {help && <p className="planner-field__help">{help}</p>}
       <div className="planner-venue__control">
         {multiline ? (

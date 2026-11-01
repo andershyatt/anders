@@ -34,11 +34,20 @@ import {
   toIsoDate,
 } from './format'
 import CheckAll from './CheckAll'
+import IntroSongs from './IntroSongs'
+import { PERFORMANCE_OPTIONS, applyPreCeremonyMusicTypeLabel } from './liveDj'
 import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
 import SongField from './SongField'
 import WelcomeInfo from './WelcomeInfo'
+
+const SECTION_FOLD: Record<string, string> = {
+  'Having a first dance': 'First dance section',
+  'Having a father-daughter dance': 'Father-daughter section',
+  'Having a mother-son dance': 'Mother-son section',
+  'Private last dance wanted': 'Private last dance section',
+}
 import './planner.css'
 
 const LINK_MESSAGE = "This planner link doesn't look right, please check the link Anders sent you."
@@ -188,6 +197,8 @@ function FieldControl({
         legend={field.label}
         options={field.options ?? []}
         value={value}
+        help={field.help}
+        allowOther={field.allowOther !== false}
         onChange={onChange}
       />
     )
@@ -201,7 +212,25 @@ function FieldControl({
         onChange={onChange}
         maxSongs={field.maxSongs}
         maxMustPlays={field.maxMustPlays}
+        picker={field.picker}
+        pickerKey={field.key}
       />
+    )
+  }
+
+  if (field.kind === 'intro-songs') {
+    return <IntroSongs label={field.label} value={value} onChange={onChange} />
+  }
+
+  if (field.kind === 'fold') {
+    if (value.trim().toLowerCase() !== 'removed') return null
+    return (
+      <p className="planner-folded">
+        {field.foldLabel ?? field.label} - not having one.{' '}
+        <button type="button" onClick={() => onChange('')}>
+          Undo
+        </button>
+      </p>
     )
   }
 
@@ -302,6 +331,7 @@ function FieldControl({
         id={id}
         label={field.label}
         help={field.help}
+        hideLabel={field.hideLabel}
         value={value}
         multiline={field.song === 'list'}
         placeholder={field.placeholder}
@@ -314,7 +344,7 @@ function FieldControl({
   if (field.kind === 'textarea') {
     return (
       <label className="planner-field" htmlFor={id}>
-        <span>
+        <span className={field.hideLabel ? 'sr-only' : undefined}>
           {field.key === 'Timeline' ? (
             <>
               Timeline
@@ -402,7 +432,7 @@ export default function PlannerApp() {
       const bookedServices = previewServices ?? result.services
       const musicChoices = cocktailMusicChoices(bookedServices)
       if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
-      const ready = applyDjCeremonyStyleLabels(next, bookedServices)
+      const ready = applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, bookedServices), bookedServices)
       const loadedBasics = resolveBasics(result.basics, result.fields, result.couple)
       const photo = result.fields[COUPLE_PHOTO_FIELD]
       setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
@@ -433,7 +463,12 @@ export default function PlannerApp() {
   }, [dirty])
 
   const updateField = useCallback((key: string, value: string) => {
-    setFields((current) => ({ ...current, [key]: value }))
+    setFields((current) => {
+      const next = { ...current, [key]: value }
+      const fold = SECTION_FOLD[key]
+      if (fold && value.trim().toLowerCase() !== 'no') next[fold] = ''
+      return next
+    })
     setSaveFailed(false)
     setSaveMessage('')
   }, [])
@@ -596,15 +631,12 @@ export default function PlannerApp() {
                   {section.blurb && <p className="planner-section__blurb">{section.blurb}</p>}
                   {section.id === 'basics' && <BasicsCard basics={basics} />}
                   {section.id === 'venue-questions' && (
-                    <p className="planner-callout">
-                      <span className="planner-callout__mark" aria-hidden="true">
-                        !
-                      </span>
-                      <span>
-                        These are some good questions to ask during your next visit to your venue or during your
-                        next conversation with the venue.
-                      </span>
-                    </p>
+                      <p className="planner-callout">
+                          <span>
+                            These are some good questions to ask during your next visit to your venue or during your
+                            next conversation with the venue.
+                          </span>
+                        </p>
                   )}
                   {section.id === 'timeline' && (
                     <div className="planner-pdf">
@@ -636,9 +668,6 @@ export default function PlannerApp() {
                       {field.heading && <h3 className="planner-subhead">{field.heading}</h3>}
                       {field.callout && (
                         <p className="planner-callout">
-                          <span className="planner-callout__mark" aria-hidden="true">
-                            !
-                          </span>
                           <span>{field.callout}</span>
                         </p>
                       )}
@@ -670,21 +699,30 @@ export default function PlannerApp() {
                       </div>
                     ) : field.key === 'Cocktail hour music type' ? (
                       <>
-                        <p className="planner-callout">
-                          <span className="planner-callout__mark" aria-hidden="true">
-                            !
-                          </span>
-                          <span>
-                            Cocktail hour music is typically more upbeat, but not quite dance party energy. This is a
-                            great time to fit in songs you love that aren&apos;t dancefloor-friendly.
-                          </span>
-                        </p>
+                        {!(services.live && services.dj) && (
+                          <p className="planner-callout">
+                            <span>
+                              Cocktail hour music is typically more upbeat, but not quite dance party energy. This is a
+                              great time to fit in songs you love that aren&apos;t dancefloor-friendly.
+                            </span>
+                          </p>
+                        )}
                         {cocktailMusicChoices(services).length > 1 && (
                           <ChoiceGroup
                             name={`field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`}
                             legend={field.label}
-                            options={cocktailMusicChoices(services)}
-                            value={fields[field.key] ?? ''}
+                            options={
+                              services.live && services.dj
+                                ? choicesWithSaved(PERFORMANCE_OPTIONS, fields[field.key] ?? '')
+                                : cocktailMusicChoices(services)
+                            }
+                            value={
+                              services.live && services.dj
+                                ? (choicesWithSaved(PERFORMANCE_OPTIONS, fields[field.key] ?? '').find(
+                                    (option) => option.toLowerCase() === (fields[field.key] ?? '').trim().toLowerCase(),
+                                  ) ?? '')
+                                : (fields[field.key] ?? '')
+                            }
                             onChange={(value) => updateField(field.key, value)}
                           />
                         )}
@@ -714,6 +752,20 @@ export default function PlannerApp() {
                         )}
                       </>
                     )}
+                      {SECTION_FOLD[field.key] &&
+                        (fields[field.key] ?? '').trim().toLowerCase() === 'no' &&
+                        (fields[SECTION_FOLD[field.key]] ?? '').trim().toLowerCase() !== 'removed' &&
+                        (fields[SECTION_FOLD[field.key]] ?? '').trim().toLowerCase() !== 'kept' && (
+                          <p className="planner-fold-prompt">
+                            Remove this section from your planner?{' '}
+                            <button type="button" onClick={() => updateField(SECTION_FOLD[field.key], 'removed')}>
+                              Remove
+                            </button>
+                            <button type="button" onClick={() => updateField(SECTION_FOLD[field.key], 'kept')}>
+                              Keep
+                            </button>
+                          </p>
+                        )}
                       {field.image === 'chauvet' && (
                         <img
                           className="planner-lighting"
