@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import BoothGallery from './BoothGallery'
 import CheckAll from './CheckAll'
 import { PHOTO_BOOTH_ITEMS, type BoothField } from './photoBooth'
+import { boothImage } from './photoBoothImages'
 
 interface PhotoBoothPanelProps {
   knownVenue: boolean
@@ -44,6 +46,10 @@ function Field({
   onChange: (value: string) => void
 }) {
   const id = `booth-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
+  const visual = (field.options ?? []).some((option) => boothImage(option))
+  if (visual && (field.input === 'choice' || field.input === 'checks')) {
+    return <BoothGallery field={field} value={value} locked={locked} onChange={onChange} />
+  }
   if (field.input === 'choice') {
     return (
       <fieldset className="planner-choices planner-choices--stack" disabled={locked}>
