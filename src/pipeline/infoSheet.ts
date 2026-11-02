@@ -213,6 +213,8 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
     children.push(pairTable(leftovers))
   }
   const doc = new Document({
+    title: `${detail.names || 'Couple'}'s info sheet`,
+    description: 'Full planner rundown. This is not the day-of cheat sheet.',
     sections: [
       {
         properties: {

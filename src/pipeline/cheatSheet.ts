@@ -134,6 +134,20 @@ export async function buildCheatSheet(detail: PipelineDetail): Promise<Blob> {
   if (bodyStart < 0 || sectStart < 0) throw new Error('The cheat sheet template could not be read.')
   const next = `${original.slice(0, bodyStart)}<w:body>${cheatSheetParagraphs(detail).join('')}${original.slice(sectStart)}`
   zip.file('word/document.xml', next)
+  const title = `${detail.names || 'Couple'}'s cheat sheet`
+  const core = zip.file('docProps/core.xml')
+  if (core) {
+    const coreXml = await core.async('string')
+    zip.file(
+      'docProps/core.xml',
+      coreXml.replace(/<dc:title>[\s\S]*?<\/dc:title>/, `<dc:title>${escapeXml(title)}</dc:title>`),
+    )
+  }
+  const app = zip.file('docProps/app.xml')
+  if (app) {
+    const appXml = await app.async('string')
+    zip.file('docProps/app.xml', appXml.replace(/<Template>[\s\S]*?<\/Template>/, '<Template></Template>'))
+  }
   return zip.generateAsync({
     type: 'blob',
     mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
