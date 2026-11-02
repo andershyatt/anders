@@ -42,6 +42,7 @@ export default function SongField({
   const [resultsQuery, setResultsQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [picked, setPicked] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null)
   const setFieldRef = useCallback((node: HTMLInputElement | HTMLTextAreaElement | null) => {
@@ -57,11 +58,11 @@ export default function SongField({
   }, [value])
 
   useEffect(() => {
-    if (suggestions.length === 0) return
+    if (!repertoireOnly && suggestions.length === 0) return
     const onPop = () => setBrowsing(window.history.state?.plannerBrowse === id)
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
-  }, [id, suggestions.length])
+  }, [id, repertoireOnly, suggestions.length])
 
   const openBrowse = () => {
     window.history.pushState({ ...(window.history.state ?? {}), plannerBrowse: id }, '')
@@ -72,6 +73,20 @@ export default function SongField({
     if (window.history.state?.plannerBrowse === id) window.history.back()
     else setBrowsing(false)
   }
+
+  const pickSuggestion = (song: SuggestedSong) => {
+    onChange(song.artist ? `${song.title} – ${song.artist}` : song.title)
+    setPicked(true)
+    setBrowsing(false)
+    if (window.history.state?.plannerBrowse === id) window.history.back()
+  }
+
+  useEffect(() => {
+    if (!picked || browsing) return
+    fieldRef.current?.scrollIntoView({ block: 'center' })
+    const timer = window.setTimeout(() => setPicked(false), 2400)
+    return () => window.clearTimeout(timer)
+  }, [picked, browsing])
 
   const readQuery = (element: HTMLInputElement | HTMLTextAreaElement) => {
     if (!multiline) {
@@ -251,16 +266,13 @@ export default function SongField({
         title={`Suggestions for ${label}`}
         songs={repertoireOnly ? repertoireChoices() : suggestions}
         onClose={closeBrowse}
-        onPick={(song) => {
-          onChange(song.artist ? `${song.title} – ${song.artist}` : song.title)
-          closeBrowse()
-        }}
+        onPick={pickSuggestion}
       />
     )
   }
 
   return (
-    <div className="planner-field planner-venue" ref={rootRef}>
+    <div className={`planner-field planner-venue${picked ? ' is-picked' : ''}`} ref={rootRef}>
       <label htmlFor={id} className={hideLabel ? 'sr-only' : undefined}>
         {label}
       </label>

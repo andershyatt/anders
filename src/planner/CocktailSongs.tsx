@@ -45,7 +45,7 @@ function rowsFromValue(raw: string, maxSongs: number): CocktailRow[] {
   return parseCocktailSongs(raw, maxSongs).map((song) => ({ ...song, id: songId() }))
 }
 
-function sameSong(left: CocktailSong, right: CocktailSong): boolean {
+function sameSong(left: { title: string; artist: string }, right: { title: string; artist: string }): boolean {
   return left.title.toLowerCase() === right.title.toLowerCase() && left.artist.toLowerCase() === right.artist.toLowerCase()
 }
 
@@ -83,6 +83,7 @@ export default function CocktailSongs({
   const [importMessage, setImportMessage] = useState('')
   const [importing, setImporting] = useState(false)
   const [mixView, setMixView] = useState<'live' | 'dj'>('live')
+  const [justAdded, setJustAdded] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const backRef = useRef<HTMLButtonElement>(null)
   const full = rows.length >= maxSongs
@@ -177,6 +178,7 @@ export default function CocktailSongs({
     setResults([])
     setOpen(false)
     setMessage('')
+    setJustAdded(true)
   }
 
   const addTracks = (tracks: SuggestedSong[]) => {
@@ -282,6 +284,7 @@ export default function CocktailSongs({
           autoComplete="off"
           onChange={(event) => {
             setQuery(event.target.value)
+            setJustAdded(false)
             setOpen(true)
             setMessage('')
             if (event.target.value.trim().length < MIN_QUERY) setResults([])
@@ -322,17 +325,27 @@ export default function CocktailSongs({
                     <span className="planner-venue__name">{song.title}</span>
                     {song.artist && <span className="planner-venue__address">{song.artist}</span>}
                   </span>
+                  <span className={rows.some((row) => sameSong(row, song)) ? 'planner-song__added' : 'planner-song__add'}>
+                    {rows.some((row) => sameSong(row, song)) ? 'Added ✓' : 'Add'}
+                  </span>
                 </button>
               </li>
             ))}
           </ul>
         )}
       </div>
-      {typed && !full && (
-        <button type="button" className="planner-songlist__add" onClick={() => addSong(typed)}>
-          Add “{typed.title}
-          {typed.artist ? ` – ${typed.artist}` : ''}” as typed
+      {justAdded ? (
+        <button type="button" className="planner-songlist__add is-added" disabled>
+          Added ✓
         </button>
+      ) : (
+        typed &&
+        !full && (
+          <button type="button" className="planner-songlist__add" onClick={() => addSong(typed)}>
+            Add “{typed.title}
+            {typed.artist ? ` – ${typed.artist}` : ''}” as typed
+          </button>
+        )
       )}
       {full && <p className="planner-songlist__message">You can add up to {maxSongs} songs.</p>}
       {message && (
@@ -489,7 +502,10 @@ export default function CocktailSongs({
         )}
         {editor}
         {(pickerMode === 'live' || (pickerMode === 'mix' && mixView === 'live')) && (
-          <RepertoireBrowser onAdd={(song) => addTracks([song])} />
+          <RepertoireBrowser
+            isAdded={(song) => rows.some((row) => sameSong(row, song))}
+            onAdd={(song) => addTracks([song])}
+          />
         )}
         {(pickerMode === 'dj' || (pickerMode === 'mix' && mixView === 'dj')) && allowImport && (
           <div className="planner-import">
@@ -519,8 +535,13 @@ export default function CocktailSongs({
                     {song.title}
                     {song.artist ? ` – ${song.artist}` : ''}
                   </span>
-                  <button type="button" onClick={() => addTracks([song])}>
-                    Add
+                  <button
+                    type="button"
+                    className={rows.some((row) => sameSong(row, song)) ? 'is-added' : undefined}
+                    disabled={rows.some((row) => sameSong(row, song))}
+                    onClick={() => addTracks([song])}
+                  >
+                    {rows.some((row) => sameSong(row, song)) ? 'Added ✓' : 'Add'}
                   </button>
                 </li>
               ))}

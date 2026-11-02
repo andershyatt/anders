@@ -43,6 +43,8 @@ export interface PlannerField {
   foldLabel?: string
   suggestions?: 'open-dancing' | 'processionals' | 'parent-dances' | 'cocktail-dinner' | 'introductions'
   screenTitle?: string
+  /** Textarea height. Defaults to the usual size for that question. */
+  rows?: number
 }
 
 export interface PlannerSection {
@@ -278,10 +280,10 @@ export const plannerSections: PlannerSection[] = [
         label: 'First dance format',
         kind: 'dance',
       },
-      { key: 'Father/daughter dance song', label: 'Father/daughter dance song', kind: 'text', song: 'single' },
-      { key: 'Father/daughter format', label: 'Father/daughter format', kind: 'dance' },
-      { key: 'Mother/son dance song', label: 'Mother/son dance song', kind: 'text', song: 'single' },
-      { key: 'Mother/son format', label: 'Mother/son format', kind: 'dance' },
+      { key: 'Father/daughter dance song', label: 'Father-daughter dance song', kind: 'text', song: 'single' },
+      { key: 'Father/daughter format', label: 'Father-daughter format', kind: 'dance' },
+      { key: 'Mother/son dance song', label: 'Mother-son dance song', kind: 'text', song: 'single' },
+      { key: 'Mother/son format', label: 'Mother-son format', kind: 'dance' },
     ],
   },
   {
@@ -784,12 +786,7 @@ export function servicesFromPreview(search: string): BookedServices | null {
 export const STYLE_OPTIONS = ['Instrumental', 'Vocals'] as const
 
 /** Ceremony style choices when the couple booked both live music and a DJ. */
-export const CEREMONY_STYLE_WITH_DJ = [
-  'Live - instrumental',
-  'Live - vocals',
-  'DJ - instrumental',
-  'DJ - vocals',
-] as const
+export const CEREMONY_STYLE_WITH_DJ = ['Live - instrumental', 'Live - vocals', 'DJ'] as const
 
 /** DJ-only couples already know the music is DJ'd, so the prefix is left off. */
 export const CEREMONY_STYLE_DJ_ONLY = ['Instrumental', 'Vocals'] as const
@@ -800,23 +797,30 @@ const CEREMONY_STYLE_KEYS = new Set([
   'Recessional style',
 ])
 
-const DJ_CEREMONY_STYLE_ALIASES: Record<string, (typeof CEREMONY_STYLE_DJ_ONLY)[number]> = {
+const DJ_CEREMONY_STYLE_ALIASES: Record<string, string> = {
   'dj - instrumental': 'Instrumental',
   'dj - vocals': 'Vocals',
 }
 
-/** Older DJ-only saves used the prefixed labels. Those are the same choices as the short labels. */
-export function ceremonyStyleValue(key: string, value: string, services: BookedServices): string {
-  if (services.live || !services.dj || !CEREMONY_STYLE_KEYS.has(key)) return value
-  return DJ_CEREMONY_STYLE_ALIASES[value.trim().toLowerCase()] ?? value
+const LIVE_DJ_CEREMONY_ALIASES: Record<string, string> = {
+  'dj - instrumental': 'DJ',
+  'dj - vocals': 'DJ',
 }
 
-/** Rewrite prefixed DJ-only ceremony answers so the form matches the labels it shows. */
+/** Older saves used separate DJ instrumental and vocal labels. Those map onto the choice shown now. */
+export function ceremonyStyleValue(key: string, value: string, services: BookedServices): string {
+  if (!CEREMONY_STYLE_KEYS.has(key)) return value
+  const saved = value.trim().toLowerCase()
+  if (services.live && services.dj) return LIVE_DJ_CEREMONY_ALIASES[saved] ?? value
+  if (!services.live && services.dj) return DJ_CEREMONY_STYLE_ALIASES[saved] ?? value
+  return value
+}
+
+/** Rewrite older ceremony answers so the form matches the labels it shows. */
 export function applyDjCeremonyStyleLabels(
   fields: Record<string, string>,
   services: BookedServices,
 ): Record<string, string> {
-  if (services.live || !services.dj) return fields
   let copy: Record<string, string> | null = null
   for (const key of CEREMONY_STYLE_KEYS) {
     const current = fields[key] ?? ''

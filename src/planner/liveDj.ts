@@ -282,6 +282,27 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     kind: 'fold',
     foldLabel: 'Private last dance',
   },
+  {
+    key: 'Wedding party processional notes',
+    label: 'Notes',
+    kind: 'textarea',
+    rows: 2,
+    placeholder: 'Anything else for this processional',
+  },
+  {
+    key: 'Bridal processional notes',
+    label: 'Notes',
+    kind: 'textarea',
+    rows: 2,
+    placeholder: 'Anything else for this processional',
+  },
+  {
+    key: 'Recessional notes',
+    label: 'Notes',
+    kind: 'textarea',
+    rows: 2,
+    placeholder: 'Anything else for the recessional',
+  },
 ]
 
 type FindField = (key: string) => PlannerField
@@ -305,15 +326,18 @@ export function liveDjCeremony(find: FindField): PlannerSection {
         suggestions: 'processionals',
       }),
       take(find, 'Wedding party processional style (instrumental/vocals)'),
+      take(find, 'Wedding party processional notes'),
       take(find, 'Bridal processional song', {
         heading: 'Bridal Processional',
         hideLabel: true,
         suggestions: 'processionals',
       }),
       take(find, 'Bridal processional style'),
+      take(find, 'Bridal processional notes'),
       take(find, 'Recessional song', { heading: 'Recessional', hideLabel: true, suggestions: 'processionals' }),
       take(find, 'Recessional style'),
       take(find, 'Recessional cue'),
+      take(find, 'Recessional notes'),
     ],
   }
 }

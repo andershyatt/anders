@@ -54,6 +54,11 @@ export default function BoothGallery({ field, value, locked, onChange }: BoothGa
               key={option}
               className={['planner-gallery__card', on ? 'is-selected' : '', image ? '' : 'is-text'].filter(Boolean).join(' ')}
             >
+              {on && (
+                <span className="planner-gallery__check" aria-hidden="true">
+                  ✓
+                </span>
+              )}
               {image && (
                 <button
                   type="button"
@@ -103,7 +108,9 @@ export default function BoothGallery({ field, value, locked, onChange }: BoothGa
               className="planner-lightbox__choose"
               onClick={(event) => {
                 event.stopPropagation()
+                const selecting = !chosen(preview)
                 toggle(preview)
+                if (selecting) setPreview(null)
               }}
             >
               {chosen(preview) ? 'Remove this choice' : 'Choose this'}
