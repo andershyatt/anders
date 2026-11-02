@@ -19,9 +19,8 @@ export function applyPreCeremonyMusicTypeLabel(
   return { ...fields, [key]: value.replaceAll(PRE_CEREMONY_MUSIC_TYPE_OLD, PRE_CEREMONY_MUSIC_TYPE_NEW) }
 }
 
-const COCKTAIL_VIBE =
-  "If you don't have specific song requests, what type of vibe/genres would you like to hear? Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option! " +
-  PLAYLIST_NOTE
+const VIBE_QUESTION =
+  "If you don't have specific song requests, what type of vibe/genres would you like to hear? Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option!"
 
 const FADE_LABEL = "If you have a specific timestamp where you'd like us to fade out, please share below."
 const START_CUE = 'Cue for when to start the song'
@@ -82,7 +81,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   },
   {
     key: 'Father of the bride dance choreographed',
-    label: 'Is the father of the bride dance choreographed?',
+    label: 'Is the father-daughter dance choreographed?',
     kind: 'yesno',
   },
   { key: 'Father of the bride start cue', label: START_CUE, kind: 'text' },
@@ -91,7 +90,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   { key: 'Mother of the groom name', label: "Mother of the groom's name", kind: 'text' },
   {
     key: 'Mother of the groom dance choreographed',
-    label: 'Is the mother of the groom dance choreographed?',
+    label: 'Is the mother-son dance choreographed?',
     kind: 'yesno',
   },
   { key: 'Mother of the groom start cue', label: START_CUE, kind: 'text' },
@@ -113,10 +112,15 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   },
   {
     key: 'Dinner music type',
-    label: 'What type of performance would you like during dinner?',
+    label: 'What type of music would you like at your dinner?',
     kind: 'yesno',
     heading: 'Dinner',
     options: PERFORMANCE_OPTIONS,
+  },
+  {
+    key: 'Dinner music notes',
+    label: VIBE_QUESTION,
+    kind: 'text',
   },
   {
     key: 'Dinner songs',
@@ -128,12 +132,6 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     note: 'Add as many or as few songs as you like.',
     maxSongs: 50,
     maxMustPlays: 10,
-  },
-  {
-    key: 'Dinner music notes',
-    label: 'Notes',
-    kind: 'textarea',
-    help: PLAYLIST_NOTE,
   },
   {
     key: 'Clean music edits',
@@ -166,7 +164,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     stack: true,
     heading: 'Slow Dance Songs',
     callout:
-      'Playing a few slow songs throughout the event is a good idea! These dance breaks will allow the "non-dancers" to join in and also create great moments for photos of couples.',
+      'Sprinkling in a few slow songs throughout the evening can be a great way to create special moments for couples and give everyone a chance to get out on the dance floor. They can also be a great way to bring more guests onto the dance floor if things are slowing down. I typically recommend 1–3 slow songs throughout the night, each followed by an upbeat dance floor starter to get the party going again!',
     options: [
       'Yes, a few slow songs are fine.',
       'No more than 2 slow dances',
@@ -349,13 +347,15 @@ export function liveDjCocktail(find: FindField): PlannerSection {
     blurb: '',
     fields: [
       take(find, 'Cocktail hour music type'),
-      take(find, 'Cocktail hour vibe', { label: COCKTAIL_VIBE }),
+      take(find, 'Cocktail hour vibe', { label: VIBE_QUESTION }),
       take(find, 'Cocktail hour Anders chooses'),
       take(find, 'Cocktail hour songs', {
         picker: true,
         screenTitle: 'Cocktail Hour Songs',
         suggestions: 'cocktail-dinner',
         note: 'Add as many or as few songs as you like.',
+        maxSongs: 30,
+        maxMustPlays: 10,
       }),
     ],
   }
@@ -407,9 +407,9 @@ export function liveDjReception(find: FindField): PlannerSection {
       }),
       take(find, 'Other announcement notes'),
       take(find, 'Dinner music type'),
+      take(find, 'Dinner music notes'),
       take(find, 'Dinner Anders chooses'),
       take(find, 'Dinner songs'),
-      take(find, 'Dinner music notes'),
       take(find, 'Clean music edits'),
       take(find, 'Open dancing Anders chooses'),
       take(find, 'Open dancing songs'),

@@ -726,6 +726,56 @@ export default function PlannerApp() {
   }, [services, fields, genderNeutral])
   const progress = answeredProgress(sections, fields)
   const savedLabel = formatSavedAt(lastUpdated)
+  const [place, setPlace] = useState('')
+  useEffect(() => {
+    if (status.kind !== 'ready') return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const header = document.querySelector('.planner-top')
+      const line = (header?.getBoundingClientRect().bottom ?? 0) + 4
+      let section = ''
+      let sub = ''
+      for (const el of document.querySelectorAll('.planner-section > h2, .planner-subhead')) {
+        if (el.getBoundingClientRect().top > line) break
+        if (el.classList.contains('planner-subhead')) sub = el.textContent?.trim() ?? ''
+        else {
+          section = el.textContent?.trim() ?? ''
+          sub = ''
+        }
+      }
+      const next = section ? (sub ? `${section} › ${sub}` : section) : ''
+      setPlace((current) => (current === next ? current : next))
+    }
+    const onScroll = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
+  }, [status.kind, sections])
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return
+    const fitKeyboard = () => {
+      const overlap = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      document.documentElement.style.setProperty('--planner-keyboard', `${Math.round(overlap)}px`)
+    }
+    viewport.addEventListener('resize', fitKeyboard)
+    viewport.addEventListener('scroll', fitKeyboard)
+    fitKeyboard()
+    return () => {
+      viewport.removeEventListener('resize', fitKeyboard)
+      viewport.removeEventListener('scroll', fitKeyboard)
+      document.documentElement.style.removeProperty('--planner-keyboard')
+    }
+  }, [])
   const welcomeDate = basics.date.trim() ? formatCoupleDate(basics.date) : ''
   const welcomeBits = [welcomeDate, basics.venue.trim()].filter(Boolean)
 
@@ -736,6 +786,7 @@ export default function PlannerApp() {
         <div className="planner-top__title">
           <a href="../">Anders Hyatt Music</a>
           <p>Wedding planner</p>
+          {place && <p className="planner-top__place">{place}</p>}
         </div>
       </header>
 

@@ -253,9 +253,9 @@ export const plannerSections: PlannerSection[] = [
         key: 'Cocktail hour vibe',
         label:
           "If you don't have specific song requests, what type of vibe/genres would you like to hear? Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option!",
-        kind: 'textarea',
+        kind: 'text',
       },
-      { key: 'Cocktail hour songs', label: 'Songs', kind: 'cocktail-songs' },
+      { key: 'Cocktail hour songs', label: 'Songs', kind: 'cocktail-songs', maxSongs: 30, maxMustPlays: 10 },
     ],
   },
   {
@@ -305,8 +305,8 @@ export const plannerSections: PlannerSection[] = [
   {
     id: 'notes',
     title: 'Notes',
-    blurb: 'Anything else Anders should know.',
-    fields: [{ key: 'Notes', label: 'Notes', kind: 'textarea' }],
+    blurb: '',
+    fields: [{ key: 'Notes', label: 'Anything else Anders should know?', kind: 'textarea' }],
   },
 ]
 

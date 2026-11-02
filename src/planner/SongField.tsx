@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent, type KeyboardEvent, type SyntheticEvent } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type SyntheticEvent } from 'react'
 import { replaceSongSegment, searchSongs, songSegment, type SongMatch } from './songSearch'
 import { repertoireChoices, repertoireMatch } from './repertoire'
 import SuggestionBrowser from './SuggestionBrowser'
@@ -52,6 +52,8 @@ export default function SongField({
   const valueRef = useRef(value)
   const caretAfterPick = useRef<number | null>(null)
   const ignoreSelect = useRef(false)
+  const retainFocus = useRef(false)
+  const requestSeq = useRef(0)
 
   useEffect(() => {
     valueRef.current = value
@@ -110,7 +112,6 @@ export default function SongField({
     }
     setOpen(true)
     if (resultsQuery === nextQuery && results.length > 0) return
-    setResults([])
     setLoading(true)
   }
 
@@ -119,17 +120,18 @@ export default function SongField({
     if (resultsQuery === query && results.length > 0) return
 
     const controller = new AbortController()
-    let cancelled = false
+    const seq = ++requestSeq.current
     const timer = window.setTimeout(() => {
       const search = repertoireOnly
         ? Promise.resolve(repertoireMatch(query))
         : searchSongs(query, controller.signal)
       search
         .then((matches) => {
-          if (cancelled) return
+          if (seq !== requestSeq.current) return
           setLoading(false)
           if (matches.length === 0) {
             setResults([])
+            setResultsQuery(query)
             setOpen(false)
             return
           }
@@ -138,7 +140,7 @@ export default function SongField({
           setActiveIndex(0)
         })
         .catch((error: unknown) => {
-          if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) return
+          if (seq !== requestSeq.current || (error instanceof DOMException && error.name === 'AbortError')) return
           setResults([])
           setLoading(false)
           setOpen(false)
@@ -146,7 +148,6 @@ export default function SongField({
     }, DEBOUNCE_MS)
 
     return () => {
-      cancelled = true
       window.clearTimeout(timer)
       controller.abort()
     }
@@ -154,11 +155,20 @@ export default function SongField({
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+      if (!rootRef.current?.contains(event.target as Node)) {
+        retainFocus.current = false
+        setOpen(false)
+      }
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [])
+
+  useLayoutEffect(() => {
+    if (!retainFocus.current) return
+    const element = fieldRef.current
+    if (element && document.activeElement !== element) element.focus({ preventScroll: true })
+  })
 
   useEffect(() => {
     const caret = caretAfterPick.current
@@ -213,6 +223,7 @@ export default function SongField({
   }
 
   const onInput = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    retainFocus.current = true
     valueRef.current = event.target.value
     onChange(event.target.value)
     armSearch(readQuery(event.target))
@@ -253,7 +264,12 @@ export default function SongField({
     'aria-autocomplete': 'list' as const,
     'aria-activedescendant': showList && freshResults[activeIndex] ? `${listId}-${activeIndex}` : undefined,
     onFocus: () => {
+      retainFocus.current = true
       if (query.length >= MIN_QUERY) armSearch(query)
+      window.setTimeout(() => fieldRef.current?.scrollIntoView({ block: 'center', inline: 'nearest' }), 300)
+    },
+    onBlur: () => {
+      retainFocus.current = false
     },
     onKeyDown,
     onSelect,
@@ -272,7 +288,7 @@ export default function SongField({
   }
 
   return (
-    <div className={`planner-field planner-venue${picked ? ' is-picked' : ''}`} ref={rootRef}>
+    <div className={`planner-field planner-venue${picked ? ' is-picked' : ''}${value.trim() ? ' is-filled' : ''}`} ref={rootRef}>
       <label htmlFor={id} className={hideLabel ? 'sr-only' : undefined}>
         {label}
       </label>
@@ -296,7 +312,19 @@ export default function SongField({
                   className={`planner-venue__option planner-song__option${index === activeIndex ? ' is-active' : ''}`}
                   onMouseEnter={() => setActiveIndex(index)}
                   onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => choose(song)}
+                  onPointerDown={(event) => {
+                    if (event.pointerType === 'mouse') return
+                    event.preventDefault()
+                    event.currentTarget.dataset.touched = '1'
+                    choose(song)
+                  }}
+                  onClick={(event) => {
+                    if (event.currentTarget.dataset.touched === '1') {
+                      delete event.currentTarget.dataset.touched
+                      return
+                    }
+                    choose(song)
+                  }}
                 >
                   {song.artwork ? (
                     <img
