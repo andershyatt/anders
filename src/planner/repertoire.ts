@@ -4,6 +4,10 @@ import type { SongMatch } from './songSearch'
 
 const songs = songsData as Song[]
 
+export function repertoireCatalog(): Song[] {
+  return songs
+}
+
 export function repertoireMatch(query: string, limit = 8): SongMatch[] {
   const needle = query.trim().toLowerCase()
   if (needle.length < 2) return []

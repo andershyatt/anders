@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import BoothGallery from './BoothGallery'
 import CheckAll from './CheckAll'
 import { PHOTO_BOOTH_ITEMS, type BoothField } from './photoBooth'
+import { boothImage } from './photoBoothImages'
 
 interface PhotoBoothPanelProps {
   knownVenue: boolean
@@ -44,6 +46,10 @@ function Field({
   onChange: (value: string) => void
 }) {
   const id = `booth-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
+  const visual = (field.options ?? []).some((option) => boothImage(option))
+  if (visual && (field.input === 'choice' || field.input === 'checks')) {
+    return <BoothGallery field={field} value={value} locked={locked} onChange={onChange} />
+  }
   if (field.input === 'choice') {
     return (
       <fieldset className="planner-choices planner-choices--stack" disabled={locked}>
@@ -132,19 +138,18 @@ export default function PhotoBoothPanel({ knownVenue, fields, locked, onChange }
     else setOpen(false)
   }
 
+  const questions = itemsFor(knownVenue).filter((item) => item.kind === 'field')
+  const answered = questions.filter((item) => (fields[item.key] ?? '').trim() !== '').length
+  const progress = questions.length === 0 ? 0 : Math.round((answered / questions.length) * 100)
+
   return (
     <div className="planner-booth">
-      {answers.length > 0 && (
-        <ul className="planner-songcompact">
-          {answers.map((answer) => (
-            <li key={answer.label}>
-              <span>
-                <strong>{answer.label}:</strong> {answer.value}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="planner-booth__progress" aria-label={`${progress} percent of the photo booth questionnaire`}>
+        <div className="planner-booth__fill" style={{ width: `${progress}%` }} />
+        <span>
+          {answered} of {questions.length} answered
+        </span>
+      </div>
       <button type="button" className="planner-songcompact__open" onClick={openForm}>
         {answers.length > 0 ? 'Edit questionnaire' : 'Fill questionnaire'}
       </button>

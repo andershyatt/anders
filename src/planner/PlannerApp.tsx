@@ -46,7 +46,7 @@ import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
 import PhotoBoothPanel from './PhotoBoothPanel'
-import { isLiveOrMixture, isLivePerformance, LIVE_SONG_CONTROLS, REMOVED_LIVE_SONG, SONG_LIVE_CONTROL, songInRepertoire } from './repertoire'
+import { isLivePerformance, LIVE_SONG_CONTROLS, REMOVED_LIVE_SONG, SONG_LIVE_CONTROL, songInRepertoire } from './repertoire'
 import SongField from './SongField'
 import WelcomeInfo from './WelcomeInfo'
 
@@ -66,6 +66,27 @@ type Status =
   | { kind: 'invalid' }
   | { kind: 'unavailable' }
   | { kind: 'ready' }
+
+const SECTION_NOTE_FIELD: Record<string, string> = {
+  'Cocktail hour songs': 'Cocktail hour vibe',
+  'Dinner songs': 'Dinner music notes',
+  'Open dancing songs': 'DJ music requests',
+  'Do not play songs': 'Do-not-play list',
+}
+
+function songListMode(key: string, answers: Record<string, string>): 'live' | 'dj' | 'mix' {
+  if (key === 'Open dancing songs' || key === 'Do not play songs') return 'dj'
+  const source =
+    key === 'Cocktail hour songs'
+      ? answers['Cocktail hour music type']
+      : key === 'Dinner songs'
+        ? answers['Dinner music type']
+        : ''
+  const text = (source ?? '').trim().toLowerCase()
+  if (text.includes('mixture')) return 'mix'
+  if (text.startsWith('live')) return 'live'
+  return 'dj'
+}
 
 function sectionSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -244,7 +265,8 @@ function FieldControl({
   services,
   token,
   repertoireOnly = false,
-  repertoire = false,
+  pickerMode = 'dj',
+  sectionNote = '',
   onChange,
 }: {
   field: PlannerField
@@ -252,7 +274,8 @@ function FieldControl({
   services: BookedServices
   token: string
   repertoireOnly?: boolean
-  repertoire?: boolean
+  pickerMode?: 'live' | 'dj' | 'mix'
+  sectionNote?: string
   onChange: (next: string) => void
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
@@ -310,7 +333,8 @@ function FieldControl({
         suggestions={suggestedSongs(field.suggestions)}
         allowImport={field.suggestions === 'cocktail-dinner' || field.suggestions === 'open-dancing'}
         token={token}
-        repertoire={repertoire}
+        pickerMode={pickerMode}
+        sectionNote={sectionNote}
       />
     )
   }
@@ -878,10 +902,8 @@ export default function PlannerApp() {
                             Boolean(SONG_LIVE_CONTROL[field.key]) &&
                             isLivePerformance(fields[SONG_LIVE_CONTROL[field.key]] ?? '')
                           }
-                          repertoire={
-                            (field.key === 'Cocktail hour songs' && isLiveOrMixture(fields['Cocktail hour music type'] ?? '')) ||
-                            (field.key === 'Dinner songs' && isLiveOrMixture(fields['Dinner music type'] ?? ''))
-                          }
+                          pickerMode={songListMode(field.key, fields)}
+                          sectionNote={fields[SECTION_NOTE_FIELD[field.key] ?? ''] ?? ''}
                           onChange={(value) => updateField(field.key, value)}
                         />
                         {songNotices[field.key] && <p className="planner-song-removed">{songNotices[field.key]}</p>}
