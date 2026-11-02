@@ -1,0 +1,612 @@
+{
+  "open-dancing": [
+    {
+      "title": "I Wanna Dance with Somebody (Who Loves Me)",
+      "artist": "Whitney Houston"
+    },
+    {
+      "title": "Dancing Queen",
+      "artist": "ABBA"
+    },
+    {
+      "title": "Mr. Brightside",
+      "artist": "The Killers"
+    },
+    {
+      "title": "September",
+      "artist": "Earth, Wind & Fire"
+    },
+    {
+      "title": "Yeah! (feat. Lil Jon & Ludacris)",
+      "artist": "USHER,\u00a0Lil Jon,\u00a0Ludacris"
+    },
+    {
+      "title": "Sweet Caroline",
+      "artist": "Neil Diamond"
+    },
+    {
+      "title": "Cupid Shuffle",
+      "artist": "Cupid"
+    },
+    {
+      "title": "Shut Up and Dance",
+      "artist": "WALK THE MOON"
+    },
+    {
+      "title": "Don't Stop Believin'",
+      "artist": "Journey"
+    },
+    {
+      "title": "Party In The U.S.A.",
+      "artist": "Miley Cyrus"
+    },
+    {
+      "title": "Wobble - Radio Version",
+      "artist": "V.I.C."
+    },
+    {
+      "title": "Uptown Funk (feat. Bruno Mars)",
+      "artist": "Mark Ronson,\u00a0Bruno Mars"
+    },
+    {
+      "title": "I Gotta Feeling",
+      "artist": "Black Eyed Peas"
+    },
+    {
+      "title": "Man! I Feel Like A Woman!",
+      "artist": "Shania Twain"
+    },
+    {
+      "title": "Hey Ya!",
+      "artist": "DJ Casper"
+    },
+    {
+      "title": "Low (feat. T-Pain)",
+      "artist": "Flo Rida,\u00a0T-Pain"
+    },
+    {
+      "title": "Love Story (Taylor\u2019s Version)",
+      "artist": "Taylor Swift"
+    },
+    {
+      "title": "Friends in Low Places - Live",
+      "artist": "Garth Brooks"
+    },
+    {
+      "title": "Tennessee Whiskey",
+      "artist": "Chris Stapleton"
+    },
+    {
+      "title": "Wannabe",
+      "artist": "Spice Girls"
+    },
+    {
+      "title": "Livin' On A Prayer",
+      "artist": "Bon Jovi"
+    },
+    {
+      "title": "Everybody (Backstreet's Back) - Extended Version",
+      "artist": "Backstreet Boys"
+    },
+    {
+      "title": "We Found Love",
+      "artist": "Rihanna,\u00a0Calvin Harris"
+    },
+    {
+      "title": "Get Low",
+      "artist": "blink-182"
+    },
+    {
+      "title": "Everytime We Touch",
+      "artist": "Cascada"
+    },
+    {
+      "title": "Hot In Herre",
+      "artist": "Kenny Loggins"
+    },
+    {
+      "title": "Fireball (feat. John Ryan)",
+      "artist": "Pitbull,\u00a0John Ryan"
+    },
+    {
+      "title": "Forever",
+      "artist": "Chris Brown"
+    },
+    {
+      "title": "24K Magic",
+      "artist": "Bruno Mars"
+    },
+    {
+      "title": "You Shook Me All Night Long",
+      "artist": "AC/DC"
+    }
+  ],
+  "processionals": [
+    {
+      "title": "If I Ain't Got You",
+      "artist": "Alicia Keys"
+    },
+    {
+      "title": "Sweet Pea",
+      "artist": "Amos Lee"
+    },
+    {
+      "title": "Swept Away",
+      "artist": "The Avett Brothers"
+    },
+    {
+      "title": "All I Want Is You",
+      "artist": "Barry Louis Polisar"
+    },
+    {
+      "title": "Don't Worry Baby",
+      "artist": "The Beach Boys"
+    },
+    {
+      "title": "God Only Knows",
+      "artist": "The Beach Boys"
+    },
+    {
+      "title": "All You Need Is Love - Remastered 2015",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "I Will - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "In My Life - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Real Love - 1996 Mix",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Something - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "The Luckiest",
+      "artist": "Ben Folds"
+    },
+    {
+      "title": "Forever",
+      "artist": "Ben Harper"
+    },
+    {
+      "title": "all the fish in the sea are stupid sluts",
+      "artist": "big japan"
+    },
+    {
+      "title": "Just the Way You Are",
+      "artist": "Billy Joel"
+    },
+    {
+      "title": "Boots of Spanish Leather",
+      "artist": "Bob Dylan"
+    },
+    {
+      "title": "Make You Feel My Love",
+      "artist": "Bob Dylan"
+    },
+    {
+      "title": "First Day of My Life",
+      "artist": "Bright Eyes"
+    },
+    {
+      "title": "Heaven",
+      "artist": "Bryan Adams"
+    },
+    {
+      "title": "Sea of Love",
+      "artist": "Cat Power"
+    },
+    {
+      "title": "a thousand years",
+      "artist": "Christina Perri"
+    },
+    {
+      "title": "La Vie En Rose",
+      "artist": "Daniela Andrade"
+    },
+    {
+      "title": "Thinking Of You",
+      "artist": "Dierks Bentley"
+    },
+    {
+      "title": "Kiss the Girl",
+      "artist": "Alan Menken,\u00a0Howard Ashman,\u00a0Samuel E. Wright,\u00a0Disney"
+    },
+    {
+      "title": "Peaceful Easy Feeling - 2013 Remaster",
+      "artist": "Eagles"
+    },
+    {
+      "title": "Perfect",
+      "artist": "Ed Sheeran"
+    },
+    {
+      "title": "Thinking out Loud",
+      "artist": "Ed Sheeran"
+    },
+    {
+      "title": "You're True",
+      "artist": "Eddie Vedder"
+    },
+    {
+      "title": "Can't Help Falling in Love",
+      "artist": "Elvis Presley"
+    },
+    {
+      "title": "Take My Hand (The Wedding Song)",
+      "artist": "Emily Hackett,\u00a0Will Anderson"
+    }
+  ],
+  "parent-dances": [
+    {
+      "title": "In My Life - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Lovely Day",
+      "artist": "Bill Withers"
+    },
+    {
+      "title": "Forever Young",
+      "artist": "Bob Dylan"
+    },
+    {
+      "title": "When You Need Me - Studio Outtake - 1987",
+      "artist": "Bruce Springsteen"
+    },
+    {
+      "title": "Child of Mine",
+      "artist": "Carole King"
+    },
+    {
+      "title": "My Hero",
+      "artist": "Foo Fighters"
+    },
+    {
+      "title": "The Way You Look Tonight",
+      "artist": "Frank Sinatra"
+    },
+    {
+      "title": "Home",
+      "artist": "Jack Johnson"
+    },
+    {
+      "title": "Something to Love",
+      "artist": "Jason Isbell and the 400 Unit,\u00a0Jason Isbell"
+    },
+    {
+      "title": "Sunshine On My Shoulders",
+      "artist": "John Denver"
+    },
+    {
+      "title": "Beautiful Boy (Darling Boy) - 2010 Remastered",
+      "artist": "John Lennon"
+    },
+    {
+      "title": "What A Wonderful World",
+      "artist": "Louis Armstrong"
+    },
+    {
+      "title": "Simple Man",
+      "artist": "Lynyrd Skynyrd"
+    },
+    {
+      "title": "Forever Now",
+      "artist": "Michael Bubl\u00e9"
+    },
+    {
+      "title": "Loves Me Like a Rock",
+      "artist": "Paul Simon"
+    },
+    {
+      "title": "You'll Be In My Heart",
+      "artist": "Phil Collins"
+    },
+    {
+      "title": "You're My Best Friend - Remastered 2011",
+      "artist": "Queen"
+    },
+    {
+      "title": "You've Got a Friend in Me",
+      "artist": "Randy Newman"
+    },
+    {
+      "title": "My Wish",
+      "artist": "Rascal Flatts"
+    },
+    {
+      "title": "Forever Young",
+      "artist": "Rod Stewart"
+    },
+    {
+      "title": "You Are The Sunshine Of My Life",
+      "artist": "Stevie Wonder"
+    },
+    {
+      "title": "Humble And Kind",
+      "artist": "Tim McGraw"
+    },
+    {
+      "title": "Days Like This",
+      "artist": "Van Morrison"
+    },
+    {
+      "title": "Gracie",
+      "artist": "Ben Folds"
+    },
+    {
+      "title": "I Loved Her First",
+      "artist": "Heartland"
+    },
+    {
+      "title": "Rainbow",
+      "artist": "Kacey Musgraves"
+    },
+    {
+      "title": "Always Be My Baby",
+      "artist": "Mariah Carey"
+    },
+    {
+      "title": "Father and Daughter",
+      "artist": "Paul Simon"
+    },
+    {
+      "title": "My Girl",
+      "artist": "The Temptations"
+    },
+    {
+      "title": "You've Got a Friend - 2019 Remaster",
+      "artist": "James Taylor"
+    }
+  ],
+  "cocktail-dinner": [
+    {
+      "title": "Grow Old with You",
+      "artist": "Adam Sandler"
+    },
+    {
+      "title": "Lonely",
+      "artist": "Akon"
+    },
+    {
+      "title": "Let's Stay Together",
+      "artist": "Al Green"
+    },
+    {
+      "title": "We're in This Love Together",
+      "artist": "Al Jarreau"
+    },
+    {
+      "title": "If I Ain't Got You",
+      "artist": "Alicia Keys"
+    },
+    {
+      "title": "Not Even the King",
+      "artist": "Alicia Keys"
+    },
+    {
+      "title": "Arms Of A Woman",
+      "artist": "Amos Lee"
+    },
+    {
+      "title": "Sweet Pea",
+      "artist": "Amos Lee"
+    },
+    {
+      "title": "Never My Love",
+      "artist": "The Association"
+    },
+    {
+      "title": "I And Love And You",
+      "artist": "The Avett Brothers"
+    },
+    {
+      "title": "January Wedding",
+      "artist": "The Avett Brothers"
+    },
+    {
+      "title": "Live And Die",
+      "artist": "The Avett Brothers"
+    },
+    {
+      "title": "Swept Away",
+      "artist": "The Avett Brothers"
+    },
+    {
+      "title": "All I Want Is You",
+      "artist": "Barry Louis Polisar"
+    },
+    {
+      "title": "Don't Worry Baby",
+      "artist": "The Beach Boys"
+    },
+    {
+      "title": "God Only Knows",
+      "artist": "The Beach Boys"
+    },
+    {
+      "title": "All My Loving - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "All You Need Is Love - Remastered 2015",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Blackbird - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "I Will - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "I've Just Seen A Face - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "In My Life - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Real Love - 1996 Mix",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Something - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Yesterday - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "The Luckiest",
+      "artist": "Ben Folds"
+    },
+    {
+      "title": "Forever",
+      "artist": "Ben Harper"
+    },
+    {
+      "title": "Only Love",
+      "artist": "Ben Howard"
+    },
+    {
+      "title": "Brand New",
+      "artist": "Ben Rector"
+    },
+    {
+      "title": "Duo",
+      "artist": "Ben Rector"
+    }
+  ],
+  "introductions": [
+    {
+      "title": "Accidentally In Love - From \"Shrek 2\" Soundtrack",
+      "artist": "Counting Crows"
+    },
+    {
+      "title": "Ain't That A Kick In The Head - Remastered 1997",
+      "artist": "Dean Martin"
+    },
+    {
+      "title": "All I Do Is Win - Feat. T-Pain, Ludacris, Snoop Dogg & Rick Ross",
+      "artist": "DJ Khaled"
+    },
+    {
+      "title": "All of Me - Ti\u00ebsto's Birthday Treatment Remix - Radio Edit",
+      "artist": "John Legend,\u00a0Jason Agel,\u00a0Ti\u00ebsto"
+    },
+    {
+      "title": "All Of The Lights",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Another One Bites The Dust - Remastered 2011",
+      "artist": "Queen"
+    },
+    {
+      "title": "Ants Marching",
+      "artist": "Dave Matthews Band"
+    },
+    {
+      "title": "Apache - 45 Version",
+      "artist": "The Sugarhill Gang"
+    },
+    {
+      "title": "Back In Black",
+      "artist": "AC/DC"
+    },
+    {
+      "title": "Beat It",
+      "artist": "Michael Jackson"
+    },
+    {
+      "title": "Best Of My Love",
+      "artist": "The Emotions"
+    },
+    {
+      "title": "Beautiful Day",
+      "artist": "U2"
+    },
+    {
+      "title": "Best Day Of My Life",
+      "artist": "American Authors"
+    },
+    {
+      "title": "Big Pimpin' / Papercut",
+      "artist": "The Verve"
+    },
+    {
+      "title": "Brand New",
+      "artist": "Ben Rector"
+    },
+    {
+      "title": "Bring Em Out",
+      "artist": "Young MC"
+    },
+    {
+      "title": "California Love - Original Version",
+      "artist": "Barry White"
+    },
+    {
+      "title": "Can't Hold Us (feat. Ray Dalton)",
+      "artist": "Macklemore,\u00a0Ryan Lewis,\u00a0Macklemore & Ryan Lewis,\u00a0Ray Dalton"
+    },
+    {
+      "title": "CAN'T STOP THE FEELING! (from DreamWorks Animation's \"TROLLS\")",
+      "artist": "Justin Timberlake"
+    },
+    {
+      "title": "Canned Heat - Radio Edit",
+      "artist": "Jamiroquai"
+    },
+    {
+      "title": "Celebration - Single Version",
+      "artist": "Kool & The Gang"
+    },
+    {
+      "title": "Chelsea Dagger",
+      "artist": "The Fratellis"
+    },
+    {
+      "title": "Clocks",
+      "artist": "Coldplay"
+    },
+    {
+      "title": "Crazy In Love (feat. JA\u0178-Z)",
+      "artist": "Beyonc\u00e9,\u00a0JA\u0178-Z"
+    },
+    {
+      "title": "Crazy Little Thing Called Love - Remastered 2011",
+      "artist": "Queen"
+    },
+    {
+      "title": "Crazy Train",
+      "artist": "Ozzy Osbourne"
+    },
+    {
+      "title": "Cruise - Remix",
+      "artist": "Florida Georgia Line,\u00a0Nelly"
+    },
+    {
+      "title": "Dance with Me Tonight",
+      "artist": "Olly Murs"
+    },
+    {
+      "title": "Dancing On The Ceiling",
+      "artist": "Lionel Richie"
+    },
+    {
+      "title": "Danger Zone - From \"Top Gun\" Original Soundtrack",
+      "artist": "Kenny Loggins"
+    }
+  ]
+}

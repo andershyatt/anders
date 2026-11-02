@@ -34,6 +34,11 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
 
           <h2>Song choices</h2>
           <p>Suggestions for live songs and DJ songs are right here in the app.</p>
+          <p>
+            You don't have to pick songs for every section, or fill a list all the way to its maximum. Part of why
+            you hire us is so we can use our expertise to turn your preferences into a setlist that fits your taste
+            and vision. Give us as much or as little input as you want.
+          </p>
           {live && (
             <p>
               For live songs, you can also browse Anders's repertoire at{' '}

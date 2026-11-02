@@ -15,6 +15,7 @@ export type FieldKind =
   | 'songlist'
   | 'intro-songs'
   | 'fold'
+  | 'check'
 
 export interface PlannerField {
   key: string
@@ -39,6 +40,8 @@ export interface PlannerField {
   hideLabel?: boolean
   /** Slim label used when a declined section is collapsed. */
   foldLabel?: string
+  suggestions?: 'open-dancing' | 'processionals' | 'parent-dances' | 'cocktail-dinner' | 'introductions'
+  screenTitle?: string
 }
 
 export interface PlannerSection {
@@ -513,6 +516,10 @@ const HIDE_WHEN_NO: Record<string, string> = {
   'Mother of the groom start cue': 'Having a mother-son dance',
   'Mother of the groom stop cue': 'Having a mother-son dance',
   'Mother of the groom fade out': 'Having a mother-son dance',
+  'Who is being introduced': 'Introductions happening',
+  'Couple introduction name': 'Introductions happening',
+  'Introduction songs': 'Introductions happening',
+  Introductions: 'Introductions happening',
 }
 
 const HIDE_WHEN_REMOVED: Record<string, string> = {
@@ -541,6 +548,11 @@ const HIDE_WHEN_REMOVED: Record<string, string> = {
   'Mother of the groom fade out': 'Mother-son section',
   'Private last dance wanted': 'Private last dance section',
   'Private last dance': 'Private last dance section',
+  'Introductions happening': 'Introductions section',
+  'Who is being introduced': 'Introductions section',
+  'Couple introduction name': 'Introductions section',
+  'Introduction songs': 'Introductions section',
+  Introductions: 'Introductions section',
 }
 
 export const COCKTAIL_MUSIC_LIVE = 'Live music'
@@ -608,6 +620,63 @@ const FOLDED_ANSWER: Record<string, string> = {
   'Having a father-daughter dance': 'Father-daughter section',
   'Having a mother-son dance': 'Mother-son section',
   'Private last dance wanted': 'Private last dance section',
+  'Introductions happening': 'Introductions section',
+}
+
+const PROGRESS_SKIP = new Set([
+  'Cocktail hour Anders chooses',
+  'Dinner Anders chooses',
+  'Open dancing Anders chooses',
+])
+
+/** Share of visible questions that have an answer. Declined or removed sections are already hidden. */
+export function answeredProgress(sections: PlannerSection[], fields: Record<string, string>): number {
+  let total = 0
+  let answered = 0
+  for (const section of sections) {
+    for (const field of section.fields) {
+      if (field.kind === 'fold' || field.kind === 'floorplan' || field.kind === 'check' || PROGRESS_SKIP.has(field.key)) {
+        continue
+      }
+      total += 1
+      if ((fields[field.key] ?? '').trim() !== '') answered += 1
+    }
+  }
+  if (total === 0) return 0
+  return Math.round((answered / total) * 100)
+}
+
+const NEUTRAL_SWAPS: Array<[RegExp, string]> = [
+  [/Father-daughter/g, 'Parent'],
+  [/father-daughter/g, 'parent'],
+  [/Mother-son/g, 'Other parent'],
+  [/mother-son/g, 'other parent'],
+  [/Father of the bride/g, 'Parent'],
+  [/father of the bride/g, 'parent'],
+  [/Mother of the groom/g, 'Other parent'],
+  [/mother of the groom/g, 'other parent'],
+  [/Father\/daughter/g, 'Parent'],
+  [/Mother\/son/g, 'Other parent'],
+  [/Bridal Processional/g, 'Partner Processional'],
+  [/Bridal processional/g, 'Partner processional'],
+]
+
+function neutralizeText(value: string | undefined): string | undefined {
+  if (!value) return value
+  return NEUTRAL_SWAPS.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), value)
+}
+
+/** Display-only wording. The gender-neutral setting itself is never shown. */
+export function neutralizeField(field: PlannerField): PlannerField {
+  return {
+    ...field,
+    label: neutralizeText(field.label) ?? field.label,
+    heading: neutralizeText(field.heading),
+    foldLabel: neutralizeText(field.foldLabel),
+    note: neutralizeText(field.note),
+    help: neutralizeText(field.help),
+    callout: neutralizeText(field.callout),
+  }
 }
 
 export function fieldIncludedInSave(
