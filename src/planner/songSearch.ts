@@ -18,8 +18,19 @@ interface ItunesResponse {
   results?: ItunesTrack[]
 }
 
+import { PLANNER_API_URL } from './config'
+
 const SEARCH_URL = 'https://itunes.apple.com/search'
 const cache = new Map<string, SongMatch[]>()
+
+/**
+ * iPhone Safari and Chrome on iOS send an iPhone user agent. Apple answers
+ * itunes.apple.com/search with a 301 to musics://… instead of JSON, so the
+ * browser never receives song results. iPad and desktop user agents get JSON.
+ */
+export function iphoneSongSearch(): boolean {
+  return /iPhone|iPod/i.test(navigator.userAgent)
+}
 
 export function songLabel(title: string, artist: string): string {
   return artist ? `${title} – ${artist}` : title
@@ -106,19 +117,62 @@ function searchByJsonp(query: string, signal: AbortSignal): Promise<SongMatch[]>
   })
 }
 
+function matchesFromProxy(value: unknown): SongMatch[] {
+  if (!value || typeof value !== 'object') return []
+  const songs = (value as { songs?: unknown }).songs
+  if (!Array.isArray(songs)) return []
+  const matches: SongMatch[] = []
+  for (const item of songs) {
+    if (!item || typeof item !== 'object') continue
+    const record = item as { id?: unknown; title?: unknown; artist?: unknown; artwork?: unknown }
+    const title = typeof record.title === 'string' ? record.title.trim() : ''
+    if (!title) continue
+    const artist = typeof record.artist === 'string' ? record.artist.trim() : ''
+    matches.push({
+      id: typeof record.id === 'string' && record.id ? record.id : songLabel(title, artist),
+      title,
+      artist,
+      artwork: typeof record.artwork === 'string' ? record.artwork : '',
+      label: songLabel(title, artist),
+    })
+  }
+  return matches
+}
+
+/** Apps Script fetches iTunes with a desktop user agent, so iPhone gets real JSON. */
+async function searchByProxy(query: string, signal: AbortSignal): Promise<SongMatch[]> {
+  const response = await fetch(PLANNER_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'searchSongs', q: query }),
+    signal,
+  })
+  const text = (await response.text()).trim()
+  if (!text.startsWith('{')) throw new Error('song search proxy')
+  const data = JSON.parse(text) as { ok?: boolean }
+  if (!data.ok) throw new Error('song search proxy')
+  return matchesFromProxy(data)
+}
+
 export async function searchSongs(query: string, signal: AbortSignal): Promise<SongMatch[]> {
   const key = query.trim().toLowerCase()
   const hit = cache.get(key)
   if (hit) return hit
-  try {
-    const matches = await searchByFetch(query, signal)
+  const store = (matches: SongMatch[]) => {
     cache.set(key, matches)
     return matches
+  }
+  if (iphoneSongSearch()) return store(await searchByProxy(query, signal))
+  try {
+    return store(await searchByFetch(query, signal))
   } catch (error) {
     if (isAbort(error)) throw error
-    const matches = await searchByJsonp(query, signal)
-    cache.set(key, matches)
-    return matches
+    try {
+      return store(await searchByJsonp(query, signal))
+    } catch (jsonpError) {
+      if (isAbort(jsonpError)) throw jsonpError
+      return store(await searchByProxy(query, signal))
+    }
   }
 }
 

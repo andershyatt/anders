@@ -71,8 +71,8 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
 
           <h2>Planning calls</h2>
           <p>
-            We're happy to have as many planning calls as you'd like before the wedding. The app makes it easy
-            to collaborate, and it isn't meant to replace a real conversation. We recommend at least one call
+            We're happy to have as many planning calls as you'd like before the wedding. This planner makes it easy
+            to collaborate, but it isn't meant to replace a real conversation. We recommend at least one call
             to walk through the day and answer questions. Get in touch any time.
           </p>
           {PLANNING_CALL_URL && (

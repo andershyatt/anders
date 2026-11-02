@@ -1,6 +1,5 @@
 import type { PlannerField, PlannerSection } from './fields'
 
-export const PLAYLIST_NOTE = 'You can also paste a link to a Spotify or Apple Music playlist'
 export const PERFORMANCE_OPTIONS = ['Live', 'DJ', 'Mixture of both'] as const
 
 const PRE_CEREMONY_MUSIC_TYPE_OLD =
@@ -35,6 +34,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     heading: 'Pre-ceremony music / Guest arrival',
     note: 'Music to be played before ceremony while guests arrive. Music typically begins up to 30 minutes prior to ceremony start time.',
     options: ['DJ playing music', 'Instrumental live music', 'Live music with vocals', 'Up to Anders'],
+    allowOther: false,
   },
   {
     key: 'Pre-ceremony music type',
@@ -120,7 +120,8 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   {
     key: 'Dinner music notes',
     label: VIBE_QUESTION,
-    kind: 'text',
+    kind: 'textarea',
+    rows: 3,
   },
   {
     key: 'Dinner songs',
@@ -164,7 +165,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     stack: true,
     heading: 'Slow Dance Songs',
     callout:
-      'Sprinkling in a few slow songs throughout the evening can be a great way to create special moments for couples and give everyone a chance to get out on the dance floor. They can also be a great way to bring more guests onto the dance floor if things are slowing down. I typically recommend 1–3 slow songs throughout the night, each followed by an upbeat dance floor starter to get the party going again!',
+      'Sprinkling in a few slow songs throughout the evening can be a great way to create special moments for couples and give everyone a chance to get out on the dance floor. They can also be a great way to bring more guests onto the dance floor if things are slowing down. I typically recommend no more than 1–3 slow songs throughout the night, and usually follow slow songs with upbeat dance floor starters to get the party going again!',
     options: [
       'Yes, a few slow songs are fine.',
       'No more than 2 slow dances',
@@ -214,17 +215,17 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   },
   {
     key: 'Cocktail hour Anders chooses',
-    label: "For this section, I'm comfortable with Anders choosing songs that complement or enhance the vibe.",
+    label: "I'm comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
     kind: 'check',
   },
   {
     key: 'Dinner Anders chooses',
-    label: "For this section, I'm comfortable with Anders choosing songs that complement or enhance the vibe.",
+    label: "I'm comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
     kind: 'check',
   },
   {
     key: 'Open dancing Anders chooses',
-    label: "For this section, I'm comfortable with Anders choosing songs that complement or enhance the vibe.",
+    label: "I'm comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
     kind: 'check',
   },
   {
@@ -237,7 +238,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     key: 'Introduction songs',
     label: 'Songs',
     kind: 'intro-songs',
-    note: "Add songs below. For each song, let us know who it's for.",
+    note: "Add introduction songs below. For each song, let us know who it's for.",
   },
   {
     key: 'First dance section',
@@ -413,7 +414,10 @@ export function liveDjReception(find: FindField): PlannerSection {
       take(find, 'Clean music edits'),
       take(find, 'Open dancing Anders chooses'),
       take(find, 'Open dancing songs'),
-      take(find, 'DJ music requests', { label: 'Notes', help: PLAYLIST_NOTE }),
+      take(find, 'DJ music requests', {
+        label: 'Notes',
+        note: "Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option!",
+      }),
       take(find, 'Slow songs preference'),
       take(find, 'Slow dance songs'),
       take(find, 'Dance floor lighting'),
