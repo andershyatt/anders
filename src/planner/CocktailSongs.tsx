@@ -10,7 +10,8 @@ import {
 import { importPlaylist } from './api'
 import RepertoireBrowser from './RepertoireBrowser'
 import { searchSongs, type SongMatch } from './songSearch'
-import type { SuggestedSong } from './suggestions'
+import SuggestionPlaylists from './SuggestionPlaylists'
+import type { SuggestionPlaylist, SuggestedSong } from './suggestions'
 
 const MIN_QUERY = 2
 const DEBOUNCE_MS = 300
@@ -29,7 +30,7 @@ interface CocktailSongsProps {
   picker?: boolean
   pickerKey?: string
   screenTitle?: string
-  suggestions?: SuggestedSong[]
+  playlists?: SuggestionPlaylist[]
   allowImport?: boolean
   token?: string
   /** live = repertoire only, dj = Apple Music tools, mix = a toggle between them. */
@@ -58,7 +59,7 @@ export default function CocktailSongs({
   picker = false,
   pickerKey = '',
   screenTitle,
-  suggestions = [],
+  playlists = [],
   allowImport = false,
   token = '',
   pickerMode = 'dj',
@@ -263,7 +264,7 @@ export default function CocktailSongs({
   }
 
   const countLabel = showMustPlay
-    ? `${rows.length} of ${maxSongs} songs, ${mustPlays} must-plays`
+    ? `${rows.length} of ${maxSongs} songs, ${mustPlays} of ${maxMustPlays} must-plays`
     : `${rows.length} of ${maxSongs} songs`
 
   const editor = (
@@ -278,9 +279,7 @@ export default function CocktailSongs({
           {picker ? "DJ'ed songs" : label}
         </p>
         <p className="planner-songlist__count">
-          {showMustPlay
-            ? `${rows.length}/${maxSongs} songs · ${mustPlays}/${maxMustPlays} must-plays`
-            : `${rows.length}/${maxSongs} songs`}
+          {countLabel}
         </p>
       </div>
       <div className="planner-venue__control">
@@ -561,28 +560,12 @@ export default function CocktailSongs({
             {importMessage && <p>{importMessage}</p>}
           </div>
         )}
-        {(pickerMode === 'dj' || (pickerMode === 'mix' && mixView === 'dj')) && suggestions.length > 0 && (
-          <div className="planner-suggest-block">
-            <p className="planner-dance__label">Suggested songs</p>
-            <ul className="planner-suggest">
-              {suggestions.map((song) => (
-                <li key={`${song.title}-${song.artist}`}>
-                  <span>
-                    {song.title}
-                    {song.artist ? ` – ${song.artist}` : ''}
-                  </span>
-                  <button
-                    type="button"
-                    className={rows.some((row) => sameSong(row, song)) ? 'is-added' : undefined}
-                    disabled={rows.some((row) => sameSong(row, song))}
-                    onClick={() => addTracks([song])}
-                  >
-                    {rows.some((row) => sameSong(row, song)) ? 'Added ✓' : 'Add'}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+        {(pickerMode === 'dj' || (pickerMode === 'mix' && mixView === 'dj')) && (
+          <SuggestionPlaylists
+            playlists={playlists}
+            isAdded={(song) => rows.some((row) => sameSong(row, song))}
+            onAdd={(song) => addTracks([song])}
+          />
         )}
       </div>
     </div>

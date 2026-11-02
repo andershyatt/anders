@@ -1,5 +1,6 @@
 import { LIVE_DJ_EXTRA, liveDjCeremony, liveDjCocktail, liveDjReception } from './liveDj'
 import { PHOTO_BOOTH_FIELDS } from './photoBooth'
+import type { SuggestionListId } from './suggestions'
 
 export type FieldKind =
   | 'text'
@@ -41,7 +42,8 @@ export interface PlannerField {
   hideLabel?: boolean
   /** Slim label used when a declined section is collapsed. */
   foldLabel?: string
-  suggestions?: 'open-dancing' | 'processionals' | 'parent-dances' | 'cocktail-dinner' | 'introductions'
+  /** One playlist, or several. Each playlist is a collapsible list on the song page. */
+  suggestions?: SuggestionListId | readonly SuggestionListId[]
   screenTitle?: string
   /** Textarea height. Defaults to the usual size for that question. */
   rows?: number
@@ -200,7 +202,7 @@ export const plannerSections: PlannerSection[] = [
     id: 'timeline',
     title: 'Timeline',
     blurb:
-      "Please provide your timeline in as much detail as possible. You may upload a PDF or put it in the notes section. You can start by drafting a rough or estimated timeline of events in the notes below, which can be finalized closer to the wedding. We're also happy to provide suggestions for the order of events tailored to your specific needs and preferences.",
+      "Please provide your timeline in as much detail as possible. You may upload a PDF or put it in the notes section. You can start by drafting an estimated timeline of events in the notes below, which can be finalized closer to the wedding. We're also happy to provide suggestions for the order of events tailored to your specific needs and preferences.",
     fields: [{ key: 'Timeline', label: 'Timeline', kind: 'textarea' }],
   },
   {
@@ -253,7 +255,8 @@ export const plannerSections: PlannerSection[] = [
         key: 'Cocktail hour vibe',
         label:
           "If you don't have specific song requests, what type of vibe/genres would you like to hear? Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option!",
-        kind: 'text',
+        kind: 'textarea',
+        rows: 3,
       },
       { key: 'Cocktail hour songs', label: 'Songs', kind: 'cocktail-songs', maxSongs: 30, maxMustPlays: 10 },
     ],

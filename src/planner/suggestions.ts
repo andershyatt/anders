@@ -14,9 +14,41 @@ export type SuggestionListId =
 
 const LISTS = suggestions as Record<SuggestionListId, SuggestedSong[]>
 
-export function suggestedSongs(id: SuggestionListId | undefined): SuggestedSong[] {
+/** Display names. Add a playlist by giving it a title here and a list in suggestions.json. */
+export const SUGGESTION_PLAYLIST_TITLES: Record<SuggestionListId, string> = {
+  'open-dancing': 'Open dancing',
+  processionals: 'Processionals',
+  'parent-dances': 'Special dances',
+  'cocktail-dinner': 'Cocktail hour and dinner',
+  introductions: 'Introductions',
+}
+
+export interface SuggestionPlaylist {
+  id: SuggestionListId
+  title: string
+  songs: SuggestedSong[]
+}
+
+export function suggestionIds(
+  id: SuggestionListId | readonly SuggestionListId[] | undefined,
+): SuggestionListId[] {
   if (!id) return []
-  return LISTS[id] ?? []
+  if (typeof id === 'string') return [id]
+  return [...id]
+}
+
+export function suggestionPlaylists(
+  id: SuggestionListId | readonly SuggestionListId[] | undefined,
+): SuggestionPlaylist[] {
+  return suggestionIds(id).flatMap((listId) => {
+    const songs = LISTS[listId] ?? []
+    if (songs.length === 0) return []
+    return [{ id: listId, title: SUGGESTION_PLAYLIST_TITLES[listId], songs }]
+  })
+}
+
+export function suggestedSongs(id: SuggestionListId | readonly SuggestionListId[] | undefined): SuggestedSong[] {
+  return suggestionPlaylists(id).flatMap((playlist) => playlist.songs)
 }
 
 /**

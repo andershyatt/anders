@@ -41,7 +41,7 @@ import {
 import CheckAll from './CheckAll'
 import IntroSongs from './IntroSongs'
 import { PERFORMANCE_OPTIONS, applyPreCeremonyMusicTypeLabel } from './liveDj'
-import { suggestedSongs } from './suggestions'
+import { suggestionIds, suggestionPlaylists, suggestedSongs } from './suggestions'
 import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
@@ -330,8 +330,8 @@ function FieldControl({
         picker={field.picker}
         pickerKey={field.key}
         screenTitle={field.screenTitle}
-        suggestions={suggestedSongs(field.suggestions)}
-        allowImport={field.suggestions === 'cocktail-dinner' || field.suggestions === 'open-dancing'}
+        playlists={suggestionPlaylists(field.suggestions)}
+        allowImport={suggestionIds(field.suggestions).some((id) => id === 'cocktail-dinner' || id === 'open-dancing')}
         token={token}
         pickerMode={pickerMode}
         sectionNote={sectionNote}

@@ -1735,6 +1735,26 @@
   background: #fffdf8;
 }
 
+.planner-playlist {
+  margin: 0 0 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.planner-playlist summary {
+  padding: 0.65rem 0.8rem;
+  font-family: var(--font-nav);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.planner-playlist .planner-suggest {
+  margin: 0;
+  padding: 0 0.8rem 0.45rem;
+}
+
 .planner-suggest {
   list-style: none;
   margin: 0 0 1rem;
