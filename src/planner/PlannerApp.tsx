@@ -23,6 +23,7 @@ import {
   type BookedServices,
   type PlannerBasics,
   type PlannerField,
+  type PlannerSection,
 } from './fields'
 import {
   coerceFields,
@@ -32,7 +33,9 @@ import {
   formatCoupleDate,
   formatSavedAt,
   isIsoDate,
+  lockoutDate,
   parseDanceFormat,
+  plannerLocked,
   toIsoDate,
 } from './format'
 import CheckAll from './CheckAll'
@@ -42,6 +45,8 @@ import { suggestedSongs } from './suggestions'
 import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
+import PhotoBoothPanel from './PhotoBoothPanel'
+import { isLiveOrMixture, isLivePerformance, LIVE_SONG_CONTROLS, REMOVED_LIVE_SONG, SONG_LIVE_CONTROL, songInRepertoire } from './repertoire'
 import SongField from './SongField'
 import WelcomeInfo from './WelcomeInfo'
 
@@ -62,7 +67,11 @@ type Status =
   | { kind: 'unavailable' }
   | { kind: 'ready' }
 
-function SectionMenu({ sections }: { sections: Array<{ id: string; title: string }> }) {
+function sectionSlug(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function SectionMenu({ sections }: { sections: PlannerSection[] }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="planner-menu">
@@ -80,11 +89,31 @@ function SectionMenu({ sections }: { sections: Array<{ id: string; title: string
       </button>
       {open && sections.length > 0 && (
         <div className="planner-menu__list">
-          {sections.map((section) => (
-            <a key={section.id} href={`#${section.id}`} onClick={() => setOpen(false)}>
-              {section.title}
-            </a>
-          ))}
+          {sections.map((section) => {
+            const children =
+              section.id === 'reception'
+                ? section.fields.flatMap((field) =>
+                    field.heading ? [{ id: `sub-${sectionSlug(field.heading)}`, title: field.heading }] : [],
+                  )
+                : []
+            const seen = new Set<string>()
+            return (
+              <div key={section.id}>
+                <a href={`#${section.id}`} onClick={() => setOpen(false)}>
+                  {section.title}
+                </a>
+                {children.map((child) => {
+                  if (seen.has(child.id)) return null
+                  seen.add(child.id)
+                  return (
+                    <a key={child.id} className="is-nested" href={`#${child.id}`} onClick={() => setOpen(false)}>
+                      {child.title}
+                    </a>
+                  )
+                })}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
@@ -97,7 +126,17 @@ function servicesBooked(services: BookedServices): string {
     .join(', ')
 }
 
-function BasicsCard({ basics, services }: { basics: PlannerBasics; services: BookedServices }) {
+function BasicsCard({
+  basics,
+  services,
+  status,
+  eventDate,
+}: {
+  basics: PlannerBasics
+  services: BookedServices
+  status: string
+  eventDate: string
+}) {
   const rows = [
     { label: 'Names', value: basics.names },
     { label: 'Event type', value: basics.eventType },
@@ -109,6 +148,13 @@ function BasicsCard({ basics, services }: { basics: PlannerBasics; services: Boo
     { label: 'Guest count', value: basics.guestCount },
     { label: 'Services booked', value: servicesBooked(services) },
     { label: 'Your team', value: basics.booked },
+    { label: 'Status', value: status, tone: status === 'Booked' ? 'booked' : status === 'Not yet booked' ? 'pending' : status === 'Completed' ? 'done' : '' },
+    {
+      label: 'Lockout',
+      value: lockoutDate(eventDate)
+        ? `${formatCoupleDate(lockoutDate(eventDate))} · ${plannerLocked(eventDate) ? '🔒 Locked' : '🔓 Unlocked'}`
+        : '',
+    },
   ].filter((row) => row.value.trim() !== '')
 
   return (
@@ -118,7 +164,7 @@ function BasicsCard({ basics, services }: { basics: PlannerBasics; services: Boo
           {rows.map((row) => (
             <div className="planner-basics__row" key={row.label}>
               <dt>{row.label}</dt>
-              <dd>{row.value.trim()}</dd>
+              <dd className={row.tone ? `is-${row.tone}` : undefined}>{row.value.trim()}</dd>
             </div>
           ))}
         </dl>
@@ -197,12 +243,16 @@ function FieldControl({
   value,
   services,
   token,
+  repertoireOnly = false,
+  repertoire = false,
   onChange,
 }: {
   field: PlannerField
   value: string
   services: BookedServices
   token: string
+  repertoireOnly?: boolean
+  repertoire?: boolean
   onChange: (next: string) => void
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
@@ -260,6 +310,7 @@ function FieldControl({
         suggestions={suggestedSongs(field.suggestions)}
         allowImport={field.suggestions === 'cocktail-dinner' || field.suggestions === 'open-dancing'}
         token={token}
+        repertoire={repertoire}
       />
     )
   }
@@ -388,7 +439,8 @@ function FieldControl({
         label={field.label}
         help={field.help}
         hideLabel={field.hideLabel}
-        suggestions={suggestedSongs(field.suggestions)}
+        suggestions={repertoireOnly ? [] : suggestedSongs(field.suggestions)}
+        repertoireOnly={repertoireOnly}
         value={value}
         multiline={field.song === 'list'}
         placeholder={field.placeholder}
@@ -453,6 +505,8 @@ export default function PlannerApp() {
   const [status, setStatus] = useState<Status>({ kind: token ? 'loading' : 'invalid' })
   const [services, setServices] = useState<BookedServices>(previewServices ?? ALL_SERVICES)
   const [genderNeutral, setGenderNeutral] = useState(false)
+  const [bookingStatus, setBookingStatus] = useState('')
+  const [songNotices, setSongNotices] = useState<Record<string, string>>({})
   const [basics, setBasics] = useState<PlannerBasics>(EMPTY_BASICS)
   const [fields, setFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
@@ -502,6 +556,7 @@ export default function PlannerApp() {
       setSavedFields(ready)
       setServices(bookedServices)
       setGenderNeutral(result.genderNeutral)
+      setBookingStatus(result.bookingStatus)
       setLastUpdated(result.lastUpdated)
       setStatus({ kind: 'ready' })
     })
@@ -522,12 +577,23 @@ export default function PlannerApp() {
   }, [dirty])
 
   const updateField = useCallback((key: string, value: string) => {
+    let removedSong = ''
     setFields((current) => {
       const next = { ...current, [key]: value }
       const fold = SECTION_FOLD[key]
       if (fold && value.trim().toLowerCase() !== 'no') next[fold] = ''
+      const songKey = LIVE_SONG_CONTROLS[key]
+      if (songKey && isLivePerformance(value)) {
+        const song = next[songKey] ?? ''
+        if (song.trim() && !songInRepertoire(song)) {
+          next[songKey] = ''
+          removedSong = songKey
+        }
+      }
       return next
     })
+    if (removedSong) setSongNotices((current) => ({ ...current, [removedSong]: REMOVED_LIVE_SONG }))
+    else if (SONG_LIVE_CONTROL[key]) setSongNotices((current) => ({ ...current, [key]: '' }))
     setSaveFailed(false)
     setSaveMessage('')
   }, [])
@@ -609,7 +675,7 @@ export default function PlannerApp() {
   )
 
   const onSave = useCallback(async () => {
-    if (!token || saving) return
+    if (!token || saving || plannerLocked(basics.date)) return
     setSaving(true)
     setSaveFailed(false)
     setSaveMessage('')
@@ -626,7 +692,7 @@ export default function PlannerApp() {
     setSavedFields(fields)
     setLastUpdated(result.lastUpdated ?? new Date().toISOString())
     setSaveMessage('Saved')
-  }, [fields, saving, services, token])
+  }, [basics.date, fields, saving, services, token])
 
   const sections = useMemo(() => {
     const visible = visibleSections(services, fields)
@@ -679,7 +745,7 @@ export default function PlannerApp() {
 
 
             <form
-              className="planner-form"
+              className={`planner-form${plannerLocked(basics.date) ? ' is-locked' : ''}`}
               onSubmit={(event) => {
                 event.preventDefault()
                 void onSave()
@@ -689,7 +755,17 @@ export default function PlannerApp() {
                 <section key={section.id} id={section.id} className="planner-section">
                   <h2>{section.title}</h2>
                   {section.blurb && <p className="planner-section__blurb">{section.blurb}</p>}
-                  {section.id === 'basics' && <BasicsCard basics={basics} services={services} />}
+                  {section.id === 'basics' && (
+                    <BasicsCard basics={basics} services={services} status={bookingStatus} eventDate={basics.date} />
+                  )}
+                  {section.id === 'photo-booth' && (
+                    <PhotoBoothPanel
+                      knownVenue={services.knownVenue}
+                      fields={fields}
+                      locked={plannerLocked(basics.date)}
+                      onChange={updateField}
+                    />
+                  )}
                   {section.id === 'venue-questions' && (
                       <p className="planner-callout">
                           <span>
@@ -725,7 +801,11 @@ export default function PlannerApp() {
                   )}
                   {section.fields.map((field) => (
                     <Fragment key={field.key}>
-                      {field.heading && <h3 className="planner-subhead">{field.heading}</h3>}
+                      {field.heading && (
+                        <h3 className="planner-subhead" id={`sub-${sectionSlug(field.heading)}`}>
+                          {field.heading}
+                        </h3>
+                      )}
                       {field.callout && (
                         <p className="planner-callout">
                           <span>{field.callout}</span>
@@ -794,8 +874,17 @@ export default function PlannerApp() {
                           value={fields[field.key] ?? ''}
                           services={services}
                           token={token}
+                          repertoireOnly={
+                            Boolean(SONG_LIVE_CONTROL[field.key]) &&
+                            isLivePerformance(fields[SONG_LIVE_CONTROL[field.key]] ?? '')
+                          }
+                          repertoire={
+                            (field.key === 'Cocktail hour songs' && isLiveOrMixture(fields['Cocktail hour music type'] ?? '')) ||
+                            (field.key === 'Dinner songs' && isLiveOrMixture(fields['Dinner music type'] ?? ''))
+                          }
                           onChange={(value) => updateField(field.key, value)}
                         />
+                        {songNotices[field.key] && <p className="planner-song-removed">{songNotices[field.key]}</p>}
                         {field.key === 'IG handle' && (
                           <p className="planner-ig-link">
                             <a
@@ -839,6 +928,10 @@ export default function PlannerApp() {
                 </section>
               ))}
 
+              <figure className="planner-quote">
+                <blockquote>You must always believe that life is as extraordinary as music says it is.</blockquote>
+                <figcaption>— Rebecca West, The Fountain Overflows</figcaption>
+              </figure>
               <div className="planner-progress" aria-label={`Planner progress ${progress} percent`}>
                 <div className="planner-progress__fill" style={{ width: `${progress}%` }} />
                 <span>{progress}% answered</span>
@@ -850,7 +943,7 @@ export default function PlannerApp() {
                   {!saveMessage && dirty && <p>You have unsaved changes</p>}
                   {savedLabel && <p className="planner-savebar__time">Last saved {savedLabel}</p>}
                 </div>
-                <button type="submit" className="btn" disabled={saving}>
+                <button type="submit" className="btn" disabled={saving || plannerLocked(basics.date)}>
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>

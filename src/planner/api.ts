@@ -22,6 +22,8 @@ export interface PlannerLoadSuccess {
   floorPlan: { name: string; url: string } | null
   /** Sheet-only setting. Never render the question itself. */
   genderNeutral: boolean
+  /** Couples-sheet value. Not a planner field. */
+  bookingStatus: string
   lastUpdated?: string | number
 }
 
@@ -61,6 +63,11 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>
 }
 
+function bookingStatusText(value: unknown): string {
+  if (value !== 'Booked' && value !== 'Not yet booked' && value !== 'Completed') return ''
+  return value
+}
+
 function parseServices(value: unknown): BookedServices {
   const record = asRecord(value)
   if (!record) return ALL_SERVICES
@@ -69,6 +76,7 @@ function parseServices(value: unknown): BookedServices {
     dj: record.dj === true,
     photobooth: record.photobooth === true,
     venueQuestions: record.venueQuestions === true,
+    knownVenue: typeof record.knownVenue === 'boolean' ? record.knownVenue : record.venueQuestions !== true,
   }
 }
 
@@ -144,6 +152,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     photo: parseLoadedPhoto(record.photo),
     floorPlan: parseFloorPlan(record.floorPlan),
     genderNeutral: record.genderNeutral === true,
+    bookingStatus: bookingStatusText(record.bookingStatus),
     lastUpdated:
       typeof lastUpdated === 'string' || typeof lastUpdated === 'number' ? lastUpdated : undefined,
   }

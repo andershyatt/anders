@@ -8,6 +8,7 @@ import {
   type CocktailSong,
 } from './cocktailSongs'
 import { importPlaylist } from './api'
+import { repertoireMatch } from './repertoire'
 import { searchSongs, type SongMatch } from './songSearch'
 import type { SuggestedSong } from './suggestions'
 
@@ -31,6 +32,38 @@ interface CocktailSongsProps {
   suggestions?: SuggestedSong[]
   allowImport?: boolean
   token?: string
+  repertoire?: boolean
+}
+
+function RepertoireSearch({ onAdd }: { onAdd: (song: SuggestedSong) => void }) {
+  const [query, setQuery] = useState('')
+  const matches = repertoireMatch(query, 8)
+  return (
+    <div className="planner-repertoire">
+      <p className="planner-dance__label">Search Anders&apos;s live repertoire</p>
+      <input
+        type="text"
+        value={query}
+        placeholder="Search the live repertoire"
+        onChange={(event) => setQuery(event.target.value)}
+      />
+      {matches.length > 0 && (
+        <ul className="planner-suggest">
+          {matches.map((song) => (
+            <li key={song.id}>
+              <span>
+                {song.title}
+                {song.artist ? ` – ${song.artist}` : ''}
+              </span>
+              <button type="button" onClick={() => onAdd(song)}>
+                Add
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
 }
 
 function songId(): string {
@@ -57,6 +90,7 @@ export default function CocktailSongs({
   suggestions = [],
   allowImport = false,
   token = '',
+  repertoire = false,
 }: CocktailSongsProps) {
   const listId = useId()
   const [rows, setRows] = useState<CocktailRow[]>(() => rowsFromValue(value, maxSongs))
@@ -463,6 +497,12 @@ export default function CocktailSongs({
         <p>{screenTitle || label}</p>
       </div>
       <div className="planner-picker__body">
+        {repertoire && (
+          <RepertoireSearch
+            onAdd={(song) => addTracks([song])}
+          />
+        )}
+        {editor}
         {allowImport && (
           <div className="planner-import">
             <label htmlFor={`${listId}-playlist`}>Paste a Spotify or Apple Music playlist link</label>

@@ -1,4 +1,5 @@
 import { LIVE_DJ_EXTRA, liveDjCeremony, liveDjCocktail, liveDjReception } from './liveDj'
+import { PHOTO_BOOTH_FIELDS } from './photoBooth'
 
 export type FieldKind =
   | 'text'
@@ -203,14 +204,8 @@ export const plannerSections: PlannerSection[] = [
   {
     id: 'photo-booth',
     title: 'Photo Booth',
-    blurb: 'Only fill this in if you are booking the photo booth.',
-    fields: [
-      { key: 'Photo Booth start/end', label: 'Photo Booth start/end', kind: 'text', placeholder: '7:00–10:00 PM' },
-      { key: 'Photo Booth backdrop', label: 'Photo Booth backdrop', kind: 'text' },
-      { key: 'Photo Booth template', label: 'Photo Booth template', kind: 'text' },
-      { key: 'Photo Booth logo/text', label: 'Photo Booth logo/text', kind: 'text' },
-      { key: 'Photo Booth props', label: 'Photo Booth props', kind: 'textarea' },
-    ],
+    blurb: '',
+    fields: [],
   },
   {
     id: 'ceremony',
@@ -316,6 +311,7 @@ export const plannerSections: PlannerSection[] = [
 export const plannerFieldKeys: string[] = [
   ...plannerSections.flatMap((section) => section.fields.map((field) => field.key)),
   ...LIVE_DJ_EXTRA.map((field) => field.key),
+  ...PHOTO_BOOTH_FIELDS.map((field) => field.key),
 ]
 
 /** Shown on the Basics card. Couples cannot edit these, and saves omit them. */
@@ -418,13 +414,21 @@ export interface BookedServices {
   dj: boolean
   photobooth: boolean
   venueQuestions: boolean
+  /** Known venue uses the shorter photo booth questionnaire. */
+  knownVenue: boolean
 }
 
 /**
  * Used when the backend omits `services` (older responses).
  * Venue questions stay off until the backend sets `venueQuestions: true`.
  */
-export const ALL_SERVICES: BookedServices = { live: true, dj: true, photobooth: true, venueQuestions: false }
+export const ALL_SERVICES: BookedServices = {
+  live: true,
+  dj: true,
+  photobooth: true,
+  venueQuestions: false,
+  knownVenue: true,
+}
 
 const LIVE_FIELDS = new Set(['Songs to learn'])
 
@@ -574,6 +578,9 @@ export function fieldVisible(key: string, services: BookedServices): boolean {
   if (LIVE_DJ_ONLY.has(key)) return services.live && services.dj
   if (LIVE_FIELDS.has(key)) return services.live
   if (DJ_FIELDS.has(key)) return services.dj
+  if (PHOTO_BOOTH_FIELDS.some((field) => field.key === key && field.newVenue)) {
+    return services.photobooth && !services.knownVenue
+  }
   if (key.startsWith('Photo Booth')) return services.photobooth
   if (LIVE_AND_DJ_FIELDS.has(key)) return services.live && services.dj
   if (VENUE_QUESTION_FIELDS.has(key)) return services.venueQuestions
@@ -707,6 +714,7 @@ function sectionWithVisibleFields(
   services: BookedServices,
   answers: Record<string, string>,
 ): PlannerSection[] {
+  if (section.id === 'photo-booth') return services.photobooth ? [{ ...section, fields: [] }] : []
   const fields = section.fields.filter((field) => fieldAnswerVisible(field.key, services, answers))
   if (fields.length === 0) return []
   return [{ ...section, fields }]
@@ -769,6 +777,7 @@ export function servicesFromPreview(search: string): BookedServices | null {
     dj: parts.has('dj'),
     photobooth: parts.has('photobooth'),
     venueQuestions: parts.has('venue'),
+    knownVenue: !parts.has('venue'),
   }
 }
 

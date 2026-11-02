@@ -1235,10 +1235,80 @@
 .planner-picker__back,
 .planner-fold-prompt button,
 .planner-folded button {
-  background: #8d6b58;
-  color: #fffdf8;
-  border: 1px solid #6f5344;
-  box-shadow: inset 0 -2px 0 rgba(60, 40, 30, 0.2);
+  background: #e4c98a;
+  color: #3c342c;
+  border: 1px solid #c4a56a;
+  box-shadow: inset 0 -2px 0 rgba(120, 90, 40, 0.18);
+}
+
+.planner-browse {
+  min-height: 48px;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  font-size: 15px;
+}
+
+.planner-top .planner-menu__list a.is-nested {
+  padding-left: 1.35rem;
+  font-weight: 500;
+  color: #5c5148;
+}
+
+.planner-basics dd.is-booked {
+  color: #1f7a32;
+  font-weight: 700;
+}
+
+.planner-basics dd.is-pending {
+  color: #8a5a00;
+  font-weight: 700;
+}
+
+.planner-basics dd.is-done {
+  color: #6b4a32;
+  font-weight: 700;
+}
+
+.planner-quote {
+  margin: 2rem 0 0;
+  padding: 1.25rem 0.5rem 0.25rem;
+  text-align: center;
+}
+
+.planner-quote blockquote {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #4e5c41;
+}
+
+.planner-quote figcaption {
+  margin-top: 0.55rem;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.planner-song-removed {
+  margin: -0.35rem 0 0.9rem;
+  color: #8a5a00;
+  font-size: 13px;
+}
+
+.planner-form.is-locked .planner-section :is(input, textarea, select, button):not(.planner-songcompact__open) {
+  pointer-events: none;
+}
+
+.planner-repertoire input,
+.planner-picker__body > input {
+  width: 100%;
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.7rem;
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-white);
 }
 
 .planner-check {

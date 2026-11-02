@@ -130,6 +130,33 @@ export function formatCoupleDate(value: string): string {
   return `${WEEKDAYS[date.getDay()]}, ${MONTHS[monthIndex]} ${ordinalDay(day)}, ${year}`
 }
 
+/** Calendar date seven days before a YYYY-MM-DD event date. */
+export function lockoutDate(eventDate: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(eventDate.trim())
+  if (!match) return ''
+  const utc = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) - 7))
+  const year = utc.getUTCFullYear()
+  const month = String(utc.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(utc.getUTCDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/** Today's calendar date in America/New_York. */
+export function todayInNewYork(now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now)
+}
+
+export function plannerLocked(eventDate: string, now = new Date()): boolean {
+  const lock = lockoutDate(eventDate)
+  if (!lock) return false
+  return todayInNewYork(now) >= lock
+}
+
 export function formatSavedAt(value: string | number | undefined): string {
   if (value === undefined || value === null || value === '') return ''
   const date = new Date(value)
