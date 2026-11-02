@@ -63,6 +63,13 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
             </>
           )}
 
+          <h2>Lockout date</h2>
+          <p>
+            Your planner locks seven days before the wedding, so Anders can start preparing without a last-minute
+            change slipping through. You are always welcome to email last-minute changes to{' '}
+            <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
+          </p>
+
           <h2>Planning calls</h2>
           <p>
             We're happy to have as many planning calls as you'd like before the wedding. The app makes it easy

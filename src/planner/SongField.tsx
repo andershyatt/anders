@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent, type KeyboardEvent, type SyntheticEvent } from 'react'
 import { replaceSongSegment, searchSongs, songSegment, type SongMatch } from './songSearch'
+import { repertoireChoices, repertoireMatch } from './repertoire'
 import SuggestionBrowser from './SuggestionBrowser'
 import type { SuggestedSong } from './suggestions'
 
@@ -12,6 +13,7 @@ interface SongFieldProps {
   help?: string
   hideLabel?: boolean
   suggestions?: SuggestedSong[]
+  repertoireOnly?: boolean
   value: string
   multiline: boolean
   placeholder?: string
@@ -25,6 +27,7 @@ export default function SongField({
   help,
   hideLabel = false,
   suggestions = [],
+  repertoireOnly = false,
   value,
   multiline,
   placeholder,
@@ -103,7 +106,10 @@ export default function SongField({
     const controller = new AbortController()
     let cancelled = false
     const timer = window.setTimeout(() => {
-      searchSongs(query, controller.signal)
+      const search = repertoireOnly
+        ? Promise.resolve(repertoireMatch(query))
+        : searchSongs(query, controller.signal)
+      search
         .then((matches) => {
           if (cancelled) return
           setLoading(false)
@@ -129,7 +135,7 @@ export default function SongField({
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [open, query, results.length, resultsQuery])
+  }, [open, query, repertoireOnly, results.length, resultsQuery])
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
@@ -243,7 +249,7 @@ export default function SongField({
     return (
       <SuggestionBrowser
         title={`Suggestions for ${label}`}
-        songs={suggestions}
+        songs={repertoireOnly ? repertoireChoices() : suggestions}
         onClose={closeBrowse}
         onPick={(song) => {
           onChange(song.artist ? `${song.title} – ${song.artist}` : song.title)
@@ -302,7 +308,7 @@ export default function SongField({
           </ul>
         )}
       </div>
-      {suggestions.length > 0 && !multiline && (
+      {(repertoireOnly || suggestions.length > 0) && !multiline && (
         <button type="button" className="planner-browse" onClick={openBrowse}>
           Browse suggestions
         </button>
