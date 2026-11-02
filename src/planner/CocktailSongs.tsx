@@ -8,7 +8,7 @@ import {
   type CocktailSong,
 } from './cocktailSongs'
 import { importPlaylist } from './api'
-import { repertoireMatch } from './repertoire'
+import RepertoireBrowser from './RepertoireBrowser'
 import { searchSongs, type SongMatch } from './songSearch'
 import type { SuggestedSong } from './suggestions'
 
@@ -32,38 +32,9 @@ interface CocktailSongsProps {
   suggestions?: SuggestedSong[]
   allowImport?: boolean
   token?: string
-  repertoire?: boolean
-}
-
-function RepertoireSearch({ onAdd }: { onAdd: (song: SuggestedSong) => void }) {
-  const [query, setQuery] = useState('')
-  const matches = repertoireMatch(query, 8)
-  return (
-    <div className="planner-repertoire">
-      <p className="planner-dance__label">Search Anders&apos;s live repertoire</p>
-      <input
-        type="text"
-        value={query}
-        placeholder="Search the live repertoire"
-        onChange={(event) => setQuery(event.target.value)}
-      />
-      {matches.length > 0 && (
-        <ul className="planner-suggest">
-          {matches.map((song) => (
-            <li key={song.id}>
-              <span>
-                {song.title}
-                {song.artist ? ` – ${song.artist}` : ''}
-              </span>
-              <button type="button" onClick={() => onAdd(song)}>
-                Add
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
+  /** live = repertoire only, dj = Apple Music tools, mix = a toggle between them. */
+  pickerMode?: 'live' | 'dj' | 'mix'
+  sectionNote?: string
 }
 
 function songId(): string {
@@ -90,7 +61,8 @@ export default function CocktailSongs({
   suggestions = [],
   allowImport = false,
   token = '',
-  repertoire = false,
+  pickerMode = 'dj',
+  sectionNote = '',
 }: CocktailSongsProps) {
   const listId = useId()
   const [rows, setRows] = useState<CocktailRow[]>(() => rowsFromValue(value, maxSongs))
@@ -110,6 +82,7 @@ export default function CocktailSongs({
   const [importUrl, setImportUrl] = useState('')
   const [importMessage, setImportMessage] = useState('')
   const [importing, setImporting] = useState(false)
+  const [mixView, setMixView] = useState<'live' | 'dj'>('live')
   const rootRef = useRef<HTMLDivElement>(null)
   const backRef = useRef<HTMLButtonElement>(null)
   const full = rows.length >= maxSongs
@@ -279,10 +252,15 @@ export default function CocktailSongs({
     : `${rows.length} of ${maxSongs} songs`
 
   const editor = (
-    <div className="planner-songlist" ref={rootRef}>
+    <div
+      className={`planner-songlist${
+        picker && !(pickerMode === 'dj' || (pickerMode === 'mix' && mixView === 'dj')) ? ' is-list-only' : ''
+      }`}
+      ref={rootRef}
+    >
       <div className="planner-songlist__heading">
         <p className="planner-dance__label" id={`${listId}-label`}>
-          {label}
+          {picker ? "DJ'ed songs" : label}
         </p>
         <p className="planner-songlist__count">
           {showMustPlay
@@ -476,10 +454,12 @@ export default function CocktailSongs({
                 {song.artist ? ` – ${song.artist}` : ''}
               </span>
               {song.mustPlay && <span className="planner-songcompact__must">Must-play</span>}
+              {song.note.trim() && <span className="planner-songcompact__note">{song.note}</span>}
             </li>
           ))}
         </ul>
       )}
+      {sectionNote.trim() && <p className="planner-songcompact__note">{sectionNote.trim()}</p>}
       <button type="button" className="planner-songcompact__open" onClick={openScreen}>
         {rows.length > 0 ? 'Edit songs' : 'Select Songs'}
       </button>
@@ -497,13 +477,21 @@ export default function CocktailSongs({
         <p>{screenTitle || label}</p>
       </div>
       <div className="planner-picker__body">
-        {repertoire && (
-          <RepertoireSearch
-            onAdd={(song) => addTracks([song])}
-          />
+        {pickerMode === 'mix' && (
+          <div className="planner-mix" role="group" aria-label="Song source">
+            <button type="button" className={mixView === 'live' ? 'is-selected' : undefined} onClick={() => setMixView('live')}>
+              Live
+            </button>
+            <button type="button" className={mixView === 'dj' ? 'is-selected' : undefined} onClick={() => setMixView('dj')}>
+              DJ
+            </button>
+          </div>
         )}
         {editor}
-        {allowImport && (
+        {(pickerMode === 'live' || (pickerMode === 'mix' && mixView === 'live')) && (
+          <RepertoireBrowser onAdd={(song) => addTracks([song])} />
+        )}
+        {(pickerMode === 'dj' || (pickerMode === 'mix' && mixView === 'dj')) && allowImport && (
           <div className="planner-import">
             <label htmlFor={`${listId}-playlist`}>Paste a Spotify or Apple Music playlist link</label>
             <div className="planner-import__row">
@@ -521,7 +509,7 @@ export default function CocktailSongs({
             {importMessage && <p>{importMessage}</p>}
           </div>
         )}
-        {suggestions.length > 0 && (
+        {(pickerMode === 'dj' || (pickerMode === 'mix' && mixView === 'dj')) && suggestions.length > 0 && (
           <div className="planner-suggest-block">
             <p className="planner-dance__label">Suggested songs</p>
             <ul className="planner-suggest">
@@ -539,7 +527,6 @@ export default function CocktailSongs({
             </ul>
           </div>
         )}
-        {editor}
       </div>
     </div>
   )

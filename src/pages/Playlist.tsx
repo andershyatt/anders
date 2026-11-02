@@ -4,15 +4,10 @@ import songsData from '../data/songs.json'
 import { usePlaylist } from '../hooks/usePlaylist'
 import { submitPlaylist, type SubmitMethod } from '../lib/submitPlaylist'
 import type { PlaylistContact, Song } from '../types/song'
+import { filterSongs, songFilterChoices } from '../planner/filterSongs'
 import './Playlist.css'
 
 const songs = songsData as Song[]
-
-function uniqueSorted(values: (string | undefined)[]): string[] {
-  return [...new Set(values.filter((v): v is string => Boolean(v)))].sort((a, b) =>
-    a.localeCompare(b),
-  )
-}
 
 export default function Playlist() {
   const playlist = usePlaylist(songs)
@@ -33,38 +28,12 @@ export default function Playlist() {
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const genres = useMemo(
-    () => uniqueSorted(songs.flatMap((s) => s.genres ?? (s.genre ? [s.genre] : []))),
-    [],
+  const { genres, decades, paces, tags } = useMemo(() => songFilterChoices(songs), [])
+
+  const filtered = useMemo(
+    () => filterSongs(songs, { query: deferredQuery, genre, decade, pace, tag, sortBy }),
+    [deferredQuery, genre, decade, pace, tag, sortBy],
   )
-  const decades = useMemo(() => uniqueSorted(songs.map((s) => s.decade)), [])
-  const paces = useMemo(() => uniqueSorted(songs.map((s) => s.pace)), [])
-  const tags = useMemo(() => uniqueSorted(songs.flatMap((s) => s.tags ?? [])), [])
-
-  const filtered = useMemo(() => {
-    const q = deferredQuery.trim().toLowerCase()
-    let list = songs.filter((s) => {
-      if (q) {
-        const hay = `${s.title} ${s.artist}`.toLowerCase()
-        if (!hay.includes(q)) return false
-      }
-      if (genre && !(s.genres ?? []).includes(genre) && s.genre !== genre) return false
-      if (decade && s.decade !== decade) return false
-      if (pace && s.pace !== pace) return false
-      if (tag && !(s.tags ?? []).includes(tag)) return false
-      return true
-    })
-
-    list = [...list].sort((a, b) => {
-      if (sortBy === 'title') {
-        const t = a.title.localeCompare(b.title)
-        return t || a.artist.localeCompare(b.artist)
-      }
-      const aArt = a.artist.localeCompare(b.artist)
-      return aArt || a.title.localeCompare(b.title)
-    })
-    return list
-  }, [deferredQuery, genre, decade, pace, tag, sortBy])
 
   const grouped = useMemo(() => {
     if (sortBy !== 'artist') return null
