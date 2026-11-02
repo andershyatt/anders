@@ -11,6 +11,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         planner: 'planner/index.html',
+        pipeline: 'pipeline/index.html',
       },
     },
   },

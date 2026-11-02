@@ -1,5 +1,6 @@
 User-agent: *
 Disallow: /anders/planner/
+Disallow: /anders/pipeline/
 
 # GitHub Pages publishes this file with the project site at
 # https://andershyatt.github.io/anders/robots.txt
