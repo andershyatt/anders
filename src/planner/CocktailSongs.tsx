@@ -7,7 +7,9 @@ import {
   typedCocktailSong,
   type CocktailSong,
 } from './cocktailSongs'
+import { importPlaylist } from './api'
 import { searchSongs, type SongMatch } from './songSearch'
+import type { SuggestedSong } from './suggestions'
 
 const MIN_QUERY = 2
 const DEBOUNCE_MS = 300
@@ -25,6 +27,10 @@ interface CocktailSongsProps {
   /** Open the editor on its own screen, and keep a short list on the planner. */
   picker?: boolean
   pickerKey?: string
+  screenTitle?: string
+  suggestions?: SuggestedSong[]
+  allowImport?: boolean
+  token?: string
 }
 
 function songId(): string {
@@ -47,6 +53,10 @@ export default function CocktailSongs({
   maxMustPlays = MAX_COCKTAIL_MUST_PLAYS,
   picker = false,
   pickerKey = '',
+  screenTitle,
+  suggestions = [],
+  allowImport = false,
+  token = '',
 }: CocktailSongsProps) {
   const listId = useId()
   const [rows, setRows] = useState<CocktailRow[]>(() => rowsFromValue(value, maxSongs))
@@ -63,6 +73,9 @@ export default function CocktailSongs({
   const [message, setMessage] = useState('')
   const [openNotes, setOpenNotes] = useState<Record<string, boolean>>({})
   const [screen, setScreen] = useState(false)
+  const [importUrl, setImportUrl] = useState('')
+  const [importMessage, setImportMessage] = useState('')
+  const [importing, setImporting] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const backRef = useRef<HTMLButtonElement>(null)
   const full = rows.length >= maxSongs
@@ -157,6 +170,38 @@ export default function CocktailSongs({
     setResults([])
     setOpen(false)
     setMessage('')
+  }
+
+  const addTracks = (tracks: SuggestedSong[]) => {
+    const next = rows.slice()
+    for (const track of tracks) {
+      if (next.length >= maxSongs) break
+      const song = { title: track.title, artist: track.artist, artwork: '', mustPlay: false, note: '' }
+      if (next.some((row) => sameSong(row, song))) continue
+      next.push({ ...song, id: songId() })
+    }
+    if (next.length === rows.length) {
+      setImportMessage(full ? `This list already has ${maxSongs} songs.` : 'Those songs are already on the list.')
+      return
+    }
+    commit(next)
+    setImportMessage(
+      next.length >= maxSongs ? `Added songs up to the ${maxSongs} song limit.` : 'Added those songs.',
+    )
+  }
+
+  const loadPlaylist = async () => {
+    const link = importUrl.trim()
+    if (!link || !token) return
+    setImporting(true)
+    setImportMessage('')
+    const result = await importPlaylist(token, link)
+    setImporting(false)
+    if (!result.ok) {
+      setImportMessage("We couldn't load that playlist. You can still add songs from the suggestions or by search.")
+      return
+    }
+    addTracks(result.tracks)
   }
 
   const showList = open && query.trim().length >= MIN_QUERY && !full && (loading || results.length > 0)
@@ -415,9 +460,47 @@ export default function CocktailSongs({
         <button ref={backRef} type="button" className="planner-picker__back" onClick={closeScreen}>
           Back
         </button>
-        <p>{label}</p>
+        <p>{screenTitle || label}</p>
       </div>
-      <div className="planner-picker__body">{editor}</div>
+      <div className="planner-picker__body">
+        {allowImport && (
+          <div className="planner-import">
+            <label htmlFor={`${listId}-playlist`}>Paste a Spotify or Apple Music playlist link</label>
+            <div className="planner-import__row">
+              <input
+                id={`${listId}-playlist`}
+                type="url"
+                value={importUrl}
+                placeholder="https://open.spotify.com/playlist/…"
+                onChange={(event) => setImportUrl(event.target.value)}
+              />
+              <button type="button" disabled={importing || !importUrl.trim()} onClick={() => void loadPlaylist()}>
+                {importing ? 'Loading…' : 'Load tracks'}
+              </button>
+            </div>
+            {importMessage && <p>{importMessage}</p>}
+          </div>
+        )}
+        {suggestions.length > 0 && (
+          <div className="planner-suggest-block">
+            <p className="planner-dance__label">Suggested songs</p>
+            <ul className="planner-suggest">
+              {suggestions.map((song) => (
+                <li key={`${song.title}-${song.artist}`}>
+                  <span>
+                    {song.title}
+                    {song.artist ? ` – ${song.artist}` : ''}
+                  </span>
+                  <button type="button" onClick={() => addTracks([song])}>
+                    Add
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {editor}
+      </div>
     </div>
   )
 }

@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { searchSongs, type SongMatch } from './songSearch'
+import SuggestionBrowser from './SuggestionBrowser'
+import type { SuggestedSong } from './suggestions'
 
 const MIN_QUERY = 2
 const DEBOUNCE_MS = 300
@@ -20,6 +22,7 @@ interface IntroSongsProps {
   label: string
   value: string
   onChange: (value: string) => void
+  suggestions?: SuggestedSong[]
 }
 
 function songId(): string {
@@ -65,7 +68,7 @@ function typedSong(query: string): IntroSong | null {
   return { title, artist: parts.slice(1).join(' – ').trim(), artwork: '', who: '' }
 }
 
-export default function IntroSongs({ label, value, onChange }: IntroSongsProps) {
+export default function IntroSongs({ label, value, onChange, suggestions = [] }: IntroSongsProps) {
   const listId = useId()
   const [rows, setRows] = useState<IntroRow[]>(() => parseIntroSongs(value).map((song) => ({ ...song, id: songId() })))
   const [source, setSource] = useState(value)
@@ -79,8 +82,26 @@ export default function IntroSongs({ label, value, onChange }: IntroSongsProps) 
   const [loading, setLoading] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [message, setMessage] = useState('')
+  const [browsing, setBrowsing] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const full = rows.length >= MAX_SONGS
+
+  useEffect(() => {
+    if (suggestions.length === 0) return
+    const onPop = () => setBrowsing(window.history.state?.plannerBrowse === 'introduction-songs')
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [suggestions.length])
+
+  const openBrowse = () => {
+    window.history.pushState({ ...(window.history.state ?? {}), plannerBrowse: 'introduction-songs' }, '')
+    setBrowsing(true)
+  }
+
+  const closeBrowse = () => {
+    if (window.history.state?.plannerBrowse === 'introduction-songs') window.history.back()
+    else setBrowsing(false)
+  }
 
   useEffect(() => {
     if (!open || query.trim().length < MIN_QUERY) return
@@ -165,6 +186,20 @@ export default function IntroSongs({ label, value, onChange }: IntroSongsProps) 
     }
   }
 
+  if (browsing) {
+    return (
+      <SuggestionBrowser
+        title="Introduction Songs"
+        songs={suggestions}
+        onClose={closeBrowse}
+        onPick={(song) => {
+          addSong({ title: song.title, artist: song.artist, artwork: '', who: '' })
+          closeBrowse()
+        }}
+      />
+    )
+  }
+
   return (
     <div className="planner-songlist" ref={rootRef}>
       <div className="planner-songlist__heading">
@@ -227,6 +262,11 @@ export default function IntroSongs({ label, value, onChange }: IntroSongsProps) 
         <button type="button" className="planner-songlist__add" onClick={() => addSong(typed)}>
           Add “{typed.title}
           {typed.artist ? ` – ${typed.artist}` : ''}” as typed
+        </button>
+      )}
+      {suggestions.length > 0 && (
+        <button type="button" className="planner-browse" onClick={openBrowse}>
+          Browse suggestions
         </button>
       )}
       {message && (

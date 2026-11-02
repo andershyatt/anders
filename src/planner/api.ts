@@ -20,6 +20,8 @@ export interface PlannerLoadSuccess {
   photo: { dataUrl: string } | null
   /** Reception floor plan. Null when the couple has not sent one. */
   floorPlan: { name: string; url: string } | null
+  /** Sheet-only setting. Never render the question itself. */
+  genderNeutral: boolean
   lastUpdated?: string | number
 }
 
@@ -141,6 +143,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     services: parseServices(record.services),
     photo: parseLoadedPhoto(record.photo),
     floorPlan: parseFloorPlan(record.floorPlan),
+    genderNeutral: record.genderNeutral === true,
     lastUpdated:
       typeof lastUpdated === 'string' || typeof lastUpdated === 'number' ? lastUpdated : undefined,
   }
@@ -308,6 +311,40 @@ export function uploadTimelinePdf(
   file: { name: string; dataUrl: string },
 ): Promise<{ ok: true; name: string; url: string } | PlannerFailure> {
   return uploadNamedPdf(token, 'uploadTimeline', file)
+}
+
+export interface ImportedTrack {
+  title: string
+  artist: string
+}
+
+export async function importPlaylist(
+  token: string,
+  url: string,
+): Promise<{ ok: true; tracks: ImportedTrack[] } | PlannerFailure> {
+  try {
+    const response = await fetch(PLANNER_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'importPlaylist', c: token, url }),
+    })
+    const record = asRecord(await readJson(response))
+    if (!record || record.ok !== true) {
+      return { ok: false, error: typeof record?.error === 'string' ? record.error : 'server_error' }
+    }
+    const tracks = Array.isArray(record.tracks) ? record.tracks : []
+    const parsed: ImportedTrack[] = []
+    for (const item of tracks) {
+      const song = asRecord(item)
+      const title = typeof song?.title === 'string' ? song.title.trim() : ''
+      if (!title) continue
+      parsed.push({ title, artist: typeof song?.artist === 'string' ? song.artist.trim() : '' })
+    }
+    if (parsed.length === 0) return { ok: false, error: 'no_tracks' }
+    return { ok: true, tracks: parsed }
+  } catch {
+    return { ok: false, error: 'server_error' }
+  }
 }
 
 export function saveErrorMessage(error: string): string {

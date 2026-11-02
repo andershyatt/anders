@@ -18,6 +18,8 @@ import {
   TIMELINE_PREFILL,
   stripOldTimelineHeader,
   visibleSections,
+  answeredProgress,
+  neutralizeField,
   type BookedServices,
   type PlannerBasics,
   type PlannerField,
@@ -36,6 +38,7 @@ import {
 import CheckAll from './CheckAll'
 import IntroSongs from './IntroSongs'
 import { PERFORMANCE_OPTIONS, applyPreCeremonyMusicTypeLabel } from './liveDj'
+import { suggestedSongs } from './suggestions'
 import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
@@ -47,6 +50,7 @@ const SECTION_FOLD: Record<string, string> = {
   'Having a father-daughter dance': 'Father-daughter section',
   'Having a mother-son dance': 'Mother-son section',
   'Private last dance wanted': 'Private last dance section',
+  'Introductions happening': 'Introductions section',
 }
 import './planner.css'
 
@@ -58,7 +62,42 @@ type Status =
   | { kind: 'unavailable' }
   | { kind: 'ready' }
 
-function BasicsCard({ basics }: { basics: PlannerBasics }) {
+function SectionMenu({ sections }: { sections: Array<{ id: string; title: string }> }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="planner-menu">
+      <button
+        type="button"
+        className="planner-menu__button"
+        aria-expanded={open}
+        aria-label="Jump to a section"
+        disabled={sections.length === 0}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+      {open && sections.length > 0 && (
+        <div className="planner-menu__list">
+          {sections.map((section) => (
+            <a key={section.id} href={`#${section.id}`} onClick={() => setOpen(false)}>
+              {section.title}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function servicesBooked(services: BookedServices): string {
+  return [services.live ? 'Live music' : '', services.dj ? 'DJ' : '', services.photobooth ? 'Photo booth' : '']
+    .filter(Boolean)
+    .join(', ')
+}
+
+function BasicsCard({ basics, services }: { basics: PlannerBasics; services: BookedServices }) {
   const rows = [
     { label: 'Names', value: basics.names },
     { label: 'Event type', value: basics.eventType },
@@ -68,6 +107,7 @@ function BasicsCard({ basics }: { basics: PlannerBasics }) {
     { label: 'Start time', value: basics.startTime },
     { label: 'Length of service', value: basics.length },
     { label: 'Guest count', value: basics.guestCount },
+    { label: 'Services booked', value: servicesBooked(services) },
     { label: 'Your team', value: basics.booked },
   ].filter((row) => row.value.trim() !== '')
 
@@ -156,11 +196,13 @@ function FieldControl({
   field,
   value,
   services,
+  token,
   onChange,
 }: {
   field: PlannerField
   value: string
   services: BookedServices
+  token: string
   onChange: (next: string) => void
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
@@ -214,12 +256,16 @@ function FieldControl({
         maxMustPlays={field.maxMustPlays}
         picker={field.picker}
         pickerKey={field.key}
+        screenTitle={field.screenTitle}
+        suggestions={suggestedSongs(field.suggestions)}
+        allowImport={field.suggestions === 'cocktail-dinner' || field.suggestions === 'open-dancing'}
+        token={token}
       />
     )
   }
 
   if (field.kind === 'intro-songs') {
-    return <IntroSongs label={field.label} value={value} onChange={onChange} />
+    return <IntroSongs label={field.label} value={value} onChange={onChange} suggestions={suggestedSongs(field.suggestions)} />
   }
 
   if (field.kind === 'fold') {
@@ -231,6 +277,16 @@ function FieldControl({
           Undo
         </button>
       </p>
+    )
+  }
+
+  if (field.kind === 'check') {
+    const checked = value.trim().toLowerCase() === 'yes'
+    return (
+      <label className="planner-check">
+        <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked ? 'Yes' : '')} />
+        <span>{field.label}</span>
+      </label>
     )
   }
 
@@ -332,6 +388,7 @@ function FieldControl({
         label={field.label}
         help={field.help}
         hideLabel={field.hideLabel}
+        suggestions={suggestedSongs(field.suggestions)}
         value={value}
         multiline={field.song === 'list'}
         placeholder={field.placeholder}
@@ -395,6 +452,7 @@ export default function PlannerApp() {
   const previewServices = useMemo(() => servicesFromPreview(window.location.search), [])
   const [status, setStatus] = useState<Status>({ kind: token ? 'loading' : 'invalid' })
   const [services, setServices] = useState<BookedServices>(previewServices ?? ALL_SERVICES)
+  const [genderNeutral, setGenderNeutral] = useState(false)
   const [basics, setBasics] = useState<PlannerBasics>(EMPTY_BASICS)
   const [fields, setFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
@@ -443,6 +501,7 @@ export default function PlannerApp() {
       setFields(ready)
       setSavedFields(ready)
       setServices(bookedServices)
+      setGenderNeutral(result.genderNeutral)
       setLastUpdated(result.lastUpdated)
       setStatus({ kind: 'ready' })
     })
@@ -569,7 +628,12 @@ export default function PlannerApp() {
     setSaveMessage('Saved')
   }, [fields, saving, services, token])
 
-  const sections = useMemo(() => visibleSections(services, fields), [services, fields])
+  const sections = useMemo(() => {
+    const visible = visibleSections(services, fields)
+    if (!genderNeutral) return visible
+    return visible.map((section) => ({ ...section, fields: section.fields.map(neutralizeField) }))
+  }, [services, fields, genderNeutral])
+  const progress = answeredProgress(sections, fields)
   const savedLabel = formatSavedAt(lastUpdated)
   const welcomeDate = basics.date.trim() ? formatCoupleDate(basics.date) : ''
   const welcomeBits = [welcomeDate, basics.venue.trim()].filter(Boolean)
@@ -577,8 +641,11 @@ export default function PlannerApp() {
   return (
     <div className="planner">
       <header className="planner-top">
-        <a href="../">Anders Hyatt Music</a>
-        <p>Wedding planner</p>
+        <SectionMenu sections={status.kind === 'ready' ? sections : []} />
+        <div className="planner-top__title">
+          <a href="../">Anders Hyatt Music</a>
+          <p>Wedding planner</p>
+        </div>
       </header>
 
       <main className="planner-main">
@@ -610,13 +677,6 @@ export default function PlannerApp() {
 
             <WelcomeInfo live={services.live} dj={services.dj} />
 
-            <nav className="planner-jump" aria-label="Planner sections">
-              {sections.map((section) => (
-                <a key={section.id} href={`#${section.id}`}>
-                  {section.title}
-                </a>
-              ))}
-            </nav>
 
             <form
               className="planner-form"
@@ -629,7 +689,7 @@ export default function PlannerApp() {
                 <section key={section.id} id={section.id} className="planner-section">
                   <h2>{section.title}</h2>
                   {section.blurb && <p className="planner-section__blurb">{section.blurb}</p>}
-                  {section.id === 'basics' && <BasicsCard basics={basics} />}
+                  {section.id === 'basics' && <BasicsCard basics={basics} services={services} />}
                   {section.id === 'venue-questions' && (
                       <p className="planner-callout">
                           <span>
@@ -733,6 +793,7 @@ export default function PlannerApp() {
                           field={field}
                           value={fields[field.key] ?? ''}
                           services={services}
+                          token={token}
                           onChange={(value) => updateField(field.key, value)}
                         />
                         {field.key === 'IG handle' && (
@@ -778,6 +839,10 @@ export default function PlannerApp() {
                 </section>
               ))}
 
+              <div className="planner-progress" aria-label={`Planner progress ${progress} percent`}>
+                <div className="planner-progress__fill" style={{ width: `${progress}%` }} />
+                <span>{progress}% answered</span>
+              </div>
               <div className="planner-savebar">
                 <div className="planner-savebar__status" aria-live="polite">
                   {saveFailed && <p className="planner-savebar__error">{saveMessage}</p>}

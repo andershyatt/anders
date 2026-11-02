@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent, type KeyboardEvent, type SyntheticEvent } from 'react'
 import { replaceSongSegment, searchSongs, songSegment, type SongMatch } from './songSearch'
+import SuggestionBrowser from './SuggestionBrowser'
+import type { SuggestedSong } from './suggestions'
 
 const MIN_QUERY = 2
 const DEBOUNCE_MS = 300
@@ -9,6 +11,7 @@ interface SongFieldProps {
   label: string
   help?: string
   hideLabel?: boolean
+  suggestions?: SuggestedSong[]
   value: string
   multiline: boolean
   placeholder?: string
@@ -21,6 +24,7 @@ export default function SongField({
   label,
   help,
   hideLabel = false,
+  suggestions = [],
   value,
   multiline,
   placeholder,
@@ -29,6 +33,7 @@ export default function SongField({
 }: SongFieldProps) {
   const listId = useId()
   const [open, setOpen] = useState(false)
+  const [browsing, setBrowsing] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SongMatch[]>([])
   const [resultsQuery, setResultsQuery] = useState('')
@@ -47,6 +52,23 @@ export default function SongField({
   useEffect(() => {
     valueRef.current = value
   }, [value])
+
+  useEffect(() => {
+    if (suggestions.length === 0) return
+    const onPop = () => setBrowsing(window.history.state?.plannerBrowse === id)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [id, suggestions.length])
+
+  const openBrowse = () => {
+    window.history.pushState({ ...(window.history.state ?? {}), plannerBrowse: id }, '')
+    setBrowsing(true)
+  }
+
+  const closeBrowse = () => {
+    if (window.history.state?.plannerBrowse === id) window.history.back()
+    else setBrowsing(false)
+  }
 
   const readQuery = (element: HTMLInputElement | HTMLTextAreaElement) => {
     if (!multiline) {
@@ -217,6 +239,20 @@ export default function SongField({
     onChange: onInput,
   }
 
+  if (browsing) {
+    return (
+      <SuggestionBrowser
+        title={`Suggestions for ${label}`}
+        songs={suggestions}
+        onClose={closeBrowse}
+        onPick={(song) => {
+          onChange(song.artist ? `${song.title} – ${song.artist}` : song.title)
+          closeBrowse()
+        }}
+      />
+    )
+  }
+
   return (
     <div className="planner-field planner-venue" ref={rootRef}>
       <label htmlFor={id} className={hideLabel ? 'sr-only' : undefined}>
@@ -266,6 +302,11 @@ export default function SongField({
           </ul>
         )}
       </div>
+      {suggestions.length > 0 && !multiline && (
+        <button type="button" className="planner-browse" onClick={openBrowse}>
+          Browse suggestions
+        </button>
+      )}
     </div>
   )
 }
