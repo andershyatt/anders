@@ -4,10 +4,11 @@ import { repertoireCatalog } from './repertoire'
 
 interface RepertoireBrowserProps {
   onAdd: (song: { title: string; artist: string }) => void
+  isAdded?: (song: { title: string; artist: string }) => boolean
 }
 
 /** Live repertoire browser. Filters match the Build Playlist page. */
-export default function RepertoireBrowser({ onAdd }: RepertoireBrowserProps) {
+export default function RepertoireBrowser({ onAdd, isAdded }: RepertoireBrowserProps) {
   const songs = useMemo(() => repertoireCatalog(), [])
   const choices = useMemo(() => songFilterChoices(songs), [songs])
   const [filters, setFilters] = useState<SongFilters>(EMPTY_SONG_FILTERS)
@@ -92,8 +93,13 @@ export default function RepertoireBrowser({ onAdd }: RepertoireBrowserProps) {
               {song.title}
               {song.artist ? ` – ${song.artist}` : ''}
             </span>
-            <button type="button" onClick={() => onAdd({ title: song.title, artist: song.artist })}>
-              Add
+            <button
+              type="button"
+              className={isAdded?.({ title: song.title, artist: song.artist }) ? 'is-added' : undefined}
+              disabled={isAdded?.({ title: song.title, artist: song.artist })}
+              onClick={() => onAdd({ title: song.title, artist: song.artist })}
+            >
+              {isAdded?.({ title: song.title, artist: song.artist }) ? 'Added ✓' : 'Add'}
             </button>
           </li>
         ))}

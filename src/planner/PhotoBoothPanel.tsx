@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import BoothGallery from './BoothGallery'
 import CheckAll from './CheckAll'
+import HalfHourTime from './HalfHourTime'
 import { PHOTO_BOOTH_ITEMS, type BoothField } from './photoBooth'
 import { boothImage } from './photoBoothImages'
 
@@ -94,10 +95,12 @@ function Field({
       {field.help && <p className="planner-field__help">{field.help}</p>}
       {multiline ? (
         <textarea id={id} rows={5} value={value} disabled={locked} onChange={(event) => onChange(event.target.value)} />
+      ) : field.input === 'time' ? (
+        <HalfHourTime id={id} value={value} disabled={locked} onChange={onChange} />
       ) : (
         <input
           id={id}
-          type={field.input === 'date' ? 'date' : field.input === 'time' ? 'time' : 'text'}
+          type={field.input === 'date' ? 'date' : 'text'}
           value={value}
           disabled={locked}
           onChange={(event) => onChange(event.target.value)}
@@ -162,7 +165,7 @@ export default function PhotoBoothPanel({ knownVenue, fields, locked, onChange }
             </button>
             <p>Photo Booth Experience questionnaire</p>
           </div>
-          <div className="planner-picker__body">
+          <div className="planner-picker__body planner-booth-form">
             <p className="planner-note">
               Help us create the perfect photo booth experience for your event! Please take a few minutes to fill out
               this form so we can tailor everything to your preferences.

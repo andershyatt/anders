@@ -83,6 +83,8 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
   const [activeIndex, setActiveIndex] = useState(0)
   const [message, setMessage] = useState('')
   const [browsing, setBrowsing] = useState(false)
+  const [pickedId, setPickedId] = useState('')
+  const [justAdded, setJustAdded] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const full = rows.length >= MAX_SONGS
 
@@ -102,6 +104,13 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
     if (window.history.state?.plannerBrowse === 'introduction-songs') window.history.back()
     else setBrowsing(false)
   }
+
+  useEffect(() => {
+    if (browsing || !pickedId) return
+    document.getElementById(`intro-row-${pickedId}`)?.scrollIntoView({ block: 'center' })
+    const timer = window.setTimeout(() => setPickedId(''), 2400)
+    return () => window.clearTimeout(timer)
+  }, [browsing, pickedId])
 
   useEffect(() => {
     if (!open || query.trim().length < MIN_QUERY) return
@@ -137,23 +146,30 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
     onChange(serialized)
   }
 
-  const addSong = (song: IntroSong) => {
+  const addSong = (song: IntroSong): string => {
     if (full) {
       setMessage(`You can add up to ${MAX_SONGS} songs.`)
-      return
+      return ''
     }
-    if (rows.some((row) => row.title.toLowerCase() === song.title.toLowerCase() && row.artist.toLowerCase() === song.artist.toLowerCase())) {
+    const existing = rows.find(
+      (row) => row.title.toLowerCase() === song.title.toLowerCase() && row.artist.toLowerCase() === song.artist.toLowerCase(),
+    )
+    if (existing) {
       setMessage('That song is already on the list.')
       setQuery('')
       setOpen(false)
       setResults([])
-      return
+      setJustAdded(true)
+      return existing.id
     }
-    commit([...rows, { ...song, id: songId() }])
+    const id = songId()
+    commit([...rows, { ...song, id }])
     setQuery('')
     setResults([])
     setOpen(false)
     setMessage('')
+    setJustAdded(true)
+    return id
   }
 
   const showList = open && query.trim().length >= MIN_QUERY && !full && (loading || results.length > 0)
@@ -193,8 +209,10 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
         songs={suggestions}
         onClose={closeBrowse}
         onPick={(song) => {
-          addSong({ title: song.title, artist: song.artist, artwork: '', who: '' })
-          closeBrowse()
+          const id = addSong({ title: song.title, artist: song.artist, artwork: '', who: '' })
+          if (id) setPickedId(id)
+          setBrowsing(false)
+          if (window.history.state?.plannerBrowse === 'introduction-songs') window.history.back()
         }}
       />
     )
@@ -224,6 +242,7 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
           autoComplete="off"
           onChange={(event) => {
             setQuery(event.target.value)
+            setJustAdded(false)
             setOpen(true)
             setMessage('')
             if (event.target.value.trim().length < MIN_QUERY) setResults([])
@@ -252,17 +271,43 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
                     <span className="planner-venue__name">{song.title}</span>
                     {song.artist && <span className="planner-venue__address">{song.artist}</span>}
                   </span>
+                  <span
+                    className={
+                      rows.some(
+                        (row) =>
+                          row.title.toLowerCase() === song.title.toLowerCase() &&
+                          row.artist.toLowerCase() === song.artist.toLowerCase(),
+                      )
+                        ? 'planner-song__added'
+                        : 'planner-song__add'
+                    }
+                  >
+                    {rows.some(
+                      (row) =>
+                        row.title.toLowerCase() === song.title.toLowerCase() &&
+                        row.artist.toLowerCase() === song.artist.toLowerCase(),
+                    )
+                      ? 'Added ✓'
+                      : 'Add'}
+                  </span>
                 </button>
               </li>
             ))}
           </ul>
         )}
       </div>
-      {typed && !full && (
-        <button type="button" className="planner-songlist__add" onClick={() => addSong(typed)}>
-          Add “{typed.title}
-          {typed.artist ? ` – ${typed.artist}` : ''}” as typed
+      {justAdded ? (
+        <button type="button" className="planner-songlist__add is-added" disabled>
+          Added ✓
         </button>
+      ) : (
+        typed &&
+        !full && (
+          <button type="button" className="planner-songlist__add" onClick={() => addSong(typed)}>
+            Add “{typed.title}
+            {typed.artist ? ` – ${typed.artist}` : ''}” as typed
+          </button>
+        )
       )}
       {suggestions.length > 0 && (
         <button type="button" className="planner-browse" onClick={openBrowse}>
@@ -277,7 +322,7 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
       {rows.length > 0 && (
         <ol className="planner-songlist__rows">
           {rows.map((song, index) => (
-            <li key={song.id} className="planner-songlist__row">
+            <li key={song.id} id={`intro-row-${song.id}`} className={song.id === pickedId ? 'planner-songlist__row is-picked' : 'planner-songlist__row'}>
               {song.artwork ? <img className="planner-song__art" src={song.artwork} alt="" /> : <span className="planner-song__art" />}
               <span className="planner-song__text">
                 <span className="planner-venue__name">

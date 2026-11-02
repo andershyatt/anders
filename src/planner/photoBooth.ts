@@ -64,10 +64,7 @@ const YES_NO_UNSURE = ['Yes', 'No', 'Not sure'] as const
 
 /** Questions copied from Anders's photo booth forms. New-venue items are marked. */
 export const PHOTO_BOOTH_ITEMS: BoothItem[] = [
-  { kind: 'field', key: 'Photo Booth: Names', label: 'Please provide your name(s)', input: 'text' },
-  { kind: 'field', key: 'Photo Booth: Event date', label: 'Event date', input: 'date' },
   { kind: 'heading', text: 'Arrival & Load-In Logistics', newVenue: true },
-  { kind: 'field', key: 'Photo Booth: Event location', label: 'Event location', input: 'text' },
   {
     kind: 'field',
     key: 'Photo Booth: Load-in time',
