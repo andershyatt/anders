@@ -132,19 +132,18 @@ export default function PhotoBoothPanel({ knownVenue, fields, locked, onChange }
     else setOpen(false)
   }
 
+  const questions = itemsFor(knownVenue).filter((item) => item.kind === 'field')
+  const answered = questions.filter((item) => (fields[item.key] ?? '').trim() !== '').length
+  const progress = questions.length === 0 ? 0 : Math.round((answered / questions.length) * 100)
+
   return (
     <div className="planner-booth">
-      {answers.length > 0 && (
-        <ul className="planner-songcompact">
-          {answers.map((answer) => (
-            <li key={answer.label}>
-              <span>
-                <strong>{answer.label}:</strong> {answer.value}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="planner-booth__progress" aria-label={`${progress} percent of the photo booth questionnaire`}>
+        <div className="planner-booth__fill" style={{ width: `${progress}%` }} />
+        <span>
+          {answered} of {questions.length} answered
+        </span>
+      </div>
       <button type="button" className="planner-songcompact__open" onClick={openForm}>
         {answers.length > 0 ? 'Edit questionnaire' : 'Fill questionnaire'}
       </button>

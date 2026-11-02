@@ -1242,10 +1242,10 @@
 }
 
 .planner-browse {
-  min-height: 48px;
-  padding: 0.75rem 1.25rem;
+  min-height: 45px;
+  padding: 0.5rem 0.9rem;
   border-radius: 999px;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .planner-top .planner-menu__list a.is-nested {
@@ -1299,6 +1299,108 @@
 
 .planner-form.is-locked .planner-section :is(input, textarea, select, button):not(.planner-songcompact__open) {
   pointer-events: none;
+}
+
+.planner-picker__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.planner-picker .planner-songlist {
+  display: contents;
+}
+
+.planner-picker .planner-songlist__rows {
+  order: 0;
+}
+
+.planner-mix {
+  order: 1;
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+
+.planner-mix button.is-selected {
+  background: #6d7f5b;
+  color: #fffdf8;
+  border-color: #4e5c41;
+}
+
+.planner-picker .planner-songlist__heading,
+.planner-picker .planner-venue__control,
+.planner-picker .planner-songlist__add,
+.planner-picker .planner-songlist__message {
+  order: 2;
+}
+
+.planner-repertoire {
+  order: 3;
+}
+
+.planner-import {
+  order: 4;
+}
+
+.planner-suggest-block {
+  order: 5;
+}
+
+.planner-songlist.is-list-only .planner-songlist__heading,
+.planner-songlist.is-list-only .planner-venue__control,
+.planner-songlist.is-list-only .planner-songlist__add,
+.planner-songlist.is-list-only .planner-songlist__message {
+  display: none;
+}
+
+.planner-repertoire__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.4rem 0 0.6rem;
+}
+
+.planner-repertoire__filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.planner-repertoire__list {
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.planner-booth__progress {
+  position: relative;
+  height: 1.35rem;
+  margin: 0 0 0.7rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #efe4d6;
+}
+
+.planner-booth__fill {
+  height: 100%;
+  background: #6d7f5b;
+}
+
+.planner-booth__progress span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-nav);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.planner-songcompact__note {
+  display: block;
+  color: #6f655b;
+  font-size: 13px;
 }
 
 .planner-repertoire input,
