@@ -107,6 +107,14 @@
   text-transform: uppercase;
 }
 
+.planner-top p.planner-top__place {
+  color: #e4c98a;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .planner-main {
   max-width: 760px;
   margin: 0 auto;
@@ -989,6 +997,18 @@
   min-width: 0;
 }
 
+.planner-songlist .planner-venue__control input,
+.planner-field.planner-venue input,
+.planner-field.planner-venue textarea {
+  font-size: 16px;
+}
+
+.planner-field.is-filled input,
+.planner-field.is-filled textarea,
+.planner-songcompact li {
+  background: #e7efe0;
+}
+
 .planner-songlist .planner-venue__control input {
   width: 100%;
   padding: 0.6rem 0.7rem;
@@ -997,6 +1017,7 @@
   background: var(--color-white);
   color: var(--color-text);
   font: inherit;
+  font-size: 16px;
   line-height: 1.45;
 }
 
@@ -1066,15 +1087,26 @@
   list-style: none;
   margin: 0.75rem 0 0;
   padding: 0;
+  counter-reset: song;
 }
 
 .planner-songlist__row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 1.5rem auto minmax(0, 1fr);
   gap: 0.35rem 0.65rem;
   align-items: center;
   padding: 0.65rem 0;
   border-top: 1px solid var(--color-border);
+}
+
+.planner-songlist__row::before {
+  content: counter(song);
+  counter-increment: song;
+  color: var(--color-accent-dark);
+  font-family: var(--font-nav);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .planner-songlist__actions {
@@ -1222,7 +1254,10 @@
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: baseline;
-  padding: 0.15rem 0;
+  margin: 0 0 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  background: #e7efe0;
   font-size: 14px;
   line-height: 1.4;
 }
@@ -1270,7 +1305,7 @@
 .planner-picker__body {
   max-width: 760px;
   margin: 0 auto;
-  padding: 1rem 1rem 2.5rem;
+  padding: 1rem 1rem calc(2.5rem + var(--planner-keyboard, 0px));
 }
 
 .planner .btn,

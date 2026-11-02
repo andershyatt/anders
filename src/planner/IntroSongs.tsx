@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { searchSongs, type SongMatch } from './songSearch'
 import SuggestionBrowser from './SuggestionBrowser'
 import type { SuggestedSong } from './suggestions'
@@ -86,6 +86,9 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
   const [pickedId, setPickedId] = useState('')
   const [justAdded, setJustAdded] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const retainFocus = useRef(false)
+  const requestSeq = useRef(0)
   const full = rows.length >= MAX_SONGS
 
   useEffect(() => {
@@ -115,29 +118,36 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
   useEffect(() => {
     if (!open || query.trim().length < MIN_QUERY) return
     const controller = new AbortController()
-    let cancelled = false
+    const seq = ++requestSeq.current
     const timer = window.setTimeout(() => {
       setLoading(true)
       searchSongs(query.trim(), controller.signal)
         .then((matches) => {
-          if (cancelled) return
+          if (seq !== requestSeq.current) return
           setResults(matches)
           setActiveIndex(0)
           setLoading(false)
+          if (matches.length === 0) setOpen(false)
         })
         .catch((error: unknown) => {
-          if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) return
+          if (seq !== requestSeq.current || (error instanceof DOMException && error.name === 'AbortError')) return
           setResults([])
           setLoading(false)
           setOpen(false)
+          setMessage('Song search is unavailable right now. You can still type the song name.')
         })
     }, DEBOUNCE_MS)
     return () => {
-      cancelled = true
       window.clearTimeout(timer)
       controller.abort()
     }
   }, [open, query])
+
+  useLayoutEffect(() => {
+    if (!retainFocus.current) return
+    const element = searchRef.current
+    if (element && document.activeElement !== element) element.focus({ preventScroll: true })
+  })
 
   const commit = (next: IntroRow[]) => {
     const serialized = serializeIntroSongs(next)
@@ -230,6 +240,7 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
       </div>
       <div className="planner-venue__control">
         <input
+          ref={searchRef}
           type="text"
           aria-labelledby={`${listId}-label`}
           role="combobox"
@@ -241,6 +252,7 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
           disabled={full}
           autoComplete="off"
           onChange={(event) => {
+            retainFocus.current = true
             setQuery(event.target.value)
             setJustAdded(false)
             setOpen(true)
@@ -248,7 +260,12 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
             if (event.target.value.trim().length < MIN_QUERY) setResults([])
           }}
           onFocus={() => {
+            retainFocus.current = true
             if (query.trim().length >= MIN_QUERY) setOpen(true)
+            window.setTimeout(() => searchRef.current?.scrollIntoView({ block: 'center', inline: 'nearest' }), 300)
+          }}
+          onBlur={() => {
+            retainFocus.current = false
           }}
           onKeyDown={onSearchKeyDown}
         />
@@ -264,7 +281,19 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
                   className={`planner-venue__option planner-song__option${index === activeIndex ? ' is-active' : ''}`}
                   onMouseEnter={() => setActiveIndex(index)}
                   onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => addSong({ title: song.title, artist: song.artist, artwork: song.artwork, who: '' })}
+                  onPointerDown={(event) => {
+                    if (event.pointerType === 'mouse') return
+                    event.preventDefault()
+                    event.currentTarget.dataset.touched = '1'
+                    addSong({ title: song.title, artist: song.artist, artwork: song.artwork, who: '' })
+                  }}
+                  onClick={(event) => {
+                    if (event.currentTarget.dataset.touched === '1') {
+                      delete event.currentTarget.dataset.touched
+                      return
+                    }
+                    addSong({ title: song.title, artist: song.artist, artwork: song.artwork, who: '' })
+                  }}
                 >
                   {song.artwork ? <img className="planner-song__art" src={song.artwork} alt="" /> : <span className="planner-song__art" />}
                   <span className="planner-song__text">

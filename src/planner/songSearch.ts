@@ -19,21 +19,17 @@ interface ItunesResponse {
 }
 
 const SEARCH_URL = 'https://itunes.apple.com/search'
+const cache = new Map<string, SongMatch[]>()
 
 export function songLabel(title: string, artist: string): string {
   return artist ? `${title} – ${artist}` : title
 }
 
-export async function searchSongs(query: string, signal: AbortSignal): Promise<SongMatch[]> {
-  const url = new URL(SEARCH_URL)
-  url.searchParams.set('term', query)
-  url.searchParams.set('media', 'music')
-  url.searchParams.set('entity', 'song')
-  url.searchParams.set('limit', '8')
+function isAbort(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
 
-  const response = await fetch(url, { signal })
-  if (!response.ok) throw new Error(`song search ${response.status}`)
-  const data = (await response.json()) as ItunesResponse
+function tracksFrom(data: ItunesResponse): SongMatch[] {
   const matches: SongMatch[] = []
   for (const track of data.results ?? []) {
     const title = track.trackName?.trim()
@@ -48,6 +44,82 @@ export async function searchSongs(query: string, signal: AbortSignal): Promise<S
     })
   }
   return matches
+}
+
+function searchUrl(query: string, callback?: string): string {
+  const url = new URL(SEARCH_URL)
+  url.searchParams.set('term', query)
+  url.searchParams.set('media', 'music')
+  url.searchParams.set('entity', 'song')
+  url.searchParams.set('limit', '8')
+  if (callback) url.searchParams.set('callback', callback)
+  return url.toString()
+}
+
+async function searchByFetch(query: string, signal: AbortSignal): Promise<SongMatch[]> {
+  const response = await fetch(searchUrl(query), { signal })
+  if (!response.ok) throw new Error(`song search ${response.status}`)
+  return tracksFrom((await response.json()) as ItunesResponse)
+}
+
+/** iOS sometimes drops the CORS fetch. The same endpoint accepts a callback. */
+function searchByJsonp(query: string, signal: AbortSignal): Promise<SongMatch[]> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'))
+      return
+    }
+    const callback = `andersSongSearch${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`
+    const script = document.createElement('script')
+    const scope = window as unknown as Record<string, ((data: ItunesResponse) => void) | undefined>
+    let settled = false
+    const cleanup = () => {
+      settled = true
+      window.clearTimeout(timer)
+      signal.removeEventListener('abort', onAbort)
+      delete scope[callback]
+      script.remove()
+    }
+    const onAbort = () => {
+      if (settled) return
+      cleanup()
+      reject(new DOMException('Aborted', 'AbortError'))
+    }
+    const timer = window.setTimeout(() => {
+      if (settled) return
+      cleanup()
+      reject(new Error('song search timeout'))
+    }, 8000)
+    scope[callback] = (data) => {
+      if (settled) return
+      cleanup()
+      resolve(tracksFrom(data))
+    }
+    script.onerror = () => {
+      if (settled) return
+      cleanup()
+      reject(new Error('song search failed'))
+    }
+    signal.addEventListener('abort', onAbort)
+    script.src = searchUrl(query, callback)
+    document.head.appendChild(script)
+  })
+}
+
+export async function searchSongs(query: string, signal: AbortSignal): Promise<SongMatch[]> {
+  const key = query.trim().toLowerCase()
+  const hit = cache.get(key)
+  if (hit) return hit
+  try {
+    const matches = await searchByFetch(query, signal)
+    cache.set(key, matches)
+    return matches
+  } catch (error) {
+    if (isAbort(error)) throw error
+    const matches = await searchByJsonp(query, signal)
+    cache.set(key, matches)
+    return matches
+  }
 }
 
 /** Ranges of songs on one line. Artist names may contain commas. */

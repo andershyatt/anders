@@ -41,11 +41,10 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
           </p>
           {live && (
             <p>
-              For live songs, you can also browse Anders's repertoire at{' '}
+              For live songs, you can also choose songs from Anders's repertoire at{' '}
               <a href={SONGLIST_URL} target="_blank" rel="noopener noreferrer">
                 andershyatt.com/songlist
               </a>
-              .
             </p>
           )}
           {dj && (
