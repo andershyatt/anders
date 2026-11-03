@@ -66,7 +66,7 @@ export default function BoothGallery({ field, value, locked, onChange }: BoothGa
                   aria-label={`View larger image of ${option}`}
                   onClick={() => setPreview(option)}
                 >
-                  <img src={image} alt="" />
+                  <img src={image} alt="" loading="lazy" decoding="async" />
                   <span>View</span>
                 </button>
               )}

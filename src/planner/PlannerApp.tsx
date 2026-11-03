@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
-import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf } from './api'
+import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf, type PlannerLoadSuccess } from './api'
 import {
   DANCE_LENGTH,
   DANCE_PERFORMANCE,
@@ -41,7 +41,8 @@ import {
 import CheckAll from './CheckAll'
 import IntroSongs from './IntroSongs'
 import { PERFORMANCE_OPTIONS, applyPreCeremonyMusicTypeLabel } from './liveDj'
-import { suggestionIds, suggestionPlaylists, suggestedSongs } from './suggestions'
+import { suggestionIds, suggestionPlaylists, suggestedSongs, useSuggestionLists } from './suggestions'
+import { clearPlannerCache, readPlannerCache, updatePlannerCacheFields, writePlannerCache } from './loadCache'
 import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
@@ -524,32 +525,67 @@ function FieldControl({
   )
 }
 
+function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null) {
+  const next = coerceFields(plannerFieldKeys, result.fields)
+  const strippedTimeline = stripOldTimelineHeader(next.Timeline)
+  const timelineEmpty = next.Timeline.trim() === ''
+  next.Timeline = timelineEmpty ? TIMELINE_PREFILL : strippedTimeline
+  const services = preview ?? result.services
+  const musicChoices = cocktailMusicChoices(services)
+  if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
+  const fields = applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services)
+  const photo = result.fields[COUPLE_PHOTO_FIELD]
+  return {
+    fields,
+    timelineEmpty,
+    services,
+    basics: resolveBasics(result.basics, result.fields, result.couple),
+    couplePhoto: typeof photo === 'string' ? photo.trim() : '',
+    couplePhotoUrl: result.photo?.dataUrl ?? null,
+    floorPlan: result.floorPlan,
+    timelinePdf: result.timelinePdf,
+    genderNeutral: result.genderNeutral,
+    bookingStatus: result.bookingStatus,
+    lastUpdated: result.lastUpdated,
+  }
+}
+
 export default function PlannerApp() {
   const token = useMemo(() => tokenFromLocation(), [])
   const previewServices = useMemo(() => servicesFromPreview(window.location.search), [])
-  const [status, setStatus] = useState<Status>({ kind: token ? 'loading' : 'invalid' })
-  const [services, setServices] = useState<BookedServices>(previewServices ?? ALL_SERVICES)
-  const [genderNeutral, setGenderNeutral] = useState(false)
-  const [bookingStatus, setBookingStatus] = useState('')
+  const cachedLoad = useMemo(() => (token ? readPlannerCache(token) : null), [token])
+  const cachedView = useMemo(() => (cachedLoad ? plannerView(cachedLoad, previewServices) : null), [cachedLoad, previewServices])
+  const [status, setStatus] = useState<Status>({ kind: cachedView ? 'ready' : token ? 'loading' : 'invalid' })
+  const [services, setServices] = useState<BookedServices>(cachedView?.services ?? previewServices ?? ALL_SERVICES)
+  const [genderNeutral, setGenderNeutral] = useState(cachedView?.genderNeutral ?? false)
+  const [bookingStatus, setBookingStatus] = useState(cachedView?.bookingStatus ?? '')
   const [songNotices, setSongNotices] = useState<Record<string, string>>({})
-  const [basics, setBasics] = useState<PlannerBasics>(EMPTY_BASICS)
-  const [fields, setFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
-  const [savedFields, setSavedFields] = useState<Record<string, string>>(() => emptyFields(plannerFieldKeys))
-  const [couplePhoto, setCouplePhoto] = useState('')
-  const [couplePhotoUrl, setCouplePhotoUrl] = useState<string | null>(null)
-  const [floorPlan, setFloorPlan] = useState<{ name: string; url: string } | null>(null)
+  const [basics, setBasics] = useState<PlannerBasics>(cachedView?.basics ?? EMPTY_BASICS)
+  const [fields, setFields] = useState<Record<string, string>>(() => cachedView?.fields ?? emptyFields(plannerFieldKeys))
+  const [savedFields, setSavedFields] = useState<Record<string, string>>(() => cachedView?.fields ?? emptyFields(plannerFieldKeys))
+  const [couplePhoto, setCouplePhoto] = useState(cachedView?.couplePhoto ?? '')
+  const [couplePhotoUrl, setCouplePhotoUrl] = useState<string | null>(cachedView?.couplePhotoUrl ?? null)
+  const [floorPlan, setFloorPlan] = useState<{ name: string; url: string } | null>(cachedView?.floorPlan ?? null)
   const [floorPlanMessage, setFloorPlanMessage] = useState('')
   const [uploadingFloorPlan, setUploadingFloorPlan] = useState(false)
-  const [timelinePdf, setTimelinePdf] = useState<{ name: string; url: string } | null>(null)
+  const [timelinePdf, setTimelinePdf] = useState<{ name: string; url: string } | null>(cachedView?.timelinePdf ?? null)
   const [timelineMessage, setTimelineMessage] = useState('')
   const [uploadingTimeline, setUploadingTimeline] = useState(false)
-  const timelineWasEmpty = useRef(false)
-  const [lastUpdated, setLastUpdated] = useState<string | number | undefined>(undefined)
+  const timelineWasEmpty = useRef(cachedView?.timelineEmpty ?? false)
+  const fieldsRef = useRef(fields)
+  const savedRef = useRef(savedFields)
+  const [lastUpdated, setLastUpdated] = useState<string | number | undefined>(cachedView?.lastUpdated)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [saveFailed, setSaveFailed] = useState(false)
 
   const dirty = status.kind === 'ready' && !fieldsEqual(fields, savedFields)
+  const suggestionsReady = useSuggestionLists(status.kind === 'ready')
+
+  useEffect(() => {
+    fieldsRef.current = fields
+    savedRef.current = savedFields
+  }, [fields, savedFields])
 
   useEffect(() => {
     if (status.kind !== 'ready') return
@@ -567,31 +603,35 @@ export default function PlannerApp() {
     loadPlanner(token).then((result) => {
       if (cancelled) return
       if (!result.ok) {
-        setStatus(isInvalidLink(result.error) ? { kind: 'invalid' } : { kind: 'unavailable' })
+        if (isInvalidLink(result.error)) {
+          clearPlannerCache(token)
+          setStatus({ kind: 'invalid' })
+        } else if (!readPlannerCache(token)) {
+          setStatus({ kind: 'unavailable' })
+        }
         return
       }
-      const next = coerceFields(plannerFieldKeys, result.fields)
-      const strippedTimeline = stripOldTimelineHeader(next.Timeline)
-      const timelineEmpty = next.Timeline.trim() === ''
-      next.Timeline = timelineEmpty ? TIMELINE_PREFILL : strippedTimeline
-      timelineWasEmpty.current = timelineEmpty
-      const bookedServices = previewServices ?? result.services
-      const musicChoices = cocktailMusicChoices(bookedServices)
-      if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
-      const ready = applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, bookedServices), bookedServices)
-      const loadedBasics = resolveBasics(result.basics, result.fields, result.couple)
-      const photo = result.fields[COUPLE_PHOTO_FIELD]
-      setCouplePhoto(typeof photo === 'string' ? photo.trim() : '')
-      setCouplePhotoUrl(result.photo?.dataUrl ?? null)
-      setFloorPlan(result.floorPlan)
-      setTimelinePdf(result.timelinePdf)
-      setBasics(loadedBasics)
-      setFields(ready)
-      setSavedFields(ready)
-      setServices(bookedServices)
-      setGenderNeutral(result.genderNeutral)
-      setBookingStatus(result.bookingStatus)
-      setLastUpdated(result.lastUpdated)
+      writePlannerCache(token, result)
+      const view = plannerView(result, previewServices)
+      timelineWasEmpty.current = view.timelineEmpty
+      const saved = savedRef.current
+      const current = fieldsRef.current
+      const edited = Object.keys(current).some((key) => (current[key] ?? '') !== (saved[key] ?? ''))
+      setSavedFields(view.fields)
+      setFields(
+        edited
+          ? Object.fromEntries(Object.keys(view.fields).map((key) => [key, (current[key] ?? '') !== (saved[key] ?? '') ? current[key] : view.fields[key]]))
+          : view.fields,
+      )
+      setCouplePhoto(view.couplePhoto)
+      if (view.couplePhotoUrl) setCouplePhotoUrl(view.couplePhotoUrl)
+      setFloorPlan(view.floorPlan)
+      setTimelinePdf(view.timelinePdf)
+      setBasics(view.basics)
+      setServices(view.services)
+      setGenderNeutral(view.genderNeutral)
+      setBookingStatus(view.bookingStatus)
+      setLastUpdated(view.lastUpdated)
       setStatus({ kind: 'ready' })
     })
 
@@ -724,7 +764,9 @@ export default function PlannerApp() {
       return
     }
     setSavedFields(fields)
-    setLastUpdated(result.lastUpdated ?? new Date().toISOString())
+    const savedAt = result.lastUpdated ?? new Date().toISOString()
+    setLastUpdated(savedAt)
+    updatePlannerCacheFields(token, fields, savedAt)
     setSaveMessage('Saved')
   }, [basics.date, fields, saving, services, token])
 
@@ -831,6 +873,7 @@ export default function PlannerApp() {
 
             <form
               className={`planner-form${plannerLocked(basics.date) ? ' is-locked' : ''}`}
+              data-suggestions={suggestionsReady ? 'ready' : 'loading'}
               onSubmit={(event) => {
                 event.preventDefault()
                 void onSave()

@@ -1,4 +1,5 @@
 import { PLANNER_API_URL } from '../planner/config'
+import { thumbnailDataUrl } from './thumbs'
 import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } from './types'
 
 const KEY_STORAGE = 'anders-pipeline-admin-key'
@@ -94,10 +95,13 @@ function fieldsOf(value: unknown): Record<string, string> | undefined {
 export async function adminList(key: string): Promise<PipelineCouple[]> {
   const data = await postAdmin({ action: 'adminList', key })
   const couples = Array.isArray(data.couples) ? data.couples : []
-  return couples.flatMap((item) => {
+  const parsed = couples.flatMap((item) => {
     const couple = coupleOf(item)
     return couple ? [couple] : []
   })
+  return Promise.all(
+    parsed.map(async (couple) => ({ ...couple, photo: await thumbnailDataUrl(couple.photo) })),
+  )
 }
 
 export async function adminCouple(key: string, token: string): Promise<PipelineDetail> {

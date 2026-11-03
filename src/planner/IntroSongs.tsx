@@ -295,7 +295,7 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
                     addSong({ title: song.title, artist: song.artist, artwork: song.artwork, who: '' })
                   }}
                 >
-                  {song.artwork ? <img className="planner-song__art" src={song.artwork} alt="" /> : <span className="planner-song__art" />}
+                  {song.artwork ? <img className="planner-song__art" src={song.artwork} alt="" loading="lazy" decoding="async" /> : <span className="planner-song__art" />}
                   <span className="planner-song__text">
                     <span className="planner-venue__name">{song.title}</span>
                     {song.artist && <span className="planner-venue__address">{song.artist}</span>}
@@ -352,7 +352,7 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
         <ol className="planner-songlist__rows">
           {rows.map((song, index) => (
             <li key={song.id} id={`intro-row-${song.id}`} className={song.id === pickedId ? 'planner-songlist__row is-picked' : 'planner-songlist__row'}>
-              {song.artwork ? <img className="planner-song__art" src={song.artwork} alt="" /> : <span className="planner-song__art" />}
+              {song.artwork ? <img className="planner-song__art" src={song.artwork} alt="" loading="lazy" decoding="async" /> : <span className="planner-song__art" />}
               <span className="planner-song__text">
                 <span className="planner-venue__name">
                   {song.title}

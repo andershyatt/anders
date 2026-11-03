@@ -1,6 +1,6 @@
 export const MAX_PHOTO_BYTES = 8 * 1024 * 1024
-const MAX_EDGE = 2000
-const JPEG_QUALITY = 0.85
+const MAX_EDGE = 1600
+const PHOTO_QUALITY = 0.85
 
 export class PhotoTooLargeError extends Error {
   constructor() {
@@ -17,9 +17,9 @@ export interface PreparedPhoto {
   previewUrl: string | null
 }
 
-function jpegFilename(name: string): string {
+function photoFilename(name: string, mimeType: string): string {
   const base = name.replace(/\.[^.]+$/, '').trim() || 'couple-photo'
-  return `${base}.jpg`
+  return `${base}.${mimeType === 'image/webp' ? 'webp' : 'jpg'}`
 }
 
 function decodeImage(file: File): Promise<HTMLImageElement | null> {
@@ -42,20 +42,33 @@ function decodeImage(file: File): Promise<HTMLImageElement | null> {
   })
 }
 
-function encodeJpeg(image: HTMLImageElement): Promise<Blob | null> {
+function canvasFor(image: HTMLImageElement): HTMLCanvasElement | null {
   const longEdge = Math.max(image.naturalWidth, image.naturalHeight)
   const scale = longEdge > MAX_EDGE ? MAX_EDGE / longEdge : 1
-  const width = Math.max(1, Math.round(image.naturalWidth * scale))
-  const height = Math.max(1, Math.round(image.naturalHeight * scale))
   const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
   const context = canvas.getContext('2d')
-  if (!context) return Promise.resolve(null)
-  context.drawImage(image, 0, 0, width, height)
+  if (!context) return null
+  context.drawImage(image, 0, 0, canvas.width, canvas.height)
+  return canvas
+}
+
+function blobOf(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
   return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', JPEG_QUALITY)
+    canvas.toBlob((blob) => resolve(blob), type, PHOTO_QUALITY)
   })
+}
+
+async function encodePhoto(image: HTMLImageElement): Promise<{ blob: Blob; mimeType: string } | null> {
+  const canvas = canvasFor(image)
+  if (!canvas) return null
+  const webp = await blobOf(canvas, 'image/webp')
+  const jpeg = await blobOf(canvas, 'image/jpeg')
+  if (webp && jpeg) return webp.size < jpeg.size ? { blob: webp, mimeType: 'image/webp' } : { blob: jpeg, mimeType: 'image/jpeg' }
+  if (webp) return { blob: webp, mimeType: 'image/webp' }
+  if (jpeg) return { blob: jpeg, mimeType: 'image/jpeg' }
+  return null
 }
 
 export async function prepareCouplePhoto(file: File): Promise<PreparedPhoto> {
@@ -70,8 +83,8 @@ export async function prepareCouplePhoto(file: File): Promise<PreparedPhoto> {
     }
   }
 
-  const blob = await encodeJpeg(image)
-  if (!blob) {
+  const encoded = await encodePhoto(image)
+  if (!encoded) {
     if (file.size > MAX_PHOTO_BYTES) throw new PhotoTooLargeError()
     return {
       filename: file.name || 'couple-photo',
@@ -80,12 +93,12 @@ export async function prepareCouplePhoto(file: File): Promise<PreparedPhoto> {
       previewUrl: null,
     }
   }
-  if (blob.size > MAX_PHOTO_BYTES) throw new PhotoTooLargeError()
+  if (encoded.blob.size > MAX_PHOTO_BYTES) throw new PhotoTooLargeError()
   return {
-    filename: jpegFilename(file.name),
-    mimeType: 'image/jpeg',
-    blob,
-    previewUrl: URL.createObjectURL(blob),
+    filename: photoFilename(file.name, encoded.mimeType),
+    mimeType: encoded.mimeType,
+    blob: encoded.blob,
+    previewUrl: URL.createObjectURL(encoded.blob),
   }
 }
 

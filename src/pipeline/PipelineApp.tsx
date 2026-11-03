@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import defaultCouplePhoto from '../assets/default-couple-photo.png'
 import { formatCoupleDate } from '../planner/format'
 import { loadGooglePlace, searchVenues, type VenueMatch } from '../planner/venueSearch'
@@ -21,23 +21,30 @@ import { downloadBlob, sheetFileName } from './files'
 import { buildInfoSheet } from './infoSheet'
 import { coupleProgress } from './progress'
 import { copyAndRunShortcut } from './shortcuts'
+import { clearPipelineCache, coupleLocallyEdited, readPipelineCache, writePipelineCache } from './listCache'
 import { couplePlaylistName, liveChartText, playlistChoices, seratoText } from './songs'
-import {
-  beginSpotifyLogin,
-  clearReauthorize,
-  createSpotifyPlaylist,
-  finishSpotifyLogin,
-  markReauthorize,
-  rememberPlaylist,
-  shouldReauthorize,
-  spotifyConnected,
-  spotifyReturnError,
-  type PendingPlaylist,
-  type SpotifyPlaylistResult,
-} from './spotify'
+import type { PendingPlaylist, SpotifyPlaylistResult } from './spotify'
 import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } from './types'
 
 const STAGES: BookingStage[] = ['Booked', 'Not yet booked', 'Completed']
+
+function spotifyOauthMessage(code: string): string {
+  if (code === 'access_denied') return 'Spotify sign-in was cancelled. The playlist was not created.'
+  return 'Spotify could not sign in. Please try the playlist again.'
+}
+
+function spotifySessionReady(): boolean {
+  try {
+    const raw = localStorage.getItem('anders-pipeline-spotify-token')
+    if (!raw) return false
+    const parsed = JSON.parse(raw) as { access?: string; refresh?: string; expires?: number; scopes?: string }
+    const scopes = parsed.scopes ?? ''
+    if (!scopes.includes('playlist-modify-private') || !scopes.includes('playlist-modify-public')) return false
+    return Boolean(parsed.access && ((parsed.expires ?? 0) > Date.now() + 30_000 || parsed.refresh))
+  } catch {
+    return false
+  }
+}
 
 const EMPTY_COUPLE: NewCoupleInput = {
   names: '',
@@ -67,39 +74,59 @@ function messageFor(error: unknown): string {
 export default function PipelineApp() {
   const [key, setKey] = useState(storedAdminKey)
   const [draftKey, setDraftKey] = useState('')
-  const [couples, setCouples] = useState<PipelineCouple[]>([])
+  const cachedCouples = useMemo(() => readPipelineCache(), [])
+  const serverList = useRef<PipelineCouple[]>(cachedCouples ?? [])
+  const [couples, setCouples] = useState<PipelineCouple[]>(cachedCouples ?? [])
   const [stages, setStages] = useState<Set<BookingStage>>(() => new Set(['Booked', 'Not yet booked']))
-  const [status, setStatus] = useState<'gate' | 'loading' | 'ready' | 'error'>(storedAdminKey() ? 'loading' : 'gate')
+  const [status, setStatus] = useState<'gate' | 'loading' | 'ready' | 'error'>(() => {
+    if (!storedAdminKey()) return 'gate'
+    return cachedCouples ? 'ready' : 'loading'
+  })
   const [notice, setNotice] = useState('')
   const [error, setError] = useState(() => {
     const oauthError = new URLSearchParams(window.location.search).get('error')
-    return oauthError ? spotifyReturnError(oauthError) : ''
+    return oauthError ? spotifyOauthMessage(oauthError) : ''
   })
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState<NewCoupleInput>(EMPTY_COUPLE)
   const [venueQuery, setVenueQuery] = useState('')
   const [venues, setVenues] = useState<VenueMatch[]>([])
   const [created, setCreated] = useState('')
-  const [spotifyReady, setSpotifyReady] = useState(spotifyConnected)
+  const [spotifyReady, setSpotifyReady] = useState(spotifySessionReady)
   const [createdPlaylist, setCreatedPlaylist] = useState<SpotifyPlaylistResult | null>(null)
 
   const visible = useMemo(() => sortCouples(couples).filter((couple) => matchesStages(couple, stages)), [couples, stages])
 
+  function applyFresh(list: PipelineCouple[]) {
+    setCouples((current) =>
+      list.map((item) => {
+        const local = current.find((couple) => couple.token === item.token)
+        const baseline = serverList.current.find((couple) => couple.token === item.token)
+        if (!local || !baseline || !coupleLocallyEdited(local, baseline)) return item
+        return { ...item, team: local.team, bookingStatus: local.bookingStatus, services: local.services }
+      }),
+    )
+    serverList.current = list
+    writePipelineCache(list)
+  }
+
   async function load(nextKey: string) {
-    setStatus('loading')
+    if (couples.length === 0) setStatus('loading')
     setError('')
     try {
       const list = await adminList(nextKey)
       saveAdminKey(nextKey)
       setKey(nextKey)
-      setCouples(list)
+      applyFresh(list)
       setStatus('ready')
     } catch (reason) {
       if (reason instanceof Error && (reason.message === 'unauthorized' || reason.message === 'forbidden')) {
         clearAdminKey()
         setKey('')
+        setCouples([])
+        clearPipelineCache()
         setStatus('gate')
-      } else {
+      } else if (couples.length === 0) {
         setStatus(storedAdminKey() ? 'error' : 'gate')
       }
       setError(messageFor(reason))
@@ -119,22 +146,23 @@ export default function PipelineApp() {
     const code = params.get('code')
     if (!code) return
     void (async () => {
+      const spotify = await import('./spotify')
       let pending: PendingPlaylist | null = null
       try {
-        pending = await finishSpotifyLogin(code, params.get('state') ?? '')
-        setSpotifyReady(spotifyConnected())
+        pending = await spotify.finishSpotifyLogin(code, params.get('state') ?? '')
+        setSpotifyReady(spotify.spotifyConnected())
         if (!pending) {
           setNotice('Spotify is connected on this browser.')
           return
         }
-        const result = await createSpotifyPlaylist(pending.name, pending.songs)
-        clearReauthorize()
+        const result = await spotify.createSpotifyPlaylist(pending.name, pending.songs)
+        spotify.clearReauthorize()
         setCreatedPlaylist(result)
       } catch (reason) {
-        if (pending && shouldReauthorize(reason)) {
-          markReauthorize()
-          rememberPlaylist(pending)
-          await beginSpotifyLogin(true)
+        if (pending && spotify.shouldReauthorize(reason)) {
+          spotify.markReauthorize()
+          spotify.rememberPlaylist(pending)
+          await spotify.beginSpotifyLogin(true)
           return
         }
         setError(messageFor(reason))
@@ -149,7 +177,7 @@ export default function PipelineApp() {
     void adminList(saved)
       .then((list) => {
         if (cancelled) return
-        setCouples(list)
+        applyFresh(list)
         setStatus('ready')
       })
       .catch((reason: unknown) => {
@@ -157,8 +185,10 @@ export default function PipelineApp() {
         if (reason instanceof Error && (reason.message === 'unauthorized' || reason.message === 'forbidden')) {
           clearAdminKey()
           setKey('')
+          setCouples([])
+          clearPipelineCache()
           setStatus('gate')
-        } else {
+        } else if (serverList.current.length === 0) {
           setStatus('error')
         }
         setError(messageFor(reason))
@@ -514,7 +544,11 @@ function CoupleCard({
 
   return (
     <article className="pipeline-card">
-      {couple.photo ? <img src={couple.photo} alt="" /> : <img className="is-default" src={defaultCouplePhoto} alt="" />}
+      {couple.photo ? (
+        <img src={couple.photo} alt="" loading="lazy" decoding="async" />
+      ) : (
+        <img className="is-default" src={defaultCouplePhoto} alt="" loading="lazy" decoding="async" />
+      )}
       <div>
         <div className="pipeline-name">
           <h2>{couple.names || 'Untitled couple'}</h2>
@@ -674,27 +708,31 @@ function CoupleCard({
                   onClick={() => {
                     const name = couplePlaylistName(couple.names, list.label)
                     const pending = { name, songs: list.songs }
-                    if (!spotifyReady) {
-                      rememberPlaylist(pending)
-                      void beginSpotifyLogin().catch(failSpotify)
-                      return
-                    }
-                    setBusy(list.key)
-                    void createSpotifyPlaylist(name, list.songs)
-                      .then((result) => {
-                        clearReauthorize()
-                        onCreated(result)
-                      })
-                      .catch((reason: unknown) => {
-                        if (shouldReauthorize(reason)) {
-                          markReauthorize()
-                          rememberPlaylist(pending)
-                          void beginSpotifyLogin(true).catch(failSpotify)
+                    void import('./spotify')
+                      .then(async (spotify) => {
+                        if (!spotifyReady) {
+                          spotify.rememberPlaylist(pending)
+                          await spotify.beginSpotifyLogin()
                           return
                         }
-                        failSpotify(reason)
+                        setBusy(list.key)
+                        try {
+                          const result = await spotify.createSpotifyPlaylist(name, list.songs)
+                          spotify.clearReauthorize()
+                          onCreated(result)
+                        } catch (reason) {
+                          if (spotify.shouldReauthorize(reason)) {
+                            spotify.markReauthorize()
+                            spotify.rememberPlaylist(pending)
+                            await spotify.beginSpotifyLogin(true)
+                            return
+                          }
+                          failSpotify(reason)
+                        } finally {
+                          setBusy('')
+                        }
                       })
-                      .finally(() => setBusy(''))
+                      .catch(failSpotify)
                   }}
                 >
                   {busy === list.key ? 'Creating…' : 'Spotify'}
