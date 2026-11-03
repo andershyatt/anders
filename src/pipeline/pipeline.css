@@ -4,10 +4,13 @@
   color: #3c342c;
 }
 
-.pipeline-top {
+.pipeline-pin {
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: 6;
+}
+
+.pipeline-top {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
@@ -108,11 +111,18 @@
   width: auto;
 }
 
+.pipeline-filters-bar {
+  background: #f4efe7;
+  border-bottom: 1px solid #e4d8ca;
+}
+
 .pipeline-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin: 0 0 0.8rem;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0.7rem 1rem;
 }
 
 .pipeline-filters button {
@@ -167,9 +177,9 @@
 }
 
 .pipeline-card img.is-default {
-  object-fit: cover;
-  object-position: center top;
-  background: #f4efe7;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
 }
 
 .pipeline-name {

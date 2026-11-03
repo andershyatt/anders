@@ -352,7 +352,7 @@ export default function CocktailSongs({
                   }}
                 >
                   {song.artwork ? (
-                    <img className="planner-song__art" src={song.artwork} alt="" />
+                    <img className="planner-song__art" src={song.artwork} alt="" loading="lazy" decoding="async" />
                   ) : (
                     <span className="planner-song__art" />
                   )}
@@ -395,7 +395,7 @@ export default function CocktailSongs({
             return (
               <li key={song.id} className="planner-songlist__row">
                 {song.artwork ? (
-                  <img className="planner-song__art" src={song.artwork} alt="" />
+                  <img className="planner-song__art" src={song.artwork} alt="" loading="lazy" decoding="async" />
                 ) : (
                   <span className="planner-song__art" />
                 )}

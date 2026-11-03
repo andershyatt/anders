@@ -497,9 +497,39 @@
   object-position: center 30%;
 }
 
+.planner-hero.is-default {
+  overflow: visible;
+  border-radius: 0;
+  background: #fff;
+}
+
 .planner-hero__image.is-default {
-  object-position: center top;
-  background: #f4efe7;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
+}
+
+.planner-hero__pick {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  cursor: pointer;
+}
+
+.planner-hero__pick.is-disabled {
+  pointer-events: none;
+}
+
+.planner-hero__pick input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .planner-hero__shade {

@@ -23,15 +23,17 @@ function PhotoPicker({
   className,
   disabled,
   onFile,
+  hideLabel = false,
 }: {
   label: string
   className: string
   disabled: boolean
   onFile: (file: File | undefined) => void
+  hideLabel?: boolean
 }) {
   return (
     <label className={className}>
-      {label}
+      {hideLabel ? <span className="sr-only">{label}</span> : label}
       <input
         type="file"
         accept="image/*"
@@ -131,22 +133,43 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
     })()
   }
 
-  const picker = (label: string, className: string) => (
-    <PhotoPicker label={label} className={className} disabled={phase === 'uploading'} onFile={onFile} />
+  const picker = (label: string, className: string, hideLabel = false) => (
+    <PhotoPicker label={label} className={className} disabled={phase === 'uploading'} hideLabel={hideLabel} onFile={onFile} />
   )
 
   const usingDefault = !shown && !showReceived
 
-  if (shown || usingDefault) {
+  if (usingDefault) {
+    return (
+      <div className="planner-hero-wrap">
+        <section className="planner-hero is-default" aria-label="Couple photo">
+          {picker('Choose a photo', `planner-hero__pick${phase === 'uploading' ? ' is-disabled' : ''}`, true)}
+          <img className="planner-hero__image is-default" src={defaultCouplePhoto} alt="" />
+        </section>
+        {phase === 'error' && (
+          <p className="planner-photo__status planner-photo__status--error" role="alert">
+            {message}
+          </p>
+        )}
+        <header className="planner-welcome">
+          <h1>{title}</h1>
+          <p className="planner-subtitle">{SUBTITLE}</p>
+          {meta && <p className="planner-meta">{meta}</p>}
+          <p className="planner-lead">{LEAD}</p>
+        </header>
+      </div>
+    )
+  }
+
+  if (shown) {
     return (
       <div className="planner-hero-wrap">
         <section className="planner-hero" aria-label="Couple photo">
           <img
-            className={`planner-hero__image${usingDefault ? ' is-default' : ''}`}
-            src={shown ?? defaultCouplePhoto}
-            alt={usingDefault ? 'Add a photo of you both here' : 'Photo of the couple'}
+            className="planner-hero__image"
+            src={shown}
+            alt="Photo of the couple"
             onError={() => {
-              if (!shown) return
               if (shown === localPreview) replacePreview(null)
               else setRejectedRemote(shown)
             }}
@@ -158,7 +181,7 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
               {meta && <p className="planner-meta">{meta}</p>}
             </div>
             {picker(
-              phase === 'uploading' ? 'Sending…' : shown ? 'Change photo' : 'Choose a photo',
+              phase === 'uploading' ? 'Sending…' : 'Change photo',
               `planner-hero__change${phase === 'uploading' ? ' is-disabled' : ''}`,
             )}
           </div>
@@ -169,7 +192,6 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
           </p>
         )}
         <p className="planner-lead">{LEAD}</p>
-        {usingDefault && <p className="planner-section__blurb planner-photo__invite">{REQUEST_TEXT}</p>}
       </div>
     )
   }

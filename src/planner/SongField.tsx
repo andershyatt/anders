@@ -327,7 +327,7 @@ export default function SongField({
                   }}
                 >
                   {song.artwork ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       className="planner-song__art"
                       src={song.artwork}
                       alt=""
