@@ -167,9 +167,9 @@
 }
 
 .pipeline-card img.is-default {
-  object-fit: cover;
-  object-position: center top;
-  background: #f4efe7;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
 }
 
 .pipeline-name {
