@@ -157,7 +157,7 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
           <img className="planner-hero__image is-default" src={defaultCouplePhoto} alt="" />
         </section>
         <label htmlFor="couple-default-photo" className="planner-photo__hint">
-          Add your own photo by clicking the picture above
+          {REQUEST_TEXT}
         </label>
         {phase === 'error' && (
           <p className="planner-photo__status planner-photo__status--error" role="alert">
@@ -216,7 +216,6 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
       </header>
       <section className="planner-section planner-photo" aria-labelledby="couple-photo-heading">
         <h2 id="couple-photo-heading">Couple photo request</h2>
-        <p className="planner-section__blurb">{REQUEST_TEXT}</p>
         {phase === 'uploading' && <p className="planner-photo__status">Sending your photo…</p>}
         {phase === 'thankyou' && <p className="planner-photo__status">Photo received, thank you!</p>}
         {showReceived && phase !== 'thankyou' && <p className="planner-photo__status">Photo received</p>}
