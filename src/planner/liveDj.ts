@@ -432,6 +432,8 @@ export function liveDjReception(find: FindField): PlannerSection {
       take(find, 'Open dancing songs'),
       take(find, 'DJ music requests', {
         label: 'Notes',
+        // The shared field is a song list for DJ-only couples. Open dancing notes stay plain text.
+        song: undefined,
         note: "Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option!",
       }),
       take(find, 'Slow songs preference'),
