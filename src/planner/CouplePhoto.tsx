@@ -145,6 +145,9 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
         <section className="planner-hero is-default" aria-label="Couple photo">
           {picker('Choose a photo', `planner-hero__pick${phase === 'uploading' ? ' is-disabled' : ''}`, true)}
           <img className="planner-hero__image is-default" src={defaultCouplePhoto} alt="" />
+          <span className="planner-hero__change planner-hero__change--default" aria-hidden="true">
+            {phase === 'uploading' ? 'Sending…' : 'Add photo'}
+          </span>
         </section>
         {phase === 'error' && (
           <p className="planner-photo__status planner-photo__status--error" role="alert">
