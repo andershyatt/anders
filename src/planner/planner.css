@@ -589,6 +589,19 @@
   cursor: pointer;
 }
 
+.planner-photo__hint-body,
+.planner-photo__hint-action {
+  display: block;
+}
+
+.planner-photo__hint-action {
+  margin-top: 0.55rem;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.45;
+}
+
 .planner-hero-wrap .planner-lead {
   margin-top: 0;
 }

@@ -157,7 +157,8 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
           <img className="planner-hero__image is-default" src={defaultCouplePhoto} alt="" />
         </section>
         <label htmlFor="couple-default-photo" className="planner-photo__hint">
-          {REQUEST_TEXT}
+          <span className="planner-photo__hint-body">{REQUEST_TEXT}</span>
+          <span className="planner-photo__hint-action">ADD YOUR OWN PHOTO BY CLICKING THE PICTURE ABOVE</span>
         </label>
         {phase === 'error' && (
           <p className="planner-photo__status planner-photo__status--error" role="alert">
