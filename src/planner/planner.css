@@ -573,47 +573,33 @@
   margin: 0;
 }
 
-.planner-hero__change {
-  position: relative;
-  flex: 0 0 auto;
-  align-self: flex-end;
-  margin: 0 0 0.15rem;
-  padding: 0.28rem 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.38);
-  color: #fff;
-  font-family: var(--font-nav);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+.planner-photo__hint {
+  display: block;
+  margin: 0.7rem 0 0.85rem;
+  padding: 0.8rem 0.95rem;
+  background: #fff8e6;
+  border: 1px solid #e4c56a;
+  border-radius: 10px;
+  color: #3c342c;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
   cursor: pointer;
-  white-space: nowrap;
 }
 
-.planner-hero__change--default {
-  position: absolute;
-  right: 1rem;
-  bottom: 0.95rem;
-  z-index: 2;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0.75);
+.planner-photo__hint-body,
+.planner-photo__hint-action {
+  display: block;
 }
 
-.planner-hero__change.is-disabled {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.planner-hero__change input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
+.planner-photo__hint-action {
+  margin-top: 0.55rem;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.45;
 }
 
 .planner-hero-wrap .planner-lead {
