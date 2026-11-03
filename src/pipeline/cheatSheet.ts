@@ -68,19 +68,26 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
     }
   }
 
+  const ceremonyNotes = [
+    ['Officiant microphone', 'Officiant microphone'],
+    ['Other ceremony speakers', 'Other ceremony speakers'],
+  ].flatMap(([label, key]) => {
+    const value = field(detail, key)
+    return value ? [`${label} - ${value}`] : []
+  })
   const ceremony: Array<[string, string, string]> = [
     ['Pre-ceremony', 'Pre-ceremony music', ''],
     ['Wedding party processional', 'Wedding party processional song', 'Wedding party processional style (instrumental/vocals)'],
     ['Bridal processional', 'Bridal processional song', 'Bridal processional style'],
     ['Recessional', 'Recessional song', 'Recessional style'],
   ]
-  const ceremonyLines = ceremony.flatMap(([label, songKey, styleKey]) => {
+  const ceremonyLines = ceremonyNotes.concat(ceremony.flatMap(([label, songKey, styleKey]) => {
     const song = field(detail, songKey)
     if (!song) return []
     const style = styleKey ? field(detail, styleKey) : ''
     const cue = songKey === 'Recessional song' ? field(detail, 'Recessional cue') : ''
     return [[label, [song, style, cue].filter(Boolean).join(' — ')].join(' - ')]
-  })
+  }))
   if (ceremonyLines.length) {
     blocks.push(blank())
     for (const line of ceremonyLines) blocks.push(paragraph(line, 'body'))
