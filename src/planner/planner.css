@@ -497,6 +497,11 @@
   object-position: center 30%;
 }
 
+.planner-hero__image.is-default {
+  object-position: center top;
+  background: #f4efe7;
+}
+
 .planner-hero__shade {
   position: absolute;
   inset: 0;

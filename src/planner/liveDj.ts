@@ -165,7 +165,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     stack: true,
     heading: 'Slow Dance Songs',
     callout:
-      'Sprinkling in a few slow songs throughout the evening can be a great way to create special moments for couples and give everyone a chance to get out on the dance floor. They can also be a great way to bring more guests onto the dance floor if things are slowing down. I typically recommend no more than 1–3 slow songs throughout the night, and usually follow slow songs with upbeat dance floor starters to get the party going again!',
+      'Sprinkling in a few slow songs throughout the evening can be a great way to create special moments for couples and give everyone a chance to get out on the dance floor. They can also be a great way to bring more guests onto the dance floor if things are slowing down. We typically recommend no more than 1–3 slow songs throughout the night, and usually follow slow songs with upbeat dance floor starters to get the party going again.',
     options: [
       'Yes, a few slow songs are fine.',
       'No more than 2 slow dances',
@@ -215,17 +215,17 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   },
   {
     key: 'Cocktail hour Anders chooses',
-    label: "I'm comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
+    label: "We're comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
     kind: 'check',
   },
   {
     key: 'Dinner Anders chooses',
-    label: "I'm comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
+    label: "We're comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
     kind: 'check',
   },
   {
     key: 'Open dancing Anders chooses',
-    label: "I'm comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
+    label: "We're comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
     kind: 'check',
   },
   {

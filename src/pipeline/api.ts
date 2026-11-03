@@ -76,7 +76,19 @@ function coupleOf(value: unknown): PipelineCouple | null {
     genderNeutral: record.genderNeutral === true,
     knownVenue: record.knownVenue !== false,
     photo: text(record.photo),
+    fields: fieldsOf(record.fields),
   }
+}
+
+function fieldsOf(value: unknown): Record<string, string> | undefined {
+  if (value == null) return undefined
+  const record = asRecord(value)
+  if (!record) return undefined
+  const fields: Record<string, string> = {}
+  for (const [name, item] of Object.entries(record)) {
+    if (typeof item === 'string') fields[name] = item
+  }
+  return fields
 }
 
 export async function adminList(key: string): Promise<PipelineCouple[]> {
@@ -129,9 +141,17 @@ export async function adminAddCouple(key: string, couple: NewCoupleInput): Promi
 export async function adminSetStatus(
   key: string,
   token: string,
-  patch: { bookingStatus?: BookingStage; team?: string },
+  patch: {
+    bookingStatus?: BookingStage
+    team?: string
+    services?: { live?: boolean; dj?: boolean; photobooth?: boolean }
+  },
 ): Promise<void> {
   await postAdmin({ action: 'adminSetStatus', key, token, ...patch })
+}
+
+export async function adminDeleteCouple(key: string, token: string): Promise<void> {
+  await postAdmin({ action: 'adminDeleteCouple', key, token })
 }
 
 export function sortCouples(couples: PipelineCouple[]): PipelineCouple[] {

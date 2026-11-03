@@ -27,6 +27,7 @@
   font-size: 15px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: #fffdf8;
 }
 
 .pipeline-top p {
@@ -165,6 +166,147 @@
   background: #efe4d6;
 }
 
+.pipeline-card img.is-default {
+  object-fit: cover;
+  object-position: center top;
+  background: #f4efe7;
+}
+
+.pipeline-name {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pipeline-name h2 {
+  margin: 0;
+}
+
+.pipeline-pill {
+  border: 1px solid #c4b4a4;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #3c342c;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pipeline-pill.booked,
+.pipeline-pill-menu button.booked {
+  background: #e7efe0;
+  border-color: #6d7f5b;
+}
+
+.pipeline-pill.pending {
+  background: #fff3cc;
+  border-color: #c4a56a;
+}
+
+.pipeline-pill.done {
+  background: #efe4d8;
+  border-color: #6b4a32;
+}
+
+.pipeline-status {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0;
+}
+
+.pipeline-pill-menu {
+  position: absolute;
+  right: 0;
+  z-index: 4;
+  display: grid;
+  gap: 0.2rem;
+  min-width: 9.5rem;
+  margin-top: 0.25rem;
+  padding: 0.35rem;
+  background: #fffdf8;
+  border: 1px solid #c4b4a4;
+  border-radius: 8px;
+}
+
+.pipeline-pill-menu button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pipeline-pill-menu button:hover {
+  background: #efe6da;
+}
+
+.pipeline-progress {
+  position: relative;
+  height: 1.35rem;
+  margin: 0.4rem 0;
+  background: #efe4d6;
+  border: 1px solid #c4b4a4;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pipeline-progress__fill {
+  height: 100%;
+  background: #6d7f5b;
+}
+
+.pipeline-progress span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #3c342c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pipeline-service-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0.15rem;
+}
+
+.pipeline-service-toggles button {
+  border: 1px solid #c4b4a4;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #6f655b;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+}
+
+.pipeline-service-toggles button.is-on {
+  background: #e7efe0;
+  border-color: #6d7f5b;
+  color: #3c342c;
+}
+
+.pipeline textarea {
+  min-height: 7.5rem;
+  resize: vertical;
+  white-space: pre-wrap;
+}
+
 .pipeline-photo {
   display: grid;
   place-items: center;
@@ -186,26 +328,6 @@
   color: #6f655b;
 }
 
-.pipeline-status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  align-items: center;
-  margin: 0.45rem 0;
-}
-
-.pipeline-status select.booked {
-  background: #e7efe0;
-}
-
-.pipeline-status select.pending {
-  background: #fff3cc;
-}
-
-.pipeline-status select.done {
-  background: #efe4d8;
-}
-
 .pipeline-actions {
   display: flex;
   flex-wrap: wrap;
@@ -213,7 +335,8 @@
 }
 
 .pipeline-actions button,
-.pipeline-actions a {
+.pipeline-actions a,
+a.pipeline-open {
   border: 1px solid #c4b4a4;
   border-radius: 999px;
   background: #fffdf8;
@@ -223,6 +346,58 @@
   font-weight: 700;
   padding: 0.28rem 0.55rem;
   text-decoration: none;
+  cursor: pointer;
+}
+
+a.pipeline-open {
+  display: inline-block;
+  border-color: #c4a56a;
+  background: #e4c98a;
+}
+
+.pipeline-actions .pipeline-delete,
+.pipeline-danger {
+  border-color: #c4a56a;
+  background: #fffdf8;
+  color: #8a3b2a;
+}
+
+.pipeline-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(28, 25, 22, 0.45);
+}
+
+.pipeline-dialog {
+  width: min(26rem, 100%);
+  padding: 1rem;
+  background: #fffdf8;
+  border-radius: 10px;
+}
+
+.pipeline-dialog p {
+  margin: 0 0 0.8rem;
+}
+
+.pipeline-dialog div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.pipeline-dialog button {
+  border: 1px solid #c4b4a4;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #3c342c;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
   cursor: pointer;
 }
 
