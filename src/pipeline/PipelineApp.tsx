@@ -23,19 +23,12 @@ import { coupleProgress } from './progress'
 import { copyAndRunShortcut } from './shortcuts'
 import { liveChartText, playlistChoices, seratoText } from './songs'
 import {
-  SPOTIFY_CLIENT_ID,
-  SPOTIFY_REDIRECT_URI,
-  SpotifySetupError,
   beginSpotifyLogin,
-  clearStoredSpotifyClientId,
   createSpotifyPlaylist,
   finishSpotifyLogin,
   rememberPlaylist,
-  saveSpotifyClientId,
   spotifyConnected,
   spotifyReturnError,
-  spotifySetupNeeded,
-  storedSpotifyClientId,
 } from './spotify'
 import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } from './types'
 
@@ -83,8 +76,6 @@ export default function PipelineApp() {
   const [venues, setVenues] = useState<VenueMatch[]>([])
   const [created, setCreated] = useState('')
   const [spotifyReady, setSpotifyReady] = useState(spotifyConnected)
-  const [setupOpen, setSetupOpen] = useState(spotifySetupNeeded)
-  const [clientDraft, setClientDraft] = useState('')
 
   const visible = useMemo(() => sortCouples(couples).filter((couple) => matchesStages(couple, stages)), [couples, stages])
 
@@ -135,13 +126,7 @@ export default function PipelineApp() {
             : `Playlist created: ${result.url}`,
         )
       })
-      .catch((reason: unknown) => {
-        if (reason instanceof SpotifySetupError && !SPOTIFY_CLIENT_ID.trim()) {
-          clearStoredSpotifyClientId()
-          setSetupOpen(true)
-        }
-        setError(messageFor(reason))
-      })
+      .catch((reason: unknown) => setError(messageFor(reason)))
   }, [])
 
   useEffect(() => {
@@ -260,38 +245,6 @@ export default function PipelineApp() {
           <>
             {notice && <p className="pipeline-note">{notice}</p>}
             {error && <p className="pipeline-error">{error}</p>}
-            {setupOpen && !SPOTIFY_CLIENT_ID.trim() && (
-              <form
-                className="pipeline-spotify-setup"
-                autoComplete="off"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  const id = clientDraft.trim()
-                  if (!id) return
-                  saveSpotifyClientId(id)
-                  setClientDraft('')
-                  setSetupOpen(false)
-                  setNotice('Spotify client ID saved on this browser.')
-                }}
-              >
-                <label htmlFor="spotify-client">Spotify client ID</label>
-                <p className="pipeline-note">
-                  One-time setup. In the Spotify dashboard, set the redirect URI to {SPOTIFY_REDIRECT_URI} and paste the Client ID. It is saved in this browser and this field stays hidden.
-                </p>
-                <input
-                  id="spotify-client"
-                  name="ah-spotify-client-id"
-                  value={clientDraft}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  onChange={(event) => setClientDraft(event.target.value)}
-                />
-                <button className="gold" type="submit">
-                  Save client ID
-                </button>
-              </form>
-            )}
             <div className="pipeline-filters" role="group" aria-label="Booking stage">
               {STAGES.map((stage) => (
                 <button
@@ -440,7 +393,6 @@ export default function PipelineApp() {
                   couple={couple}
                   adminKey={key}
                   spotifyReady={spotifyReady}
-                  onNeedSetup={() => setSetupOpen(true)}
                   onChange={(next) => setCouples((current) => current.map((item) => (item.token === next.token ? next : item)))}
                   onRemove={(token) => setCouples((current) => current.filter((item) => item.token !== token))}
                   onNotice={setNotice}
@@ -467,7 +419,6 @@ function CoupleCard({
   couple,
   adminKey,
   spotifyReady,
-  onNeedSetup,
   onChange,
   onRemove,
   onNotice,
@@ -477,7 +428,6 @@ function CoupleCard({
   couple: PipelineCouple
   adminKey: string
   spotifyReady: boolean
-  onNeedSetup: () => void
   onChange: (couple: PipelineCouple) => void
   onRemove: (token: string) => void
   onNotice: (value: string) => void
@@ -500,10 +450,6 @@ function CoupleCard({
   }
 
   function failSpotify(reason: unknown) {
-    if (reason instanceof SpotifySetupError && !SPOTIFY_CLIENT_ID.trim()) {
-      clearStoredSpotifyClientId()
-      onNeedSetup()
-    }
     onError(messageFor(reason))
   }
 
@@ -668,11 +614,6 @@ function CoupleCard({
                   disabled={busy === list.key}
                   onClick={() => {
                     const name = `${couple.names} – ${list.label}`
-                    if (!storedSpotifyClientId()) {
-                      onNeedSetup()
-                      onError('Add the Spotify client ID once, at the top of the page.')
-                      return
-                    }
                     if (!spotifyReady) {
                       rememberPlaylist({ name, songs: list.songs })
                       void beginSpotifyLogin().catch(failSpotify)

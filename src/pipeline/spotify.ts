@@ -1,47 +1,19 @@
 import type { ListedSong } from './songs'
 
-/**
- * Spotify app client ID. This is public (PKCE, no secret).
- * Paste Anders's client ID here and the setup field stays hidden.
- * Leave it empty until then. The dashboard redirect URI must be exactly SPOTIFY_REDIRECT_URI.
- */
-export const SPOTIFY_CLIENT_ID = ''
+/** Public Spotify app client ID (PKCE, no secret). Redirect URI is SPOTIFY_REDIRECT_URI. */
+export const SPOTIFY_CLIENT_ID = 'c3486538573a4e229a3f43589fb2f793'
 
 /** Registered on the Spotify app. Do not add a query string or drop the trailing slash. */
 export const SPOTIFY_REDIRECT_URI = 'https://andershyatt.github.io/anders/pipeline/'
 
-const CLIENT_KEY = 'anders-pipeline-spotify-client'
 const TOKEN_KEY = 'anders-pipeline-spotify-token'
 const VERIFIER_KEY = 'anders-pipeline-spotify-verifier'
 const STATE_KEY = 'anders-pipeline-spotify-state'
 const PENDING_KEY = 'anders-pipeline-spotify-pending'
 
-export class SpotifySetupError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'SpotifySetupError'
-  }
-}
-
 export interface PendingPlaylist {
   name: string
   songs: ListedSong[]
-}
-
-export function storedSpotifyClientId(): string {
-  return SPOTIFY_CLIENT_ID.trim() || localStorage.getItem(CLIENT_KEY) || ''
-}
-
-export function saveSpotifyClientId(clientId: string) {
-  localStorage.setItem(CLIENT_KEY, clientId.trim())
-}
-
-export function clearStoredSpotifyClientId() {
-  localStorage.removeItem(CLIENT_KEY)
-}
-
-export function spotifySetupNeeded(): boolean {
-  return SPOTIFY_CLIENT_ID.trim() === '' && !localStorage.getItem(CLIENT_KEY)
 }
 
 function randomVerifier(): string {
@@ -83,10 +55,7 @@ function clearPending() {
 }
 
 export async function beginSpotifyLogin(): Promise<void> {
-  const clientId = storedSpotifyClientId()
-  if (!clientId) {
-    throw new SpotifySetupError('Add the Spotify client ID once. It is saved in this browser and will not be asked again.')
-  }
+  const clientId = SPOTIFY_CLIENT_ID
   const verifier = randomVerifier()
   const state = randomVerifier()
   localStorage.setItem(VERIFIER_KEY, verifier)
@@ -145,8 +114,8 @@ async function readError(response: Response, fallback: string): Promise<Error> {
   }
   const code = detail.toLowerCase()
   if (code.includes('invalid_client')) {
-    return new SpotifySetupError(
-      'Spotify did not accept that client ID. In the Spotify dashboard, set the redirect URI to https://andershyatt.github.io/anders/pipeline/ and paste the Client ID again.',
+    return new Error(
+      'Spotify did not accept the login. In the Spotify dashboard, the redirect URI must be https://andershyatt.github.io/anders/pipeline/.',
     )
   }
   if (code.includes('invalid_grant') || code.includes('code_verifier')) {
@@ -197,10 +166,10 @@ async function exchangeCode(code: string, state: string): Promise<PendingPlaylis
     clearPending()
     throw new Error('Spotify sent back a login this page did not start. Please try the playlist again.')
   }
-  const clientId = storedSpotifyClientId()
+  const clientId = SPOTIFY_CLIENT_ID
   const verifier = localStorage.getItem(VERIFIER_KEY) ?? ''
-  if (!clientId || !verifier) {
-    throw new SpotifySetupError('Spotify login could not be finished. Save the client ID and try the playlist again.')
+  if (!verifier) {
+    throw new Error('Spotify login could not be finished. Please try the playlist again.')
   }
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
@@ -242,7 +211,7 @@ export function spotifyReturnError(code: string): string {
 }
 
 async function accessToken(): Promise<string> {
-  const clientId = storedSpotifyClientId()
+  const clientId = SPOTIFY_CLIENT_ID
   const current = readToken()
   if (!current) throw new Error('Connect Spotify from a playlist button, then this browser stays signed in.')
   if (current.expires > Date.now() + 30_000) return current.access
