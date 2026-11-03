@@ -205,6 +205,7 @@ export default function PipelineApp() {
 
   return (
     <div className="pipeline">
+      <div className="pipeline-pin">
       <header className="pipeline-top">
         <div>
           <h1>Anders Hyatt Music</h1>
@@ -224,6 +225,27 @@ export default function PipelineApp() {
           </button>
         )}
       </header>
+      {status === 'ready' && (
+        <div className="pipeline-filters-bar">
+          <div className="pipeline-filters" role="group" aria-label="Booking stage">
+            {STAGES.map((stage) => (
+              <button
+                key={stage}
+                type="button"
+                className={`${stages.has(stage) ? 'is-on' : ''} ${stage === 'Booked' ? 'booked' : stage === 'Completed' ? 'done' : 'pending'}`}
+                aria-pressed={stages.has(stage)}
+                onClick={() => toggleStage(stage)}
+              >
+                {stage}
+              </button>
+            ))}
+            <button type="button" className="gold" onClick={() => setAdding((current) => !current)}>
+              {adding ? 'Close form' : 'Add couple'}
+            </button>
+          </div>
+        </div>
+      )}
+      </div>
       <main className="pipeline-main">
         {status === 'gate' && (
           <form
@@ -258,22 +280,6 @@ export default function PipelineApp() {
           <>
             {notice && <p className="pipeline-note">{notice}</p>}
             {error && <p className="pipeline-error">{error}</p>}
-            <div className="pipeline-filters" role="group" aria-label="Booking stage">
-              {STAGES.map((stage) => (
-                <button
-                  key={stage}
-                  type="button"
-                  className={`${stages.has(stage) ? 'is-on' : ''} ${stage === 'Booked' ? 'booked' : stage === 'Completed' ? 'done' : 'pending'}`}
-                  aria-pressed={stages.has(stage)}
-                  onClick={() => toggleStage(stage)}
-                >
-                  {stage}
-                </button>
-              ))}
-              <button type="button" className="gold" onClick={() => setAdding((current) => !current)}>
-                {adding ? 'Close form' : 'Add couple'}
-              </button>
-            </div>
             {adding && (
               <form
                 className="pipeline-panel"
