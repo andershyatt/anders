@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
-import defaultCouplePhoto from '../assets/default-couple-photo.svg'
+import defaultCouplePhoto from '../assets/default-couple-photo.png'
 import { uploadCouplePhoto } from './api'
 import { PhotoTooLargeError, blobToBase64, prepareCouplePhoto } from './preparePhoto'
 

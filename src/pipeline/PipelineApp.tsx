@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import defaultCouplePhoto from '../assets/default-couple-photo.svg'
+import defaultCouplePhoto from '../assets/default-couple-photo.png'
 import { formatCoupleDate } from '../planner/format'
 import { loadGooglePlace, searchVenues, type VenueMatch } from '../planner/venueSearch'
 import {
@@ -21,14 +21,19 @@ import { downloadBlob, sheetFileName } from './files'
 import { buildInfoSheet } from './infoSheet'
 import { coupleProgress } from './progress'
 import { copyAndRunShortcut } from './shortcuts'
-import { liveChartText, playlistChoices, seratoText } from './songs'
+import { couplePlaylistName, liveChartText, playlistChoices, seratoText } from './songs'
 import {
   beginSpotifyLogin,
+  clearReauthorize,
   createSpotifyPlaylist,
   finishSpotifyLogin,
+  markReauthorize,
   rememberPlaylist,
+  shouldReauthorize,
   spotifyConnected,
   spotifyReturnError,
+  type PendingPlaylist,
+  type SpotifyPlaylistResult,
 } from './spotify'
 import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } from './types'
 
@@ -76,6 +81,7 @@ export default function PipelineApp() {
   const [venues, setVenues] = useState<VenueMatch[]>([])
   const [created, setCreated] = useState('')
   const [spotifyReady, setSpotifyReady] = useState(spotifyConnected)
+  const [createdPlaylist, setCreatedPlaylist] = useState<SpotifyPlaylistResult | null>(null)
 
   const visible = useMemo(() => sortCouples(couples).filter((couple) => matchesStages(couple, stages)), [couples, stages])
 
@@ -112,21 +118,28 @@ export default function PipelineApp() {
     }
     const code = params.get('code')
     if (!code) return
-    void finishSpotifyLogin(code, params.get('state') ?? '')
-      .then(async (pending) => {
-        setSpotifyReady(true)
+    void (async () => {
+      let pending: PendingPlaylist | null = null
+      try {
+        pending = await finishSpotifyLogin(code, params.get('state') ?? '')
+        setSpotifyReady(spotifyConnected())
         if (!pending) {
           setNotice('Spotify is connected on this browser.')
           return
         }
         const result = await createSpotifyPlaylist(pending.name, pending.songs)
-        setNotice(
-          result.missing.length
-            ? `Playlist created. Spotify could not find: ${result.missing.join('; ')}`
-            : `Playlist created: ${result.url}`,
-        )
-      })
-      .catch((reason: unknown) => setError(messageFor(reason)))
+        clearReauthorize()
+        setCreatedPlaylist(result)
+      } catch (reason) {
+        if (pending && shouldReauthorize(reason)) {
+          markReauthorize()
+          rememberPlaylist(pending)
+          await beginSpotifyLogin(true)
+          return
+        }
+        setError(messageFor(reason))
+      }
+    })()
   }, [])
 
   useEffect(() => {
@@ -397,11 +410,49 @@ export default function PipelineApp() {
                   onRemove={(token) => setCouples((current) => current.filter((item) => item.token !== token))}
                   onNotice={setNotice}
                   onError={setError}
+                  onCreated={setCreatedPlaylist}
                   run={withDetail}
                 />
               ))}
             </div>
             {visible.length === 0 && <p>No weddings in this view.</p>}
+            {createdPlaylist && (
+              <div className="pipeline-dialog-backdrop" onClick={() => setCreatedPlaylist(null)}>
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="playlist-created-title"
+                  className="pipeline-dialog"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <h2 id="playlist-created-title">Playlist created</h2>
+                  <p>{createdPlaylist.name}</p>
+                  <p>
+                    <a href={createdPlaylist.url} target="_blank" rel="noopener noreferrer">
+                      Open in Spotify
+                    </a>
+                  </p>
+                  <p>
+                    Found {createdPlaylist.total - createdPlaylist.missing.length} of {createdPlaylist.total} songs
+                  </p>
+                  {createdPlaylist.missing.length > 0 && (
+                    <>
+                      <p>Spotify could not find:</p>
+                      <ul className="pipeline-missing">
+                        {createdPlaylist.missing.map((song) => (
+                          <li key={song}>{song}</li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                  <div>
+                    <button type="button" className="gold" onClick={() => setCreatedPlaylist(null)}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </main>
@@ -423,6 +474,7 @@ function CoupleCard({
   onRemove,
   onNotice,
   onError,
+  onCreated,
   run,
 }: {
   couple: PipelineCouple
@@ -432,6 +484,7 @@ function CoupleCard({
   onRemove: (token: string) => void
   onNotice: (value: string) => void
   onError: (value: string) => void
+  onCreated: (result: SpotifyPlaylistResult) => void
   run: (couple: PipelineCouple, task: (detail: PipelineDetail) => Promise<void>) => Promise<void>
 }) {
   const [menu, setMenu] = useState<'playlist' | ''>('')
@@ -529,7 +582,7 @@ function CoupleCard({
           }}
         />
         <div className="pipeline-actions">
-          <a className="pipeline-open" href={plannerLink(couple.token)}>
+          <a className="pipeline-open" href={plannerLink(couple.token)} target="_blank" rel="noopener">
             Open planner
           </a>
           <button
@@ -613,22 +666,28 @@ function CoupleCard({
                   className="gold"
                   disabled={busy === list.key}
                   onClick={() => {
-                    const name = `${couple.names} – ${list.label}`
+                    const name = couplePlaylistName(couple.names, list.label)
+                    const pending = { name, songs: list.songs }
                     if (!spotifyReady) {
-                      rememberPlaylist({ name, songs: list.songs })
+                      rememberPlaylist(pending)
                       void beginSpotifyLogin().catch(failSpotify)
                       return
                     }
                     setBusy(list.key)
                     void createSpotifyPlaylist(name, list.songs)
-                      .then((result) =>
-                        onNotice(
-                          result.missing.length
-                            ? `Playlist created. Spotify could not find: ${result.missing.join('; ')}`
-                            : `Playlist created: ${result.url}`,
-                        ),
-                      )
-                      .catch(failSpotify)
+                      .then((result) => {
+                        clearReauthorize()
+                        onCreated(result)
+                      })
+                      .catch((reason: unknown) => {
+                        if (shouldReauthorize(reason)) {
+                          markReauthorize()
+                          rememberPlaylist(pending)
+                          void beginSpotifyLogin(true).catch(failSpotify)
+                          return
+                        }
+                        failSpotify(reason)
+                      })
                       .finally(() => setBusy(''))
                   }}
                 >
