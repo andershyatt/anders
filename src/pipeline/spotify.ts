@@ -6,6 +6,10 @@ export const SPOTIFY_CLIENT_ID = 'c3486538573a4e229a3f43589fb2f793'
 /** Registered on the Spotify app. Do not add a query string or drop the trailing slash. */
 export const SPOTIFY_REDIRECT_URI = 'https://andershyatt.github.io/anders/pipeline/'
 
+/** Private playlists need the private scope. Spotify also expects the public scope on the current create call. */
+const REQUIRED_SCOPES = ['playlist-modify-private', 'playlist-modify-public']
+const REAUTH_KEY = 'anders-pipeline-spotify-reauth'
+
 const TOKEN_KEY = 'anders-pipeline-spotify-token'
 const VERIFIER_KEY = 'anders-pipeline-spotify-verifier'
 const STATE_KEY = 'anders-pipeline-spotify-state'
@@ -54,7 +58,7 @@ function clearPending() {
   localStorage.removeItem(PENDING_KEY)
 }
 
-export async function beginSpotifyLogin(): Promise<void> {
+export async function beginSpotifyLogin(forcePrompt = false): Promise<void> {
   const clientId = SPOTIFY_CLIENT_ID
   const verifier = randomVerifier()
   const state = randomVerifier()
@@ -68,7 +72,8 @@ export async function beginSpotifyLogin(): Promise<void> {
   url.searchParams.set('code_challenge_method', 'S256')
   url.searchParams.set('code_challenge', codeChallenge)
   url.searchParams.set('state', state)
-  url.searchParams.set('scope', 'playlist-modify-private')
+  url.searchParams.set('scope', REQUIRED_SCOPES.join(' '))
+  if (forcePrompt || consentPromptNeeded()) url.searchParams.set('show_dialog', 'true')
   window.location.assign(url.toString())
 }
 
@@ -76,6 +81,42 @@ interface SpotifyToken {
   access: string
   refresh: string
   expires: number
+  scopes: string
+}
+
+export class SpotifyApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'SpotifyApiError'
+    this.status = status
+  }
+}
+
+function tokenHasScopes(token: SpotifyToken): boolean {
+  const have = new Set(token.scopes.split(/[\s,]+/).filter(Boolean))
+  return REQUIRED_SCOPES.every((scope) => have.has(scope))
+}
+
+/** A saved login from before both playlist scopes were requested cannot create playlists. */
+export function consentPromptNeeded(): boolean {
+  const token = readToken()
+  return Boolean(token && !tokenHasScopes(token))
+}
+
+export function shouldReauthorize(error: unknown): boolean {
+  if (!(error instanceof SpotifyApiError)) return false
+  if (error.status !== 401 && error.status !== 403) return false
+  if (/not registered|developer dashboard/i.test(error.message)) return false
+  return sessionStorage.getItem(REAUTH_KEY) !== '1'
+}
+
+export function markReauthorize() {
+  sessionStorage.setItem(REAUTH_KEY, '1')
+}
+
+export function clearReauthorize() {
+  sessionStorage.removeItem(REAUTH_KEY)
 }
 
 function readToken(): SpotifyToken | null {
@@ -84,6 +125,7 @@ function readToken(): SpotifyToken | null {
   try {
     const parsed = JSON.parse(raw) as SpotifyToken
     if (!parsed.access || !parsed.expires) return null
+    if (typeof parsed.scopes !== 'string') parsed.scopes = ''
     return parsed
   } catch {
     return null
@@ -96,38 +138,47 @@ function writeToken(token: SpotifyToken) {
 
 export function spotifyConnected(): boolean {
   const token = readToken()
-  return Boolean(token && (token.expires > Date.now() + 30_000 || token.refresh))
+  return Boolean(token && tokenHasScopes(token) && (token.expires > Date.now() + 30_000 || token.refresh))
 }
 
-async function readError(response: Response, fallback: string): Promise<Error> {
+function spotifyDetail(data: { error?: string | { message?: string; reason?: string }; error_description?: string }): string {
+  if (typeof data.error_description === 'string' && data.error_description.trim()) return data.error_description.trim()
+  if (typeof data.error === 'string' && data.error.trim()) return data.error.trim()
+  const record = data.error
+  if (record && typeof record === 'object') {
+    if (typeof record.message === 'string' && record.message.trim()) return record.message.trim()
+    if (typeof record.reason === 'string' && record.reason.trim()) return record.reason.trim()
+  }
+  return ''
+}
+
+async function readError(response: Response, path: string): Promise<SpotifyApiError> {
   let detail = ''
   try {
-    const data = (await response.json()) as {
-      error?: string | { message?: string }
-      error_description?: string
-    }
-    if (typeof data.error_description === 'string') detail = data.error_description
-    else if (typeof data.error === 'string') detail = data.error
-    else if (data.error && typeof data.error.message === 'string') detail = data.error.message
+    detail = spotifyDetail((await response.json()) as { error?: string | { message?: string; reason?: string }; error_description?: string })
   } catch {
     detail = ''
   }
-  const code = detail.toLowerCase()
-  if (code.includes('invalid_client')) {
-    return new Error(
-      'Spotify did not accept the login. In the Spotify dashboard, the redirect URI must be https://andershyatt.github.io/anders/pipeline/.',
+  const raw = detail || response.statusText || 'no details'
+  if (/invalid_client/i.test(raw)) {
+    return new SpotifyApiError(
+      `Spotify said “${raw}” (HTTP ${response.status}). The redirect URI on the app must be exactly https://andershyatt.github.io/anders/pipeline/.`,
+      response.status,
     )
   }
-  if (code.includes('invalid_grant') || code.includes('code_verifier')) {
-    return new Error('That Spotify login expired. Please try the playlist again.')
+  if (/invalid_grant|code_verifier/i.test(raw)) {
+    return new SpotifyApiError(`Spotify said “${raw}”. That login expired. Please try the playlist again.`, response.status)
   }
-  if (response.status === 401 || response.status === 403) {
-    return new Error('Spotify did not allow that. Reconnect, and confirm the app can create playlists.')
+  if (/not registered|developer dashboard/i.test(raw)) {
+    return new SpotifyApiError(
+      `Spotify said “${raw}” (HTTP ${response.status} on ${path}). In the Spotify dashboard, open this app, then User Management, and add the Spotify account that is signing in.`,
+      response.status,
+    )
   }
-  return new Error(detail ? `${fallback} ${detail}` : fallback)
+  return new SpotifyApiError(`Spotify said “${raw}” (HTTP ${response.status} on ${path}).`, response.status)
 }
 
-async function refreshToken(clientId: string, refresh: string): Promise<SpotifyToken> {
+async function refreshToken(clientId: string, refresh: string, scopes: string): Promise<SpotifyToken> {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refresh,
@@ -138,13 +189,14 @@ async function refreshToken(clientId: string, refresh: string): Promise<SpotifyT
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
   })
-  if (!response.ok) throw await readError(response, 'Spotify could not refresh the login.')
-  const data = (await response.json()) as { access_token?: string; refresh_token?: string; expires_in?: number }
+  if (!response.ok) throw await readError(response, 'POST /api/token')
+  const data = (await response.json()) as { access_token?: string; refresh_token?: string; expires_in?: number; scope?: string }
   if (!data.access_token) throw new Error('Spotify could not refresh the login.')
   const token = {
     access: data.access_token,
     refresh: data.refresh_token || refresh,
     expires: Date.now() + (data.expires_in ?? 3600) * 1000,
+    scopes: data.scope || scopes,
   }
   writeToken(token)
   return token
@@ -183,13 +235,14 @@ async function exchangeCode(code: string, state: string): Promise<PendingPlaylis
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
   })
-  if (!response.ok) throw await readError(response, 'Spotify rejected the login.')
-  const data = (await response.json()) as { access_token?: string; refresh_token?: string; expires_in?: number }
+  if (!response.ok) throw await readError(response, 'POST /api/token')
+  const data = (await response.json()) as { access_token?: string; refresh_token?: string; expires_in?: number; scope?: string }
   if (!data.access_token) throw new Error('Spotify rejected the login.')
   writeToken({
     access: data.access_token,
     refresh: data.refresh_token ?? '',
     expires: Date.now() + (data.expires_in ?? 3600) * 1000,
+    scopes: data.scope || REQUIRED_SCOPES.join(' '),
   })
   localStorage.removeItem(VERIFIER_KEY)
   localStorage.removeItem(STATE_KEY)
@@ -213,14 +266,15 @@ export function spotifyReturnError(code: string): string {
 async function accessToken(): Promise<string> {
   const clientId = SPOTIFY_CLIENT_ID
   const current = readToken()
-  if (!current) throw new Error('Connect Spotify from a playlist button, then this browser stays signed in.')
+  if (!current || !tokenHasScopes(current)) throw new SpotifyApiError('Spotify needs you to sign in again.', 401)
   if (current.expires > Date.now() + 30_000) return current.access
-  if (!current.refresh || !clientId) throw new Error('Spotify needs you to sign in again. Open the playlist and try once more.')
-  return (await refreshToken(clientId, current.refresh)).access
+  if (!current.refresh || !clientId) throw new SpotifyApiError('Spotify needs you to sign in again.', 401)
+  return (await refreshToken(clientId, current.refresh, current.scopes)).access
 }
 
 async function spotify(path: string, init: RequestInit = {}): Promise<unknown> {
   const token = await accessToken()
+  const method = init.method ?? 'GET'
   const response = await fetch(`https://api.spotify.com/v1${path}`, {
     ...init,
     headers: {
@@ -229,11 +283,11 @@ async function spotify(path: string, init: RequestInit = {}): Promise<unknown> {
       ...(init.headers ?? {}),
     },
   })
-  if (response.status === 401) {
-    localStorage.removeItem(TOKEN_KEY)
-    throw new Error('Spotify signed you out. Open the playlist and try again.')
+  if (!response.ok) {
+    const error = await readError(response, `${method} ${path}`)
+    if (error instanceof SpotifyApiError && (error.status === 401 || error.status === 403)) localStorage.removeItem(TOKEN_KEY)
+    throw error
   }
-  if (!response.ok) throw await readError(response, 'Spotify could not finish that request.')
   if (response.status === 204) return null
   return response.json()
 }
@@ -246,11 +300,16 @@ async function findTrack(song: ListedSong): Promise<string | null> {
   return data.tracks?.items?.[0]?.uri ?? null
 }
 
-export async function createSpotifyPlaylist(name: string, songs: ListedSong[]): Promise<{ url: string; missing: string[] }> {
+export interface SpotifyPlaylistResult {
+  name: string
+  url: string
+  total: number
+  missing: string[]
+}
+
+export async function createSpotifyPlaylist(name: string, songs: ListedSong[]): Promise<SpotifyPlaylistResult> {
   if (songs.length === 0) throw new Error('That section has no songs to add.')
-  const me = (await spotify('/me')) as { id?: string }
-  if (!me.id) throw new Error('Spotify did not return the signed-in account.')
-  const playlist = (await spotify(`/users/${encodeURIComponent(me.id)}/playlists`, {
+  const playlist = (await spotify('/me/playlists', {
     method: 'POST',
     body: JSON.stringify({ name, public: false, description: 'Created from the Anders Hyatt pipeline.' }),
   })) as { id?: string; external_urls?: { spotify?: string } }
@@ -263,10 +322,10 @@ export async function createSpotifyPlaylist(name: string, songs: ListedSong[]): 
     else missing.push(song.artist ? `${song.title} - ${song.artist}` : song.title)
   }
   for (let index = 0; index < uris.length; index += 100) {
-    await spotify(`/playlists/${playlist.id}/tracks`, {
+    await spotify(`/playlists/${playlist.id}/items`, {
       method: 'POST',
       body: JSON.stringify({ uris: uris.slice(index, index + 100) }),
     })
   }
-  return { url: playlist.external_urls?.spotify || 'https://open.spotify.com/', missing }
+  return { name, url: playlist.external_urls?.spotify || 'https://open.spotify.com/', total: songs.length, missing }
 }

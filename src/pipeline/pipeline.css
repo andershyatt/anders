@@ -314,9 +314,13 @@
   font-weight: 700;
 }
 
-.pipeline-card h2 {
+.pipeline-card h2,
+.pipeline-name h2 {
   margin: 0 0 0.15rem;
-  font-size: 18px;
+  color: #000;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.15;
 }
 
 .pipeline-card p {
@@ -379,8 +383,22 @@ a.pipeline-open {
   border-radius: 10px;
 }
 
+.pipeline-dialog h2 {
+  margin: 0 0 0.4rem;
+  color: #000;
+  font-size: 22px;
+}
+
 .pipeline-dialog p {
   margin: 0 0 0.8rem;
+}
+
+.pipeline-missing {
+  margin: 0 0 0.8rem;
+  padding-left: 1.1rem;
+  max-height: 12rem;
+  overflow: auto;
+  font-size: 14px;
 }
 
 .pipeline-dialog div {

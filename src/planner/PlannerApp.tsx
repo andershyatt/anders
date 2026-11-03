@@ -552,6 +552,15 @@ export default function PlannerApp() {
   const dirty = status.kind === 'ready' && !fieldsEqual(fields, savedFields)
 
   useEffect(() => {
+    if (status.kind !== 'ready') return
+    const names = basics.names.trim()
+    document.title = names ? `${names} – Wedding Planner` : 'Wedding Planner'
+    return () => {
+      document.title = 'Wedding planner · Anders Hyatt Music'
+    }
+  }, [basics.names, status.kind])
+
+  useEffect(() => {
     if (!token) return
     let cancelled = false
 

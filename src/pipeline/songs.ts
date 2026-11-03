@@ -149,14 +149,20 @@ export function liveChartText(detail: PipelineDetail): string {
     .join('\n\n')
 }
 
-export const PLAYLIST_LISTS: Array<{ key: string; label: string }> = [
-  { key: 'Cocktail hour songs', label: 'Cocktail hour' },
-  { key: 'Dinner songs', label: 'Dinner' },
-  { key: 'Open dancing songs', label: 'Open dancing' },
-  { key: 'Slow dance songs', label: 'Slow songs' },
-  { key: 'Introduction songs', label: 'Introductions' },
-  { key: 'Do not play songs', label: 'Do not play' },
+const PLAYLIST_LISTS: Array<{ key: string; label: string }> = [
+  { key: 'Cocktail hour songs', label: 'cocktails' },
+  { key: 'Dinner songs', label: 'dinner' },
+  { key: 'Open dancing songs', label: 'dance' },
+  { key: 'Do not play songs', label: "don't play" },
+  { key: 'Slow dance songs', label: 'slow songs' },
+  { key: 'Introduction songs', label: 'introductions' },
 ]
+
+/** "Sarah & Mike" becomes "SarahMike cocktails". */
+export function couplePlaylistName(names: string, section: string): string {
+  const compact = names.replace(/[\s&]+/g, '')
+  return `${compact} ${section}`.trim()
+}
 
 export function playlistChoices(detail: PipelineDetail): Array<{ key: string; label: string; songs: ListedSong[] }> {
   return PLAYLIST_LISTS.flatMap((list) => {
