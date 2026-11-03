@@ -573,24 +573,6 @@
   margin: 0;
 }
 
-.planner-hero__change {
-  position: relative;
-  flex: 0 0 auto;
-  align-self: flex-end;
-  margin: 0 0 0.15rem;
-  padding: 0.28rem 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.38);
-  color: #fff;
-  font-family: var(--font-nav);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
 .planner-photo__hint {
   display: block;
   margin: 0.15rem 0 0.35rem;
@@ -600,22 +582,6 @@
   font-weight: 400;
   text-align: center;
   cursor: pointer;
-}
-
-.planner-hero__change.is-disabled {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.planner-hero__change input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
 }
 
 .planner-hero-wrap .planner-lead {

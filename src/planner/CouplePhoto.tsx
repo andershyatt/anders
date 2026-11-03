@@ -157,7 +157,7 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
           <img className="planner-hero__image is-default" src={defaultCouplePhoto} alt="" />
         </section>
         <label htmlFor="couple-default-photo" className="planner-photo__hint">
-          Click to add a photo of you two
+          Add your own photo by clicking the picture above
         </label>
         {phase === 'error' && (
           <p className="planner-photo__status planner-photo__status--error" role="alert">
@@ -193,11 +193,8 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
               <p className="planner-subtitle">{SUBTITLE}</p>
               {meta && <p className="planner-meta">{meta}</p>}
             </div>
-            {picker(
-              phase === 'uploading' ? 'Sending…' : 'Change photo',
-              `planner-hero__change${phase === 'uploading' ? ' is-disabled' : ''}`,
-            )}
           </div>
+          {picker('Change photo', `planner-hero__pick${phase === 'uploading' ? ' is-disabled' : ''}`, true, 'couple-photo-file')}
         </section>
         {phase === 'error' && (
           <p className="planner-photo__status planner-photo__status--error" role="alert">
