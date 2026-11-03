@@ -50,7 +50,11 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
 
   const ig = field(detail, 'IG handle')
   if (ig) blocks.push(paragraph(ig, 'bullet'))
-  if (detail.team) blocks.push(paragraph(`Your team: ${detail.team}`, 'bullet'))
+  if (detail.team) {
+    detail.team.split('\n').forEach((line, index) => {
+      blocks.push(paragraph(index === 0 ? `Your team: ${line}` : line, index === 0 ? 'bullet' : 'body'))
+    })
+  }
   const photo = [field(detail, 'Photographer'), field(detail, 'Videographer')].filter(Boolean).join(' · ')
   if (photo) blocks.push(paragraph(`Photo: ${photo}`, 'bullet'))
   const contact = field(detail, 'Day-of contact') || field(detail, 'Photo Booth: Day-of contact')

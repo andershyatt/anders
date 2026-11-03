@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import defaultCouplePhoto from '../assets/default-couple-photo.svg'
 import { formatCoupleDate } from '../planner/format'
 import { loadGooglePlace, searchVenues, type VenueMatch } from '../planner/venueSearch'
 import {
   adminAddCouple,
   adminCouple,
+  adminDeleteCouple,
   adminList,
   adminSetStatus,
   clearAdminKey,
@@ -17,9 +19,24 @@ import {
 import { buildCheatSheet } from './cheatSheet'
 import { downloadBlob, sheetFileName } from './files'
 import { buildInfoSheet } from './infoSheet'
+import { coupleProgress } from './progress'
 import { copyAndRunShortcut } from './shortcuts'
-import { groupedText, liveChartText, playlistChoices, seratoText } from './songs'
-import { beginSpotifyLogin, createSpotifyPlaylist, finishSpotifyLogin, pipelineRedirectUri, spotifyConnected, storedSpotifyClientId } from './spotify'
+import { liveChartText, playlistChoices, seratoText } from './songs'
+import {
+  SPOTIFY_CLIENT_ID,
+  SPOTIFY_REDIRECT_URI,
+  SpotifySetupError,
+  beginSpotifyLogin,
+  clearStoredSpotifyClientId,
+  createSpotifyPlaylist,
+  finishSpotifyLogin,
+  rememberPlaylist,
+  saveSpotifyClientId,
+  spotifyConnected,
+  spotifyReturnError,
+  spotifySetupNeeded,
+  storedSpotifyClientId,
+} from './spotify'
 import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } from './types'
 
 const STAGES: BookingStage[] = ['Booked', 'Not yet booked', 'Completed']
@@ -42,12 +59,6 @@ const EMPTY_COUPLE: NewCoupleInput = {
   genderNeutral: false,
 }
 
-function servicesText(couple: PipelineCouple): string {
-  return [couple.services.live ? 'Live' : '', couple.services.dj ? 'DJ' : '', couple.services.photobooth ? 'Photo booth' : '']
-    .filter(Boolean)
-    .join(', ')
-}
-
 function messageFor(error: unknown): string {
   const text = error instanceof Error ? error.message : ''
   if (text === 'unauthorized' || text === 'forbidden') return 'That passphrase was not accepted.'
@@ -62,14 +73,18 @@ export default function PipelineApp() {
   const [stages, setStages] = useState<Set<BookingStage>>(() => new Set(['Booked', 'Not yet booked']))
   const [status, setStatus] = useState<'gate' | 'loading' | 'ready' | 'error'>(storedAdminKey() ? 'loading' : 'gate')
   const [notice, setNotice] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(() => {
+    const oauthError = new URLSearchParams(window.location.search).get('error')
+    return oauthError ? spotifyReturnError(oauthError) : ''
+  })
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState<NewCoupleInput>(EMPTY_COUPLE)
   const [venueQuery, setVenueQuery] = useState('')
   const [venues, setVenues] = useState<VenueMatch[]>([])
   const [created, setCreated] = useState('')
-  const [spotifyId, setSpotifyId] = useState(storedSpotifyClientId)
-  const [connected, setConnected] = useState(spotifyConnected)
+  const [spotifyReady, setSpotifyReady] = useState(spotifyConnected)
+  const [setupOpen, setSetupOpen] = useState(spotifySetupNeeded)
+  const [clientDraft, setClientDraft] = useState('')
 
   const visible = useMemo(() => sortCouples(couples).filter((couple) => matchesStages(couple, stages)), [couples, stages])
 
@@ -95,14 +110,38 @@ export default function PipelineApp() {
   }
 
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get('code')
+    const params = new URLSearchParams(window.location.search)
+    const oauthError = params.get('error')
+    if (oauthError) {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('error')
+      url.searchParams.delete('state')
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+      return
+    }
+    const code = params.get('code')
     if (!code) return
-    void finishSpotifyLogin(code)
-      .then(() => {
-        setConnected(true)
-        setNotice('Spotify is connected on this browser.')
+    void finishSpotifyLogin(code, params.get('state') ?? '')
+      .then(async (pending) => {
+        setSpotifyReady(true)
+        if (!pending) {
+          setNotice('Spotify is connected on this browser.')
+          return
+        }
+        const result = await createSpotifyPlaylist(pending.name, pending.songs)
+        setNotice(
+          result.missing.length
+            ? `Playlist created. Spotify could not find: ${result.missing.join('; ')}`
+            : `Playlist created: ${result.url}`,
+        )
       })
-      .catch((reason: unknown) => setError(messageFor(reason)))
+      .catch((reason: unknown) => {
+        if (reason instanceof SpotifySetupError && !SPOTIFY_CLIENT_ID.trim()) {
+          clearStoredSpotifyClientId()
+          setSetupOpen(true)
+        }
+        setError(messageFor(reason))
+      })
   }, [])
 
   useEffect(() => {
@@ -221,6 +260,38 @@ export default function PipelineApp() {
           <>
             {notice && <p className="pipeline-note">{notice}</p>}
             {error && <p className="pipeline-error">{error}</p>}
+            {setupOpen && !SPOTIFY_CLIENT_ID.trim() && (
+              <form
+                className="pipeline-spotify-setup"
+                autoComplete="off"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  const id = clientDraft.trim()
+                  if (!id) return
+                  saveSpotifyClientId(id)
+                  setClientDraft('')
+                  setSetupOpen(false)
+                  setNotice('Spotify client ID saved on this browser.')
+                }}
+              >
+                <label htmlFor="spotify-client">Spotify client ID</label>
+                <p className="pipeline-note">
+                  One-time setup. In the Spotify dashboard, set the redirect URI to {SPOTIFY_REDIRECT_URI} and paste the Client ID. It is saved in this browser and this field stays hidden.
+                </p>
+                <input
+                  id="spotify-client"
+                  name="ah-spotify-client-id"
+                  value={clientDraft}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  onChange={(event) => setClientDraft(event.target.value)}
+                />
+                <button className="gold" type="submit">
+                  Save client ID
+                </button>
+              </form>
+            )}
             <div className="pipeline-filters" role="group" aria-label="Booking stage">
               {STAGES.map((stage) => (
                 <button
@@ -314,7 +385,7 @@ export default function PipelineApp() {
                 <label htmlFor="guests">Guest count</label>
                 <input id="guests" value={form.guestCount} onChange={(event) => setForm({ ...form, guestCount: event.target.value })} />
                 <label htmlFor="team">Your team</label>
-                <input id="team" value={form.team} onChange={(event) => setForm({ ...form, team: event.target.value })} />
+                <textarea id="team" rows={5} value={form.team} onChange={(event) => setForm({ ...form, team: event.target.value })} />
                 <label htmlFor="status">Booking status</label>
                 <select
                   id="status"
@@ -368,10 +439,10 @@ export default function PipelineApp() {
                   key={couple.token}
                   couple={couple}
                   adminKey={key}
-                  spotifyId={spotifyId}
-                  connected={connected}
-                  onSpotifyId={setSpotifyId}
+                  spotifyReady={spotifyReady}
+                  onNeedSetup={() => setSetupOpen(true)}
                   onChange={(next) => setCouples((current) => current.map((item) => (item.token === next.token ? next : item)))}
+                  onRemove={(token) => setCouples((current) => current.filter((item) => item.token !== token))}
                   onNotice={setNotice}
                   onError={setError}
                   run={withDetail}
@@ -386,23 +457,29 @@ export default function PipelineApp() {
   )
 }
 
+const SERVICE_TOGGLES = [
+  ['live', 'Live'],
+  ['dj', 'DJ'],
+  ['photobooth', 'Photo booth'],
+] as const
+
 function CoupleCard({
   couple,
   adminKey,
-  spotifyId,
-  connected,
-  onSpotifyId,
+  spotifyReady,
+  onNeedSetup,
   onChange,
+  onRemove,
   onNotice,
   onError,
   run,
 }: {
   couple: PipelineCouple
   adminKey: string
-  spotifyId: string
-  connected: boolean
-  onSpotifyId: (value: string) => void
+  spotifyReady: boolean
+  onNeedSetup: () => void
   onChange: (couple: PipelineCouple) => void
+  onRemove: (token: string) => void
   onNotice: (value: string) => void
   onError: (value: string) => void
   run: (couple: PipelineCouple, task: (detail: PipelineDetail) => Promise<void>) => Promise<void>
@@ -410,51 +487,105 @@ function CoupleCard({
   const [menu, setMenu] = useState<'playlist' | ''>('')
   const [detail, setDetail] = useState<PipelineDetail | null>(null)
   const [busy, setBusy] = useState('')
+  const [statusOpen, setStatusOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const tone = stageOf(couple.bookingStatus)
   const toneClass = tone === 'Booked' ? 'booked' : tone === 'Completed' ? 'done' : 'pending'
+  const progress = coupleProgress(couple)
+  const booked = SERVICE_TOGGLES.filter(([key]) => couple.services[key]).map(([, label]) => label)
 
   async function save(patch: { bookingStatus?: BookingStage; team?: string }) {
     await adminSetStatus(adminKey, couple.token, patch)
     onChange({ ...couple, ...patch })
   }
 
+  function failSpotify(reason: unknown) {
+    if (reason instanceof SpotifySetupError && !SPOTIFY_CLIENT_ID.trim()) {
+      clearStoredSpotifyClientId()
+      onNeedSetup()
+    }
+    onError(messageFor(reason))
+  }
+
   return (
     <article className="pipeline-card">
-      {couple.photo ? <img src={couple.photo} alt="" /> : <div className="pipeline-photo">{couple.names.slice(0, 1) || '?'}</div>}
+      {couple.photo ? <img src={couple.photo} alt="" /> : <img className="is-default" src={defaultCouplePhoto} alt="" />}
       <div>
-        <h2>{couple.names || 'Untitled couple'}</h2>
+        <div className="pipeline-name">
+          <h2>{couple.names || 'Untitled couple'}</h2>
+          <div className="pipeline-status">
+            <button
+              type="button"
+              className={`pipeline-pill ${toneClass}`}
+              aria-expanded={statusOpen}
+              aria-haspopup="menu"
+              onClick={() => setStatusOpen((current) => !current)}
+            >
+              {tone}
+            </button>
+            {statusOpen && (
+              <div className="pipeline-pill-menu" role="menu">
+                {STAGES.map((stage) => (
+                  <button
+                    key={stage}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setStatusOpen(false)
+                      if (stage === tone) return
+                      onChange({ ...couple, bookingStatus: stage })
+                      void save({ bookingStatus: stage }).catch((reason: unknown) => onError(messageFor(reason)))
+                    }}
+                  >
+                    {stage}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
         <p className="pipeline-meta">
           {[formatCoupleDate(couple.date) || couple.date, couple.venue].filter(Boolean).join(' · ')}
         </p>
-        <p>{servicesText(couple) || 'No services marked'}</p>
+        {progress !== null && (
+          <div className="pipeline-progress" aria-label={`Planner progress ${progress} percent`}>
+            <div className="pipeline-progress__fill" style={{ width: `${progress}%` }} />
+            <span>{progress}% answered</span>
+          </div>
+        )}
+        <p>Services booked: {booked.join(' + ') || 'None'}</p>
+        <div className="pipeline-service-toggles" role="group" aria-label="Services booked">
+          {SERVICE_TOGGLES.map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={couple.services[key]}
+              className={couple.services[key] ? 'is-on' : ''}
+              onClick={() => {
+                const services = { ...couple.services, [key]: !couple.services[key] }
+                onChange({ ...couple, services })
+                void adminSetStatus(adminKey, couple.token, { services }).catch((reason: unknown) => onError(messageFor(reason)))
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <label htmlFor={`team-${couple.token}`}>Your team</label>
-        <input
+        <textarea
           id={`team-${couple.token}`}
+          rows={5}
           value={couple.team}
           onChange={(event) => onChange({ ...couple, team: event.target.value })}
-          onBlur={() => {
-            void save({ team: couple.team }).catch((reason: unknown) => onError(messageFor(reason)))
+          onBlur={(event) => {
+            const team = event.target.value
+            void save({ team }).catch((reason: unknown) => onError(messageFor(reason)))
           }}
         />
-        <div className="pipeline-status">
-          <label htmlFor={`status-${couple.token}`}>Status</label>
-          <select
-            id={`status-${couple.token}`}
-            className={toneClass}
-            value={tone}
-            onChange={(event) => {
-              const bookingStatus = event.target.value as BookingStage
-              onChange({ ...couple, bookingStatus })
-              void save({ bookingStatus }).catch((reason: unknown) => onError(messageFor(reason)))
-            }}
-          >
-            {STAGES.map((stage) => (
-              <option key={stage}>{stage}</option>
-            ))}
-          </select>
-          <a href={plannerLink(couple.token)}>Open planner</a>
-        </div>
         <div className="pipeline-actions">
+          <a className="pipeline-open" href={plannerLink(couple.token)}>
+            Open planner
+          </a>
           <button
             type="button"
             disabled={busy === 'info'}
@@ -509,53 +640,98 @@ function CoupleCard({
               setMenu((current) => (current === 'playlist' ? '' : 'playlist'))
               if (!detail) {
                 void adminCouple(adminKey, couple.token)
-                  .then(setDetail)
+                  .then((full) => {
+                    setDetail(full)
+                    onChange({ ...couple, fields: full.fields })
+                  })
                   .catch((reason: unknown) => onError(messageFor(reason)))
               }
             }}
           >
             Make playlist
           </button>
+          <button type="button" className="pipeline-delete" onClick={() => setConfirming(true)}>
+            Delete wedding
+          </button>
         </div>
         {menu === 'playlist' && (
           <div className="pipeline-menu">
-            <p>Spotify uses a free developer app. Redirect URI: {pipelineRedirectUri()}</p>
-            <label htmlFor={`spotify-${couple.token}`}>Spotify client ID</label>
-            <input id={`spotify-${couple.token}`} value={spotifyId} onChange={(event) => onSpotifyId(event.target.value)} />
-            <p>
-              <button type="button" className="gold" onClick={() => beginSpotifyLogin(spotifyId.trim())} disabled={!spotifyId.trim()}>
-                {connected ? 'Reconnect Spotify' : 'Connect Spotify'}
-              </button>
-            </p>
+            {!spotifyReady && (
+              <p className="pipeline-note">The first playlist signs this browser into Spotify. Later playlists are created directly.</p>
+            )}
             {(detail ? playlistChoices(detail) : []).map((list) => (
               <p key={list.key}>
                 {list.label}{' '}
                 <button
                   type="button"
-                  disabled={!connected}
+                  className="gold"
+                  disabled={busy === list.key}
                   onClick={() => {
-                    void createSpotifyPlaylist(`${couple.names} – ${list.label}`, list.songs)
-                      .then((result) => onNotice(result.missing.length ? `Playlist created. Not found: ${result.missing.join('; ')}` : `Playlist created: ${result.url}`))
-                      .catch((reason: unknown) => onError(messageFor(reason)))
+                    const name = `${couple.names} – ${list.label}`
+                    if (!storedSpotifyClientId()) {
+                      onNeedSetup()
+                      onError('Add the Spotify client ID once, at the top of the page.')
+                      return
+                    }
+                    if (!spotifyReady) {
+                      rememberPlaylist({ name, songs: list.songs })
+                      void beginSpotifyLogin().catch(failSpotify)
+                      return
+                    }
+                    setBusy(list.key)
+                    void createSpotifyPlaylist(name, list.songs)
+                      .then((result) =>
+                        onNotice(
+                          result.missing.length
+                            ? `Playlist created. Spotify could not find: ${result.missing.join('; ')}`
+                            : `Playlist created: ${result.url}`,
+                        ),
+                      )
+                      .catch(failSpotify)
+                      .finally(() => setBusy(''))
                   }}
                 >
-                  Spotify
-                </button>{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const text = groupedText([{ title: list.label, lines: list.songs.map((song) => (song.artist ? `${song.title} - ${song.artist}` : song.title)) }])
-                    void copyAndRunShortcut('Make Apple Music Playlist', text).then(onNotice)
-                  }}
-                >
-                  Apple Music
+                  {busy === list.key ? 'Creating…' : 'Spotify'}
                 </button>
               </p>
             ))}
             {detail && playlistChoices(detail).length === 0 && <p>This couple has no song lists yet.</p>}
-            <p className="pipeline-note">
-              Apple shortcut “Make Apple Music Playlist” should take Shortcut Input as text. Split on blank lines for sections and on “Title - Artist” for songs, search the Apple Music catalog, and add the matches to a new playlist.
-            </p>
+            {!detail && <p>Loading song lists…</p>}
+          </div>
+        )}
+        {confirming && (
+          <div className="pipeline-dialog-backdrop" onClick={() => setConfirming(false)}>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`delete-${couple.token}`}
+              className="pipeline-dialog"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <p id={`delete-${couple.token}`}>
+                Delete {couple.names || 'this wedding'}? This removes the couple and their planner answers.
+              </p>
+              <div>
+                <button type="button" onClick={() => setConfirming(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="pipeline-danger"
+                  onClick={() => {
+                    setConfirming(false)
+                    void adminDeleteCouple(adminKey, couple.token)
+                      .then(() => {
+                        onRemove(couple.token)
+                        onNotice(`Deleted ${couple.names || 'the wedding'}.`)
+                      })
+                      .catch((reason: unknown) => onError(messageFor(reason)))
+                  }}
+                >
+                  Delete wedding
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

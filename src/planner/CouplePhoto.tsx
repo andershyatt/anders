@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import defaultCouplePhoto from '../assets/default-couple-photo.svg'
 import { uploadCouplePhoto } from './api'
 import { PhotoTooLargeError, blobToBase64, prepareCouplePhoto } from './preparePhoto'
 
@@ -134,15 +135,18 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
     <PhotoPicker label={label} className={className} disabled={phase === 'uploading'} onFile={onFile} />
   )
 
-  if (shown) {
+  const usingDefault = !shown && !showReceived
+
+  if (shown || usingDefault) {
     return (
       <div className="planner-hero-wrap">
         <section className="planner-hero" aria-label="Couple photo">
           <img
-            className="planner-hero__image"
-            src={shown}
-            alt="Photo of the couple"
+            className={`planner-hero__image${usingDefault ? ' is-default' : ''}`}
+            src={shown ?? defaultCouplePhoto}
+            alt={usingDefault ? 'Add a photo of you both here' : 'Photo of the couple'}
             onError={() => {
+              if (!shown) return
               if (shown === localPreview) replacePreview(null)
               else setRejectedRemote(shown)
             }}
@@ -154,7 +158,7 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
               {meta && <p className="planner-meta">{meta}</p>}
             </div>
             {picker(
-              phase === 'uploading' ? 'Sending…' : 'Change photo',
+              phase === 'uploading' ? 'Sending…' : shown ? 'Change photo' : 'Choose a photo',
               `planner-hero__change${phase === 'uploading' ? ' is-disabled' : ''}`,
             )}
           </div>
@@ -165,6 +169,7 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
           </p>
         )}
         <p className="planner-lead">{LEAD}</p>
+        {usingDefault && <p className="planner-section__blurb planner-photo__invite">{REQUEST_TEXT}</p>}
       </div>
     )
   }

@@ -33,7 +33,7 @@ function cell(text: string, bold: boolean, width: number): TableCell {
   return new TableCell({
     width: { size: width, type: WidthType.DXA },
     margins: { top: 40, bottom: 40, left: 60, right: 60 },
-    children: [new Paragraph({ children: [run(text, bold)] })],
+    children: text.split('\n').map((line) => new Paragraph({ children: [run(line, bold)] })),
   })
 }
 

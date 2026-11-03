@@ -20,6 +20,8 @@ export interface PipelineCouple {
   genderNeutral: boolean
   knownVenue: boolean
   photo: string
+  /** Planner answers, when the admin list includes them. Omitted on an older backend. */
+  fields?: Record<string, string>
 }
 
 export interface PipelineDetail extends PipelineCouple {
