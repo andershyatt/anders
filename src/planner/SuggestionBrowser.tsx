@@ -12,13 +12,15 @@ interface SuggestionBrowserProps {
 export default function SuggestionBrowser({ title, songs, onPick, onClose }: SuggestionBrowserProps) {
   const backRef = useRef<HTMLButtonElement>(null)
   const [query, setQuery] = useState('')
-  const shown = useMemo(() => {
+  const [revealedFor, setRevealedFor] = useState<string | null>(null)
+  const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    const filtered = needle
-      ? songs.filter((song) => `${song.title} ${song.artist}`.toLowerCase().includes(needle))
-      : songs
-    return filtered.slice(0, 80)
+    if (!needle) return songs
+    return songs.filter((song) => `${song.title} ${song.artist}`.toLowerCase().includes(needle))
   }, [query, songs])
+  const expanded = revealedFor === query
+  const shown = expanded ? filtered : filtered.slice(0, 100)
+  const hidden = filtered.length - shown.length
 
   useEffect(() => {
     const previous = document.body.style.overflow
@@ -51,8 +53,8 @@ export default function SuggestionBrowser({ title, songs, onPick, onClose }: Sug
           <p className="planner-note">No suggestions are available right now.</p>
         ) : (
           <ul className="planner-suggest">
-            {shown.map((song) => (
-              <li key={`${song.title}-${song.artist}`}>
+            {shown.map((song, index) => (
+              <li key={`${index}-${song.title}-${song.artist}`}>
                 <span>
                   {song.title}
                   {song.artist ? ` – ${song.artist}` : ''}
@@ -63,6 +65,11 @@ export default function SuggestionBrowser({ title, songs, onPick, onClose }: Sug
               </li>
             ))}
           </ul>
+        )}
+        {hidden > 0 && (
+          <button type="button" className="planner-show-more" onClick={() => setRevealedFor(query)}>
+            Show more
+          </button>
         )}
       </div>
     </div>

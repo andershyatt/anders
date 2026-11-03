@@ -1312,6 +1312,7 @@
 .planner-browse,
 .planner-import button,
 .planner-suggest button,
+.planner-show-more,
 .planner-songcompact__open,
 .planner-picker__back,
 .planner-fold-prompt button,
@@ -1753,6 +1754,17 @@
 .planner-playlist .planner-suggest {
   margin: 0;
   padding: 0 0.8rem 0.45rem;
+}
+
+.planner-show-more {
+  display: block;
+  margin: 0.15rem auto 0.75rem;
+  padding: 0.28rem 0.85rem;
+  border-radius: 999px;
+  font-family: var(--font-nav);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .planner-suggest {
