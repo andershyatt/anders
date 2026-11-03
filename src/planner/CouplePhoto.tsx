@@ -24,17 +24,20 @@ function PhotoPicker({
   disabled,
   onFile,
   hideLabel = false,
+  inputId,
 }: {
   label: string
   className: string
   disabled: boolean
   onFile: (file: File | undefined) => void
   hideLabel?: boolean
+  inputId?: string
 }) {
   return (
     <label className={className}>
       {hideLabel ? <span className="sr-only">{label}</span> : label}
       <input
+        id={inputId}
         type="file"
         accept="image/*"
         disabled={disabled}
@@ -133,8 +136,15 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
     })()
   }
 
-  const picker = (label: string, className: string, hideLabel = false) => (
-    <PhotoPicker label={label} className={className} disabled={phase === 'uploading'} hideLabel={hideLabel} onFile={onFile} />
+  const picker = (label: string, className: string, hideLabel = false, inputId?: string) => (
+    <PhotoPicker
+      label={label}
+      className={className}
+      disabled={phase === 'uploading'}
+      hideLabel={hideLabel}
+      inputId={inputId}
+      onFile={onFile}
+    />
   )
 
   const usingDefault = !shown && !showReceived
@@ -143,12 +153,12 @@ export default function CouplePhoto({ token, savedValue, savedDataUrl, title, me
     return (
       <div className="planner-hero-wrap">
         <section className="planner-hero is-default" aria-label="Couple photo">
-          {picker('Choose a photo', `planner-hero__pick${phase === 'uploading' ? ' is-disabled' : ''}`, true)}
+          {picker('Choose a photo', `planner-hero__pick${phase === 'uploading' ? ' is-disabled' : ''}`, true, 'couple-default-photo')}
           <img className="planner-hero__image is-default" src={defaultCouplePhoto} alt="" />
-          <span className="planner-hero__change planner-hero__change--default" aria-hidden="true">
-            {phase === 'uploading' ? 'Sending…' : 'Add photo'}
-          </span>
         </section>
+        <label htmlFor="couple-default-photo" className="planner-photo__hint">
+          Click to add a photo of you two
+        </label>
         {phase === 'error' && (
           <p className="planner-photo__status planner-photo__status--error" role="alert">
             {message}

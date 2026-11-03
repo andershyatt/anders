@@ -591,13 +591,15 @@
   white-space: nowrap;
 }
 
-.planner-hero__change--default {
-  position: absolute;
-  right: 1rem;
-  bottom: 0.95rem;
-  z-index: 2;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0.75);
+.planner-photo__hint {
+  display: block;
+  margin: 0.15rem 0 0.35rem;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 400;
+  text-align: center;
+  cursor: pointer;
 }
 
 .planner-hero__change.is-disabled {
