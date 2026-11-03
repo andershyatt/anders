@@ -18,7 +18,7 @@
     },
     {
       "title": "Yeah! (feat. Lil Jon & Ludacris)",
-      "artist": "USHER,\u00a0Lil Jon,\u00a0Ludacris"
+      "artist": "USHER, Lil Jon, Ludacris"
     },
     {
       "title": "Sweet Caroline",
@@ -46,7 +46,7 @@
     },
     {
       "title": "Uptown Funk (feat. Bruno Mars)",
-      "artist": "Mark Ronson,\u00a0Bruno Mars"
+      "artist": "Mark Ronson, Bruno Mars"
     },
     {
       "title": "I Gotta Feeling",
@@ -58,14 +58,18 @@
     },
     {
       "title": "Hey Ya!",
+      "artist": "Outkast"
+    },
+    {
+      "title": "Cha Cha Slide - Original Live Platinum Band Mix",
       "artist": "DJ Casper"
     },
     {
       "title": "Low (feat. T-Pain)",
-      "artist": "Flo Rida,\u00a0T-Pain"
+      "artist": "Flo Rida, T-Pain"
     },
     {
-      "title": "Love Story (Taylor\u2019s Version)",
+      "title": "Love Story (Taylor’s Version)",
       "artist": "Taylor Swift"
     },
     {
@@ -90,10 +94,14 @@
     },
     {
       "title": "We Found Love",
-      "artist": "Rihanna,\u00a0Calvin Harris"
+      "artist": "Rihanna, Calvin Harris"
     },
     {
       "title": "Get Low",
+      "artist": "Lil Jon & The East Side Boyz, Ying Yang Twins"
+    },
+    {
+      "title": "All The Small Things",
       "artist": "blink-182"
     },
     {
@@ -102,11 +110,15 @@
     },
     {
       "title": "Hot In Herre",
+      "artist": "Nelly"
+    },
+    {
+      "title": "Footloose - From \"Footloose\" Soundtrack",
       "artist": "Kenny Loggins"
     },
     {
       "title": "Fireball (feat. John Ryan)",
-      "artist": "Pitbull,\u00a0John Ryan"
+      "artist": "Pitbull, John Ryan"
     },
     {
       "title": "Forever",
@@ -130,6 +142,10 @@
     },
     {
       "title": "No Hands (feat. Roscoe Dash & Wale)",
+      "artist": "Waka Flocka Flame, Roscoe Dash, Wale"
+    },
+    {
+      "title": "Shake It Off",
       "artist": "Taylor Swift"
     },
     {
@@ -138,14 +154,22 @@
     },
     {
       "title": "Ain't No Mountain High Enough",
-      "artist": "Marvin Gaye,\u00a0Tammi Terrell"
+      "artist": "Marvin Gaye, Tammi Terrell"
     },
     {
       "title": "Time of Our Lives",
+      "artist": "Pitbull, Ne-Yo"
+    },
+    {
+      "title": "CAN'T STOP THE FEELING! (from DreamWorks Animation's \"TROLLS\")",
       "artist": "Justin Timberlake"
     },
     {
       "title": "About Damn Time",
+      "artist": "Lizzo"
+    },
+    {
+      "title": "Come On Eileen",
       "artist": "Dexys Midnight Runners"
     },
     {
@@ -166,6 +190,10 @@
     },
     {
       "title": "In Da Club",
+      "artist": "50 Cent"
+    },
+    {
+      "title": "Save a Horse (Ride a Cowboy)",
       "artist": "Big & Rich"
     },
     {
@@ -178,11 +206,15 @@
     },
     {
       "title": "Baby Got Back",
-      "artist": "Beyonc\u00e9,\u00a0JA\u0178-Z"
+      "artist": "Sir Mix-A-Lot"
+    },
+    {
+      "title": "Crazy In Love (feat. JAŸ-Z)",
+      "artist": "Beyoncé, JAŸ-Z"
     },
     {
       "title": "Give Me Everything (feat. Nayer)",
-      "artist": "Pitbull,\u00a0AFROJACK,\u00a0Ne-Yo,\u00a0Nayer"
+      "artist": "Pitbull, AFROJACK, Ne-Yo, Nayer"
     },
     {
       "title": "Hotel Room Service",
@@ -194,11 +226,11 @@
     },
     {
       "title": "Party Rock Anthem",
-      "artist": "LMFAO,\u00a0Lauren Bennett,\u00a0GoonRock"
+      "artist": "LMFAO, Lauren Bennett, GoonRock"
     },
     {
       "title": "Timber",
-      "artist": "Pitbull,\u00a0Kesha"
+      "artist": "Pitbull, Kesha"
     },
     {
       "title": "We Are Family - 1995 Remaster",
@@ -210,6 +242,10 @@
     },
     {
       "title": "I'm Good (Blue)",
+      "artist": "David Guetta, Bebe Rexha"
+    },
+    {
+      "title": "Cotton Eye Joe",
       "artist": "Rednex"
     },
     {
@@ -218,7 +254,7 @@
     },
     {
       "title": "This Is How We Do It",
-      "artist": "Montell Jordan,\u00a0Wino"
+      "artist": "Montell Jordan, Wino"
     },
     {
       "title": "Wagon Wheel",
@@ -258,7 +294,11 @@
     },
     {
       "title": "Fergalicious",
-      "artist": "Kygo,\u00a0Whitney Houston"
+      "artist": "Fergie, will.i.am"
+    },
+    {
+      "title": "Higher Love",
+      "artist": "Kygo, Whitney Houston"
     },
     {
       "title": "Jump Around",
@@ -266,11 +306,11 @@
     },
     {
       "title": "Despacito",
-      "artist": "Luis Fonsi,\u00a0Daddy Yankee"
+      "artist": "Luis Fonsi, Daddy Yankee"
     },
     {
       "title": "Danza Kuduro",
-      "artist": "Don Omar,\u00a0Lucenzo"
+      "artist": "Don Omar, Lucenzo"
     },
     {
       "title": "Don't Stop The Music",
@@ -294,6 +334,14 @@
     },
     {
       "title": "Shots",
+      "artist": "LMFAO, Lil Jon"
+    },
+    {
+      "title": "Raise Your Glass",
+      "artist": "P!nk"
+    },
+    {
+      "title": "Boot Scootin' Boogie",
       "artist": "Brooks & Dunn"
     },
     {
@@ -318,15 +366,23 @@
     },
     {
       "title": "SexyBack (feat. Timbaland)",
+      "artist": "Justin Timberlake, Timbaland"
+    },
+    {
+      "title": "Y.M.C.A.",
       "artist": "Village People"
     },
     {
       "title": "Pepas",
-      "artist": "Shakira,\u00a0Wyclef Jean"
+      "artist": "Farruko"
+    },
+    {
+      "title": "Hips Don't Lie (feat. Wyclef Jean)",
+      "artist": "Shakira, Wyclef Jean"
     },
     {
       "title": "Love On Top",
-      "artist": "Beyonc\u00e9"
+      "artist": "Beyoncé"
     },
     {
       "title": "Crank That (Soulja Boy)",
@@ -338,11 +394,411 @@
     },
     {
       "title": "Turn Down for What",
-      "artist": "DJ Snake,\u00a0Lil Jon"
+      "artist": "DJ Snake, Lil Jon"
     },
     {
       "title": "Billie Jean",
       "artist": "Michael Jackson"
+    },
+    {
+      "title": "Let's Groove",
+      "artist": "Earth, Wind & Fire"
+    },
+    {
+      "title": "This Will Be (An Everlasting Love)",
+      "artist": "Natalie Cole"
+    },
+    {
+      "title": "The Way You Look Tonight",
+      "artist": "Frank Sinatra"
+    },
+    {
+      "title": "Blinding Lights",
+      "artist": "The Weeknd"
+    },
+    {
+      "title": "Thinking out Loud",
+      "artist": "Ed Sheeran"
+    },
+    {
+      "title": "Single Ladies (Put a Ring on It)",
+      "artist": "Beyoncé"
+    },
+    {
+      "title": "Summer Of '69",
+      "artist": "Bryan Adams"
+    },
+    {
+      "title": "Super Bass",
+      "artist": "Nicki Minaj"
+    },
+    {
+      "title": "One More Time",
+      "artist": "Daft Punk"
+    },
+    {
+      "title": "DJ Got Us Fallin' In Love (feat. Pitbull)",
+      "artist": "USHER, Pitbull"
+    },
+    {
+      "title": "All of Me",
+      "artist": "John Legend"
+    },
+    {
+      "title": "Dynamite",
+      "artist": "Taio Cruz"
+    },
+    {
+      "title": "Levels - Original Version",
+      "artist": "Avicii"
+    },
+    {
+      "title": "Speechless",
+      "artist": "Dan + Shay"
+    },
+    {
+      "title": "Chicken Fried",
+      "artist": "Zac Brown Band"
+    },
+    {
+      "title": "Suavemente",
+      "artist": "Elvis Crespo"
+    },
+    {
+      "title": "Macarena",
+      "artist": "Los Del Rio"
+    },
+    {
+      "title": "Just Dance",
+      "artist": "Lady Gaga, Colby O'Donis"
+    },
+    {
+      "title": "Africa",
+      "artist": "TOTO"
+    },
+    {
+      "title": "Thunderstruck",
+      "artist": "AC/DC"
+    },
+    {
+      "title": "Ice Ice Baby",
+      "artist": "Vanilla Ice"
+    },
+    {
+      "title": "Jessie's Girl",
+      "artist": "Rick Springfield"
+    },
+    {
+      "title": "Sugar",
+      "artist": "Maroon 5"
+    },
+    {
+      "title": "Starships",
+      "artist": "Nicki Minaj"
+    },
+    {
+      "title": "Fat Bottomed Girls",
+      "artist": "Queen"
+    },
+    {
+      "title": "No Scrubs",
+      "artist": "TLC"
+    },
+    {
+      "title": "Closer",
+      "artist": "The Chainsmokers, Halsey"
+    },
+    {
+      "title": "At Last",
+      "artist": "Etta James"
+    },
+    {
+      "title": "Last Night",
+      "artist": "Morgan Wallen"
+    },
+    {
+      "title": "Gold Digger",
+      "artist": "Kanye West, Jamie Foxx"
+    },
+    {
+      "title": "Truth Hurts",
+      "artist": "Lizzo"
+    },
+    {
+      "title": "Happy - From \"Despicable Me 2\"",
+      "artist": "Pharrell Williams"
+    },
+    {
+      "title": "(I've Had) The Time Of My Life - From \"Dirty Dancing\" Soundtrack",
+      "artist": "Bill Medley, Jennifer Warnes"
+    },
+    {
+      "title": "Take on Me",
+      "artist": "a-ha"
+    },
+    {
+      "title": "Buy U a Drank (Shawty Snappin') (feat. Yung Joc)",
+      "artist": "T-Pain, Yung Joc"
+    },
+    {
+      "title": "Better Together",
+      "artist": "Luke Combs"
+    },
+    {
+      "title": "Cake By The Ocean",
+      "artist": "DNCE"
+    },
+    {
+      "title": "You Belong With Me (Taylor’s Version)",
+      "artist": "Taylor Swift"
+    },
+    {
+      "title": "Build Me up Buttercup",
+      "artist": "The Foundations"
+    },
+    {
+      "title": "P.Y.T. (Pretty Young Thing)",
+      "artist": "Michael Jackson"
+    },
+    {
+      "title": "Old Time Rock & Roll",
+      "artist": "Bob Seger"
+    },
+    {
+      "title": "Ignition",
+      "artist": "R. Kelly"
+    },
+    {
+      "title": "Return of the Mack",
+      "artist": "Mark Morrison"
+    },
+    {
+      "title": "Watermelon Sugar",
+      "artist": "Harry Styles"
+    },
+    {
+      "title": "Feel So Close - Radio Edit",
+      "artist": "Calvin Harris"
+    },
+    {
+      "title": "Stand By Me",
+      "artist": "Ben E. King"
+    },
+    {
+      "title": "Don't Stop 'Til You Get Enough",
+      "artist": "Michael Jackson"
+    },
+    {
+      "title": "Piano Man",
+      "artist": "Billy Joel"
+    },
+    {
+      "title": "I Like It",
+      "artist": "Cardi B, Bad Bunny, J Balvin"
+    },
+    {
+      "title": "Wonderful Tonight",
+      "artist": "Eric Clapton"
+    },
+    {
+      "title": "Club Can't Handle Me (feat. David Guetta)",
+      "artist": "Flo Rida, David Guetta"
+    },
+    {
+      "title": "Sweet Child O' Mine",
+      "artist": "Guns N' Roses"
+    },
+    {
+      "title": "Forever After All",
+      "artist": "Luke Combs"
+    },
+    {
+      "title": "I Don't Want to Miss a Thing - From \"Armageddon\" Soundtrack",
+      "artist": "Aerosmith"
+    },
+    {
+      "title": "Crazy Little Thing Called Love - Remastered 2011",
+      "artist": "Queen"
+    },
+    {
+      "title": "Good as Hell",
+      "artist": "Lizzo"
+    },
+    {
+      "title": "It's Tricky",
+      "artist": "Run–D.M.C."
+    },
+    {
+      "title": "Brick House",
+      "artist": "Commodores"
+    },
+    {
+      "title": "Toxic",
+      "artist": "Britney Spears"
+    },
+    {
+      "title": "Call Me Maybe",
+      "artist": "Carly Rae Jepsen"
+    },
+    {
+      "title": "Pony",
+      "artist": "Ginuwine"
+    },
+    {
+      "title": "Die A Happy Man",
+      "artist": "Thomas Rhett"
+    },
+    {
+      "title": "Shivers",
+      "artist": "Ed Sheeran"
+    },
+    {
+      "title": "Mamma Mia",
+      "artist": "ABBA"
+    },
+    {
+      "title": "What Makes You Beautiful",
+      "artist": "One Direction"
+    },
+    {
+      "title": "Hollaback Girl",
+      "artist": "Gwen Stefani"
+    },
+    {
+      "title": "Trap Queen",
+      "artist": "Fetty Wap"
+    },
+    {
+      "title": "Fancy Like",
+      "artist": "Walker Hayes"
+    },
+    {
+      "title": "Stacy's Mom",
+      "artist": "Fountains Of Wayne"
+    },
+    {
+      "title": "Tití Me Preguntó",
+      "artist": "Bad Bunny"
+    },
+    {
+      "title": "Let's Get It Started",
+      "artist": "Black Eyed Peas"
+    },
+    {
+      "title": "Copperhead Road",
+      "artist": "Steve Earle"
+    },
+    {
+      "title": "CUFF IT",
+      "artist": "Beyoncé"
+    },
+    {
+      "title": "Electric Boogie",
+      "artist": "Marcia Griffiths"
+    },
+    {
+      "title": "Thank God",
+      "artist": "Kane Brown, Katelyn Brown"
+    },
+    {
+      "title": "Fly Me To The Moon - 2008 Remastered",
+      "artist": "Frank Sinatra, Count Basie"
+    },
+    {
+      "title": "a thousand years",
+      "artist": "Christina Perri"
+    },
+    {
+      "title": "Cold Heart - PNAU Remix",
+      "artist": "Elton John, Dua Lipa, PNAU"
+    },
+    {
+      "title": "TiK ToK",
+      "artist": "Kesha"
+    },
+    {
+      "title": "Moves Like Jagger",
+      "artist": "Maroon 5, Christina Aguilera"
+    },
+    {
+      "title": "Firework",
+      "artist": "Katy Perry"
+    },
+    {
+      "title": "Fire Burning",
+      "artist": "Sean Kingston"
+    },
+    {
+      "title": "Amazed",
+      "artist": "Lonestar"
+    },
+    {
+      "title": "On The Floor",
+      "artist": "Jennifer Lopez, Pitbull"
+    },
+    {
+      "title": "Beer Never Broke My Heart",
+      "artist": "Luke Combs"
+    },
+    {
+      "title": "Dance The Night",
+      "artist": "Dua Lipa"
+    },
+    {
+      "title": "How Sweet It Is (To Be Loved by You)",
+      "artist": "James Taylor"
+    },
+    {
+      "title": "Push It",
+      "artist": "Salt-N-Pepa"
+    },
+    {
+      "title": "Just the Way You Are",
+      "artist": "Bruno Mars"
+    },
+    {
+      "title": "I'm Gonna Be (500 Miles)",
+      "artist": "The Proclaimers"
+    },
+    {
+      "title": "No Diggity",
+      "artist": "Blackstreet, Dr. Dre, Queen Pen"
+    },
+    {
+      "title": "Thriller",
+      "artist": "Michael Jackson"
+    },
+    {
+      "title": "Old Town Road (feat. Billy Ray Cyrus) - Remix",
+      "artist": "Lil Nas X, Billy Ray Cyrus"
+    },
+    {
+      "title": "In Case You Didn't Know",
+      "artist": "Brett Young"
+    },
+    {
+      "title": "One Dance",
+      "artist": "Drake, Wizkid, Kyla"
+    },
+    {
+      "title": "Respect",
+      "artist": "Aretha Franklin"
+    },
+    {
+      "title": "My House",
+      "artist": "Flo Rida"
+    },
+    {
+      "title": "U Can't Touch This",
+      "artist": "MC Hammer"
+    },
+    {
+      "title": "Burnin' Up",
+      "artist": "Jonas Brothers"
+    },
+    {
+      "title": "The Git Up",
+      "artist": "Blanco Brown"
     }
   ],
   "processionals": [
@@ -440,7 +896,7 @@
     },
     {
       "title": "Kiss the Girl",
-      "artist": "Alan Menken,\u00a0Howard Ashman,\u00a0Samuel E. Wright,\u00a0Disney"
+      "artist": "Alan Menken, Howard Ashman, Samuel E. Wright, Disney"
     },
     {
       "title": "Peaceful Easy Feeling - 2013 Remaster",
@@ -464,7 +920,7 @@
     },
     {
       "title": "Take My Hand (The Wedding Song)",
-      "artist": "Emily Hackett,\u00a0Will Anderson"
+      "artist": "Emily Hackett, Will Anderson"
     },
     {
       "title": "At Last",
@@ -630,7 +1086,7 @@
     },
     {
       "title": "Something to Love",
-      "artist": "Jason Isbell and the 400 Unit,\u00a0Jason Isbell"
+      "artist": "Jason Isbell and the 400 Unit, Jason Isbell"
     },
     {
       "title": "Sunshine On My Shoulders",
@@ -650,7 +1106,7 @@
     },
     {
       "title": "Forever Now",
-      "artist": "Michael Bubl\u00e9"
+      "artist": "Michael Bublé"
     },
     {
       "title": "Loves Me Like a Rock",
@@ -709,6 +1165,10 @@
       "artist": "Paul Simon"
     },
     {
+      "title": "Forever Young",
+      "artist": "Rod Stewart"
+    },
+    {
       "title": "My Girl",
       "artist": "The Temptations"
     },
@@ -729,7 +1189,7 @@
       "artist": "Van Morrison"
     },
     {
-      "title": "I\u2019ll Have to Say I Love You in a Song",
+      "title": "I’ll Have to Say I Love You in a Song",
       "artist": "Jim Croce"
     }
   ],
@@ -856,7 +1316,7 @@
     },
     {
       "title": "Just the Two of Us (feat. Bill Withers) - Edit",
-      "artist": "Grover Washington, Jr.,\u00a0Bill Withers"
+      "artist": "Grover Washington, Jr., Bill Withers"
     },
     {
       "title": "Just the Way You Are",
@@ -1000,7 +1460,7 @@
     },
     {
       "title": "10,000 Hours (with Justin Bieber)",
-      "artist": "Dan + Shay,\u00a0Justin Bieber"
+      "artist": "Dan + Shay, Justin Bieber"
     },
     {
       "title": "Speechless",
@@ -1016,7 +1476,7 @@
     },
     {
       "title": "Best Part (feat. H.E.R.)",
-      "artist": "Daniel Caesar,\u00a0H.E.R."
+      "artist": "Daniel Caesar, H.E.R."
     },
     {
       "title": "Hands Down",
@@ -1072,7 +1532,7 @@
     },
     {
       "title": "Kiss the Girl",
-      "artist": "Alan Menken,\u00a0Howard Ashman,\u00a0Samuel E. Wright,\u00a0Disney"
+      "artist": "Alan Menken, Howard Ashman, Samuel E. Wright, Disney"
     },
     {
       "title": "Out Loud (Live)",
@@ -1100,7 +1560,7 @@
     },
     {
       "title": "I Don't Care (with Justin Bieber)",
-      "artist": "Ed Sheeran & Justin Bieber,\u00a0Justin Bieber"
+      "artist": "Ed Sheeran & Justin Bieber, Justin Bieber"
     },
     {
       "title": "Perfect",
@@ -1133,6 +1593,586 @@
     {
       "title": "I'll Be",
       "artist": "Edwin McCain"
+    },
+    {
+      "title": "Can You Feel The Love Tonight",
+      "artist": "Elton John"
+    },
+    {
+      "title": "Tiny Dancer",
+      "artist": "Elton John"
+    },
+    {
+      "title": "Your Song",
+      "artist": "Elton John"
+    },
+    {
+      "title": "Can't Help Falling in Love",
+      "artist": "Elvis Presley"
+    },
+    {
+      "title": "Take My Hand (The Wedding Song)",
+      "artist": "Emily Hackett, Will Anderson"
+    },
+    {
+      "title": "Tears in Heaven",
+      "artist": "Eric Clapton"
+    },
+    {
+      "title": "Wonderful Tonight",
+      "artist": "Eric Clapton"
+    },
+    {
+      "title": "At Last",
+      "artist": "Etta James"
+    },
+    {
+      "title": "More Than Words",
+      "artist": "Extreme"
+    },
+    {
+      "title": "Everlong",
+      "artist": "Foo Fighters"
+    },
+    {
+      "title": "The Way You Look Tonight",
+      "artist": "Frank Sinatra"
+    },
+    {
+      "title": "Can't Take My Eyes off You",
+      "artist": "Frankie Valli"
+    },
+    {
+      "title": "All My Love",
+      "artist": "George Ezra"
+    },
+    {
+      "title": "Budapest",
+      "artist": "George Ezra"
+    },
+    {
+      "title": "Come to Me",
+      "artist": "The Goo Goo Dolls"
+    },
+    {
+      "title": "You Make My Dreams (Come True)",
+      "artist": "Daryl Hall & John Oates"
+    },
+    {
+      "title": "I Loved Her First",
+      "artist": "Heartland"
+    },
+    {
+      "title": "I'm Into Something Good - Mono",
+      "artist": "Herman's Hermits"
+    },
+    {
+      "title": "Jackie and Wilson",
+      "artist": "Hozier"
+    },
+    {
+      "title": "Like Real People Do",
+      "artist": "Hozier"
+    },
+    {
+      "title": "Cruisin' - Single Edit",
+      "artist": "Huey Lewis, Gwyneth Paltrow"
+    },
+    {
+      "title": "Next To Me",
+      "artist": "Imagine Dragons"
+    },
+    {
+      "title": "Flightless Bird, American Mouth",
+      "artist": "Iron & Wine"
+    },
+    {
+      "title": "Such Great Heights",
+      "artist": "Iron & Wine"
+    },
+    {
+      "title": "Somewhere Over The Rainbow/What A Wonderful World",
+      "artist": "Israel Kamakawiwo'ole"
+    },
+    {
+      "title": "Angel",
+      "artist": "Jack Johnson"
+    },
+    {
+      "title": "Better Together",
+      "artist": "Jack Johnson"
+    },
+    {
+      "title": "I Got You",
+      "artist": "Jack Johnson"
+    },
+    {
+      "title": "What You Thought You Need",
+      "artist": "Jack Johnson"
+    },
+    {
+      "title": "Somebody's Baby",
+      "artist": "Jackson Browne"
+    },
+    {
+      "title": "Say You Won't Let Go",
+      "artist": "James Arthur"
+    },
+    {
+      "title": "Bonfire Heart",
+      "artist": "James Blunt"
+    },
+    {
+      "title": "How Sweet It Is (To Be Loved by You)",
+      "artist": "James Taylor"
+    },
+    {
+      "title": "Something in the Way She Moves",
+      "artist": "James Taylor"
+    },
+    {
+      "title": "Something to Love",
+      "artist": "Jason Isbell and the 400 Unit, Jason Isbell"
+    },
+    {
+      "title": "Hello, You Beautiful Thing",
+      "artist": "Jason Mraz"
+    },
+    {
+      "title": "I Won't Give Up",
+      "artist": "Jason Mraz"
+    },
+    {
+      "title": "I'm Yours",
+      "artist": "Jason Mraz"
+    },
+    {
+      "title": "Love Someone",
+      "artist": "Jason Mraz"
+    },
+    {
+      "title": "Lucky",
+      "artist": "Jason Mraz, Colbie Caillat"
+    },
+    {
+      "title": "Unlonely",
+      "artist": "Jason Mraz"
+    },
+    {
+      "title": "I’ll Have to Say I Love You in a Song",
+      "artist": "Jim Croce"
+    },
+    {
+      "title": "Magnolia",
+      "artist": "J.J. Cale"
+    },
+    {
+      "title": "Annie's Song",
+      "artist": "John Denver"
+    },
+    {
+      "title": "All of Me",
+      "artist": "John Legend"
+    },
+    {
+      "title": "Beautiful Boy (Darling Boy) - 2010 Remastered",
+      "artist": "John Lennon"
+    },
+    {
+      "title": "Comfortable - EP Version",
+      "artist": "John Mayer"
+    },
+    {
+      "title": "Love on the Weekend",
+      "artist": "John Mayer"
+    },
+    {
+      "title": "Slow Dancing in a Burning Room",
+      "artist": "John Mayer"
+    },
+    {
+      "title": "XO",
+      "artist": "John Mayer"
+    },
+    {
+      "title": "Blow Away",
+      "artist": "Joshua Radin"
+    },
+    {
+      "title": "If the World Was Ending (feat. Julia Michaels)",
+      "artist": "JP Saxe, Julia Michaels"
+    },
+    {
+      "title": "Holy (feat. Chance The Rapper)",
+      "artist": "Justin Bieber, Chance the Rapper"
+    },
+    {
+      "title": "Golden Hour",
+      "artist": "Kacey Musgraves"
+    },
+    {
+      "title": "Lava",
+      "artist": "Kuana Torres Kahele, Napua Greig, James Ford Murphy"
+    },
+    {
+      "title": "Shallow",
+      "artist": "Lady Gaga, Bradley Cooper"
+    },
+    {
+      "title": "Greatest Love Story",
+      "artist": "LANCO"
+    },
+    {
+      "title": "I Like Me Better",
+      "artist": "Lauv"
+    },
+    {
+      "title": "Thank You - 1990 Remaster",
+      "artist": "Led Zeppelin"
+    },
+    {
+      "title": "I Don't Dance",
+      "artist": "Lee Brice"
+    },
+    {
+      "title": "Beyond",
+      "artist": "Leon Bridges"
+    },
+    {
+      "title": "Someone You Loved",
+      "artist": "Lewis Capaldi"
+    },
+    {
+      "title": "You And Me",
+      "artist": "Lifehouse"
+    },
+    {
+      "title": "What A Wonderful World",
+      "artist": "Louis Armstrong"
+    },
+    {
+      "title": "Subversives",
+      "artist": "Lowest of the Low"
+    },
+    {
+      "title": "Beautiful Crazy",
+      "artist": "Luke Combs"
+    },
+    {
+      "title": "I Got Away with You",
+      "artist": "Luke Combs"
+    },
+    {
+      "title": "Stubborn Love",
+      "artist": "The Lumineers"
+    },
+    {
+      "title": "Always Be My Baby",
+      "artist": "Mariah Carey"
+    },
+    {
+      "title": "True Companion",
+      "artist": "Marc Cohn"
+    },
+    {
+      "title": "She Will Be Loved",
+      "artist": "Maroon 5"
+    },
+    {
+      "title": "Sunday Morning",
+      "artist": "Maroon 5"
+    },
+    {
+      "title": "Closer to Love",
+      "artist": "Mat Kearney"
+    },
+    {
+      "title": "Wanted Man",
+      "artist": "Mat Kearney"
+    },
+    {
+      "title": "Married Life",
+      "artist": "Michael Giacchino"
+    },
+    {
+      "title": "Rest",
+      "artist": "Michael Kiwanuka"
+    },
+    {
+      "title": "I'm a Believer",
+      "artist": "The Monkees"
+    },
+    {
+      "title": "Lay Here",
+      "artist": "The Mulligan Brothers"
+    },
+    {
+      "title": "Wonderful (The Way I Feel)",
+      "artist": "My Morning Jacket"
+    },
+    {
+      "title": "L-O-V-E",
+      "artist": "Nat King Cole"
+    },
+    {
+      "title": "Harvest Moon",
+      "artist": "Neil Young"
+    },
+    {
+      "title": "Only Love Can Break Your Heart",
+      "artist": "Neil Young"
+    },
+    {
+      "title": "When I Get My Hands On You",
+      "artist": "The New Basement Tapes"
+    },
+    {
+      "title": "Northern Sky",
+      "artist": "Nick Drake"
+    },
+    {
+      "title": "To Love Somebody",
+      "artist": "Nina Simone"
+    },
+    {
+      "title": "Simply the Best (From \"Schitt's Creek\")",
+      "artist": "Noah Reid"
+    },
+    {
+      "title": "Bloom - Bonus Track",
+      "artist": "The Paper Kites"
+    },
+    {
+      "title": "Tenenbaum",
+      "artist": "The Paper Kites"
+    },
+    {
+      "title": "And I Love Her",
+      "artist": "Passenger"
+    },
+    {
+      "title": "We Belong",
+      "artist": "Pat Benatar"
+    },
+    {
+      "title": "Better Man",
+      "artist": "Pearl Jam"
+    },
+    {
+      "title": "Let My Love Open The Door",
+      "artist": "Pete Townshend"
+    },
+    {
+      "title": "Baby, I Love Your Way",
+      "artist": "Peter Frampton"
+    },
+    {
+      "title": "Wedding Song (There Is Love) - Remastered Version",
+      "artist": "Noel Paul Stookey"
+    },
+    {
+      "title": "Gone, Gone, Gone",
+      "artist": "Phillip Phillips"
+    },
+    {
+      "title": "Waste",
+      "artist": "Phish"
+    },
+    {
+      "title": "Hey There Delilah",
+      "artist": "Plain White T's"
+    },
+    {
+      "title": "Every Little Thing She Does Is Magic",
+      "artist": "The Police"
+    },
+    {
+      "title": "Sunflower - Spider-Man: Into the Spider-Verse",
+      "artist": "Post Malone, Swae Lee"
+    },
+    {
+      "title": "I'm Gonna Be (500 Miles)",
+      "artist": "The Proclaimers"
+    },
+    {
+      "title": "You're My Best Friend - Remastered 2011",
+      "artist": "Queen"
+    },
+    {
+      "title": "All That And More (Sailboat)",
+      "artist": "Rainbow Kitten Surprise"
+    },
+    {
+      "title": "Bless The Broken Road",
+      "artist": "Rascal Flatts"
+    },
+    {
+      "title": "Hold You in My Arms",
+      "artist": "Ray LaMontagne"
+    },
+    {
+      "title": "You Are the Best Thing",
+      "artist": "Ray LaMontagne"
+    },
+    {
+      "title": "Be My Baby",
+      "artist": "The Ronettes"
+    },
+    {
+      "title": "Unchained Melody",
+      "artist": "The Righteous Brothers"
+    },
+    {
+      "title": "Yours",
+      "artist": "Russell Dickerson"
+    },
+    {
+      "title": "(What A) Wonderful World",
+      "artist": "Sam Cooke"
+    },
+    {
+      "title": "Cupid",
+      "artist": "Sam Cooke"
+    },
+    {
+      "title": "Nothing Can Change This Love",
+      "artist": "Sam Cooke"
+    },
+    {
+      "title": "I Choose You",
+      "artist": "Sara Bareilles"
+    },
+    {
+      "title": "Bridge Over Troubled Water",
+      "artist": "Simon & Garfunkel"
+    },
+    {
+      "title": "Kathy's Song",
+      "artist": "Simon & Garfunkel"
+    },
+    {
+      "title": "Song for the Asking",
+      "artist": "Simon & Garfunkel"
+    },
+    {
+      "title": "I'm Gonna Be (500 Miles)",
+      "artist": "Sleeping At Last"
+    },
+    {
+      "title": "Chasing Cars",
+      "artist": "Snow Patrol"
+    },
+    {
+      "title": "I Got You Babe",
+      "artist": "Sonny & Cher"
+    },
+    {
+      "title": "Nothing's Gonna Stop Us Now",
+      "artist": "Starship"
+    },
+    {
+      "title": "Fields Of Gold",
+      "artist": "Sting"
+    },
+    {
+      "title": "Everything Has Changed (feat. Ed Sheeran) (Taylor’s Version)",
+      "artist": "Taylor Swift, Ed Sheeran"
+    },
+    {
+      "title": "Lover",
+      "artist": "Taylor Swift"
+    },
+    {
+      "title": "I Was Just Thinking",
+      "artist": "Teitur"
+    },
+    {
+      "title": "My Girl",
+      "artist": "The Temptations"
+    },
+    {
+      "title": "Die A Happy Man",
+      "artist": "Thomas Rhett"
+    },
+    {
+      "title": "I Will Follow You",
+      "artist": "Toulouse"
+    },
+    {
+      "title": "Marry Me",
+      "artist": "Train"
+    },
+    {
+      "title": "Happy Together",
+      "artist": "The Turtles"
+    },
+    {
+      "title": "House of Gold",
+      "artist": "Twenty One Pilots"
+    },
+    {
+      "title": "With Or Without You",
+      "artist": "U2"
+    },
+    {
+      "title": "Crazy Love - 2013 Remaster",
+      "artist": "Van Morrison"
+    },
+    {
+      "title": "Moondance - 2013 Remaster",
+      "artist": "Van Morrison"
+    },
+    {
+      "title": "Someone Like You",
+      "artist": "Van Morrison"
+    },
+    {
+      "title": "Tupelo Honey",
+      "artist": "Van Morrison"
+    },
+    {
+      "title": "Fire and the Flood",
+      "artist": "Vance Joy"
+    },
+    {
+      "title": "I'm with You",
+      "artist": "Vance Joy"
+    },
+    {
+      "title": "Mess Is Mine",
+      "artist": "Vance Joy"
+    },
+    {
+      "title": "Missing Piece",
+      "artist": "Vance Joy"
+    },
+    {
+      "title": "Take Your Time",
+      "artist": "Vance Joy"
+    },
+    {
+      "title": "Lovin' Arms",
+      "artist": "The Wood Brothers"
+    },
+    {
+      "title": "You and Me",
+      "artist": "You+Me"
+    },
+    {
+      "title": "Loving You Easy",
+      "artist": "Zac Brown Band"
+    },
+    {
+      "title": "Sweet Annie",
+      "artist": "Zac Brown Band"
+    },
+    {
+      "title": "Whatever It Is",
+      "artist": "Zac Brown Band"
+    },
+    {
+      "title": "All My Love",
+      "artist": "Noah Kahan"
     }
   ],
   "introductions": [
@@ -1149,11 +2189,15 @@
       "artist": "DJ Khaled"
     },
     {
-      "title": "All of Me - Ti\u00ebsto's Birthday Treatment Remix - Radio Edit",
-      "artist": "John Legend,\u00a0Jason Agel,\u00a0Ti\u00ebsto"
+      "title": "All of Me - Tiësto's Birthday Treatment Remix - Radio Edit",
+      "artist": "John Legend, Jason Agel, Tiësto"
     },
     {
       "title": "All Of The Lights",
+      "artist": "Kanye West"
+    },
+    {
+      "title": "All You Need Is Love - Remastered 2009",
       "artist": "The Beatles"
     },
     {
@@ -1190,6 +2234,10 @@
     },
     {
       "title": "Big Pimpin' / Papercut",
+      "artist": "JAŸ-Z, Linkin Park"
+    },
+    {
+      "title": "Bitter Sweet Symphony - Remastered 2016",
       "artist": "The Verve"
     },
     {
@@ -1198,15 +2246,23 @@
     },
     {
       "title": "Bring Em Out",
+      "artist": "T.I."
+    },
+    {
+      "title": "Bust A Move",
       "artist": "Young MC"
     },
     {
       "title": "California Love - Original Version",
+      "artist": "2Pac, Roger, Dr. Dre"
+    },
+    {
+      "title": "Can't Get Enough Of Your Love, Babe",
       "artist": "Barry White"
     },
     {
       "title": "Can't Hold Us (feat. Ray Dalton)",
-      "artist": "Macklemore,\u00a0Ryan Lewis,\u00a0Macklemore & Ryan Lewis,\u00a0Ray Dalton"
+      "artist": "Macklemore, Ryan Lewis, Macklemore & Ryan Lewis, Ray Dalton"
     },
     {
       "title": "CAN'T STOP THE FEELING! (from DreamWorks Animation's \"TROLLS\")",
@@ -1229,8 +2285,8 @@
       "artist": "Coldplay"
     },
     {
-      "title": "Crazy In Love (feat. JA\u0178-Z)",
-      "artist": "Beyonc\u00e9,\u00a0JA\u0178-Z"
+      "title": "Crazy In Love (feat. JAŸ-Z)",
+      "artist": "Beyoncé, JAŸ-Z"
     },
     {
       "title": "Crazy Little Thing Called Love - Remastered 2011",
@@ -1242,7 +2298,7 @@
     },
     {
       "title": "Cruise - Remix",
-      "artist": "Florida Georgia Line,\u00a0Nelly"
+      "artist": "Florida Georgia Line, Nelly"
     },
     {
       "title": "Dance with Me Tonight",
@@ -1266,7 +2322,7 @@
     },
     {
       "title": "Don't Stop the Party (feat. TJR)",
-      "artist": "Pitbull,\u00a0TJR"
+      "artist": "Pitbull, TJR"
     },
     {
       "title": "Electric Feel",
@@ -1282,7 +2338,7 @@
     },
     {
       "title": "Everything Is AWESOME!!!",
-      "artist": "Tegan and Sara,\u00a0The Lonely Island"
+      "artist": "Tegan and Sara, The Lonely Island"
     },
     {
       "title": "Everytime We Touch",
@@ -1298,7 +2354,7 @@
     },
     {
       "title": "Feel This Moment (feat. Christina Aguilera)",
-      "artist": "Pitbull,\u00a0Christina Aguilera"
+      "artist": "Pitbull, Christina Aguilera"
     },
     {
       "title": "The Final Countdown",
@@ -1306,7 +2362,7 @@
     },
     {
       "title": "Finesse - Remix; feat. Cardi B",
-      "artist": "Bruno Mars,\u00a0Cardi B"
+      "artist": "Bruno Mars, Cardi B"
     },
     {
       "title": "Firework",
@@ -1330,7 +2386,7 @@
     },
     {
       "title": "Get Lucky (feat. Pharrell Williams and Nile Rodgers)",
-      "artist": "Daft Punk,\u00a0Pharrell Williams,\u00a0Nile Rodgers"
+      "artist": "Daft Punk, Pharrell Williams, Nile Rodgers"
     },
     {
       "title": "Get Ready - Rap Version Edit",
@@ -1346,15 +2402,15 @@
     },
     {
       "title": "Give Me Everything (feat. Nayer)",
-      "artist": "Pitbull,\u00a0AFROJACK,\u00a0Ne-Yo,\u00a0Nayer"
+      "artist": "Pitbull, AFROJACK, Ne-Yo, Nayer"
     },
     {
       "title": "Glad You Came - Alex Gaudino Radio Full Vocal",
-      "artist": "The Wanted,\u00a0Alex Gaudino,\u00a0Jason Rooney"
+      "artist": "The Wanted, Alex Gaudino, Jason Rooney"
     },
     {
       "title": "Gonna Make You Sweat (Everybody Dance Now) (feat. Freedom Williams)",
-      "artist": "C & C Music Factory,\u00a0Freedom Williams"
+      "artist": "C & C Music Factory, Freedom Williams"
     },
     {
       "title": "Good Feeling",
@@ -1362,6 +2418,14 @@
     },
     {
       "title": "Good Life",
+      "artist": "Kanye West, T-Pain"
+    },
+    {
+      "title": "Good Life",
+      "artist": "OneRepublic"
+    },
+    {
+      "title": "Good To Be Alive (Hallelujah)",
       "artist": "Andy Grammer"
     },
     {
@@ -1382,11 +2446,11 @@
     },
     {
       "title": "Hooked On A Feeling",
-      "artist": "Blue Swede,\u00a0Bj\u00f6rn Skifs"
+      "artist": "Blue Swede, Björn Skifs"
     },
     {
       "title": "How Sweet It Is",
-      "artist": "Michael Bubl\u00e9"
+      "artist": "Michael Bublé"
     },
     {
       "title": "Howlin' for You",
@@ -1442,6 +2506,10 @@
     },
     {
       "title": "Let It Rock",
+      "artist": "Kevin Rudolf, Lil Wayne"
+    },
+    {
+      "title": "Let Me Clear My Throat - Live",
       "artist": "DJ Kool"
     },
     {
@@ -1450,11 +2518,11 @@
     },
     {
       "title": "Let's Get Married (feat. Run) - ReMarqable Remix",
-      "artist": "Jagged Edge,\u00a0RUN,\u00a0Lamarquis Jefferson"
+      "artist": "Jagged Edge, RUN, Lamarquis Jefferson"
     },
     {
       "title": "Let's Go (feat. Ne-Yo) - Radio Edit",
-      "artist": "Calvin Harris,\u00a0Ne-Yo"
+      "artist": "Calvin Harris, Ne-Yo"
     },
     {
       "title": "Let's Go Crazy - 2015 Paisley Park Remaster",
@@ -1466,7 +2534,7 @@
     },
     {
       "title": "Love Never Felt So Good",
-      "artist": "Michael Jackson,\u00a0Justin Timberlake"
+      "artist": "Michael Jackson, Justin Timberlake"
     },
     {
       "title": "Love Train",
@@ -1486,7 +2554,7 @@
     },
     {
       "title": "Mo Money Mo Problems (feat. Puff Daddy & Mase) - Radio Mix; 2014 Remaster",
-      "artist": "The Notorious B.I.G.,\u00a0Mase,\u00a0Diddy"
+      "artist": "The Notorious B.I.G., Mase, Diddy"
     },
     {
       "title": "Monday Night Football Theme: Heavy Action",
@@ -1502,11 +2570,451 @@
     },
     {
       "title": "Now That We Found Love",
-      "artist": "Heavy D & The Boyz,\u00a0Aaron Hall"
+      "artist": "Heavy D & The Boyz, Aaron Hall"
     },
     {
       "title": "Oh Yeah - Remastered 2005",
       "artist": "Yello"
+    },
+    {
+      "title": "On Top Of The World",
+      "artist": "Imagine Dragons"
+    },
+    {
+      "title": "One More Time - Radio Edit",
+      "artist": "Daft Punk"
+    },
+    {
+      "title": "P.Y.T. (Pretty Young Thing)",
+      "artist": "Michael Jackson"
+    },
+    {
+      "title": "Party Like A Rock Star - Radio Edit",
+      "artist": "SHOP BOYZ"
+    },
+    {
+      "title": "Party Rock Anthem",
+      "artist": "LMFAO, Lauren Bennett, GoonRock"
+    },
+    {
+      "title": "Party Up (Up In Here) (Re-Recorded / Remastered)",
+      "artist": "DMX"
+    },
+    {
+      "title": "Poker Face",
+      "artist": "Lady Gaga"
+    },
+    {
+      "title": "Raiders March - From Raiders of the Lost Ark",
+      "artist": "John Williams"
+    },
+    {
+      "title": "Raise Your Glass",
+      "artist": "P!nk"
+    },
+    {
+      "title": "Rock and Roll Part 2 (Indiana Pacers)",
+      "artist": "Basketball Rockers"
+    },
+    {
+      "title": "Sandstorm - Radio Edit",
+      "artist": "Darude"
+    },
+    {
+      "title": "Save a Horse (Ride a Cowboy)",
+      "artist": "Big & Rich"
+    },
+    {
+      "title": "Say Hey (I Love You)",
+      "artist": "Michael Franti & Spearhead, Cherine Tanya Anderson"
+    },
+    {
+      "title": "Sexy And I Know It",
+      "artist": "LMFAO"
+    },
+    {
+      "title": "SexyBack (feat. Timbaland)",
+      "artist": "Justin Timberlake, Timbaland"
+    },
+    {
+      "title": "Sharp Dressed Man - 2008 Remaster",
+      "artist": "ZZ Top"
+    },
+    {
+      "title": "Shut Up and Dance",
+      "artist": "WALK THE MOON"
+    },
+    {
+      "title": "Signed, Sealed, Delivered (I'm Yours)",
+      "artist": "Stevie Wonder"
+    },
+    {
+      "title": "Sing, Sing, Sing",
+      "artist": "Benny Goodman"
+    },
+    {
+      "title": "Sirius",
+      "artist": "The Alan Parsons Project"
+    },
+    {
+      "title": "Something Just Like This",
+      "artist": "The Chainsmokers, Coldplay"
+    },
+    {
+      "title": "Song 2 - 2012 Remaster",
+      "artist": "Blur"
+    },
+    {
+      "title": "Star Wars: Imperial March",
+      "artist": "John Williams, Alvaro Siviero, The City of Prague Philharmonic Orchestra, Nic Raine"
+    },
+    {
+      "title": "Star Wars: Main Title",
+      "artist": "John Williams, Boston Pops Orchestra"
+    },
+    {
+      "title": "The Throne Room (From \"Star Wars: A New Hope\")",
+      "artist": "John Williams, Richard Hayman"
+    },
+    {
+      "title": "Such Great Heights",
+      "artist": "The Postal Service"
+    },
+    {
+      "title": "Suit & Tie (feat. JAY Z) (feat. JAY-Z) - [Radio Edit]",
+      "artist": "Justin Timberlake, JAŸ-Z"
+    },
+    {
+      "title": "Sweet Child O' Mine",
+      "artist": "Guns N' Roses"
+    },
+    {
+      "title": "Sweet Disposition",
+      "artist": "The Temper Trap"
+    },
+    {
+      "title": "Take on Me",
+      "artist": "a-ha"
+    },
+    {
+      "title": "Gonna Fly Now - From \"Rocky\" Soundtrack / Remastered 2006",
+      "artist": "Bill Conti"
+    },
+    {
+      "title": "This Is How We Do It",
+      "artist": "Montell Jordan"
+    },
+    {
+      "title": "This Will Be (An Everlasting Love) - 2003 Remaster",
+      "artist": "Natalie Cole"
+    },
+    {
+      "title": "Thunderstruck",
+      "artist": "AC/DC"
+    },
+    {
+      "title": "TiK ToK",
+      "artist": "Kesha"
+    },
+    {
+      "title": "Timber",
+      "artist": "Pitbull, Kesha"
+    },
+    {
+      "title": "The Time (Dirty Bit)",
+      "artist": "Black Eyed Peas"
+    },
+    {
+      "title": "Time of Our Lives",
+      "artist": "Pitbull, Ne-Yo"
+    },
+    {
+      "title": "Toxic",
+      "artist": "Britney Spears"
+    },
+    {
+      "title": "Treasure - Cash Cash Radio Mix",
+      "artist": "Bruno Mars"
+    },
+    {
+      "title": "Turn Down for What",
+      "artist": "DJ Snake, Lil Jon"
+    },
+    {
+      "title": "24K Magic",
+      "artist": "Bruno Mars"
+    },
+    {
+      "title": "U Can't Touch This",
+      "artist": "MC Hammer"
+    },
+    {
+      "title": "Unspeakable Joy - Razor N Guido Radio Mix",
+      "artist": "Kim English"
+    },
+    {
+      "title": "Uptown Funk (feat. Bruno Mars)",
+      "artist": "Mark Ronson, Bruno Mars"
+    },
+    {
+      "title": "Viva La Vida",
+      "artist": "Coldplay"
+    },
+    {
+      "title": "Walk This Way",
+      "artist": "Aerosmith"
+    },
+    {
+      "title": "Walking On Sunshine",
+      "artist": "Katrina & The Waves"
+    },
+    {
+      "title": "The Way You Make Me Feel - 2012 Remaster",
+      "artist": "Michael Jackson"
+    },
+    {
+      "title": "We Are Family - 2006 Remaster",
+      "artist": "Sister Sledge, Bernard Edwards"
+    },
+    {
+      "title": "We Found Love",
+      "artist": "Rihanna, Calvin Harris"
+    },
+    {
+      "title": "We like to Party! (The Vengabus) Six Flags",
+      "artist": "Vengaboys"
+    },
+    {
+      "title": "We Will Rock You - Remastered 2011",
+      "artist": "Queen"
+    },
+    {
+      "title": "We're All In This Together",
+      "artist": "High School Musical Cast, Disney"
+    },
+    {
+      "title": "What I Like About You",
+      "artist": "The Romantics"
+    },
+    {
+      "title": "What Makes You Beautiful",
+      "artist": "One Direction"
+    },
+    {
+      "title": "When Love Takes Over (feat. Kelly Rowland)",
+      "artist": "David Guetta, Kelly Rowland"
+    },
+    {
+      "title": "White Wedding - Pt. 1",
+      "artist": "Billy Idol"
+    },
+    {
+      "title": "With A Little Help From My Friends - Remastered 2009",
+      "artist": "The Beatles"
+    },
+    {
+      "title": "Woke up This Morning (The Sopranos Mix)",
+      "artist": "Alabama 3"
+    },
+    {
+      "title": "Yeah! (feat. Lil Jon & Ludacris)",
+      "artist": "USHER, Lil Jon, Ludacris"
+    },
+    {
+      "title": "Yeah 3x",
+      "artist": "Chris Brown"
+    },
+    {
+      "title": "You Are the Best Thing",
+      "artist": "Ray LaMontagne"
+    },
+    {
+      "title": "You Make My Dreams (Come True)",
+      "artist": "Daryl Hall & John Oates"
+    },
+    {
+      "title": "You Sexy Thing",
+      "artist": "Hot Chocolate"
+    },
+    {
+      "title": "You Shook Me All Night Long",
+      "artist": "AC/DC"
+    },
+    {
+      "title": "You're The First, The Last, My Everything - Single Version",
+      "artist": "Barry White"
+    },
+    {
+      "title": "(Your Love Keeps Lifting Me) Higher & Higher",
+      "artist": "Jackie Wilson"
+    },
+    {
+      "title": "Bad To The Bone",
+      "artist": "George Thorogood & The Destroyers"
+    },
+    {
+      "title": "Black Betty",
+      "artist": "Ram Jam"
+    },
+    {
+      "title": "Welcome To The Jungle",
+      "artist": "Guns N' Roses"
+    },
+    {
+      "title": "The Final Countdown",
+      "artist": "Europe"
+    },
+    {
+      "title": "It Takes Two",
+      "artist": "Rob Base & DJ EZ Rock"
+    },
+    {
+      "title": "The Show",
+      "artist": "Doug E. Fresh"
+    },
+    {
+      "title": "Let Me Clear My Throat - Old School Reunion Remix '96",
+      "artist": "DJ Kool"
+    },
+    {
+      "title": "Fight For Your Right",
+      "artist": "Beastie Boys"
+    },
+    {
+      "title": "Jump Around",
+      "artist": "House Of Pain"
+    },
+    {
+      "title": "You Make My Dreams (Come True)",
+      "artist": "Daryl Hall & John Oates"
+    },
+    {
+      "title": "Let It Rock - Album Version (Edited)",
+      "artist": "Kevin Rudolf, Lil Wayne"
+    },
+    {
+      "title": "Let's Get Married",
+      "artist": "Jagged Edge"
+    },
+    {
+      "title": "Moment 4 Life - Album Version (Edited)",
+      "artist": "Nicki Minaj, Drake"
+    },
+    {
+      "title": "OMG",
+      "artist": "USHER, will.i.am"
+    },
+    {
+      "title": "Harlem Shake",
+      "artist": "Baauer"
+    },
+    {
+      "title": "Good To Be Alive (Hallelujah)",
+      "artist": "Andy Grammer"
+    },
+    {
+      "title": "...Ready For It?",
+      "artist": "Taylor Swift"
+    },
+    {
+      "title": "Raise Your Glass",
+      "artist": "P!nk"
+    },
+    {
+      "title": "Dear Future Husband",
+      "artist": "Meghan Trainor"
+    },
+    {
+      "title": "Party Rock Anthem",
+      "artist": "LMFAO, Lauren Bennett, GoonRock"
+    },
+    {
+      "title": "A Guy with a Girl",
+      "artist": "Blake Shelton"
+    },
+    {
+      "title": "You Can't Stop Me (feat. Thomas Rhett)",
+      "artist": "Brett Eldredge, Thomas Rhett"
+    },
+    {
+      "title": "How Sweet It Is (To Be Loved By You)",
+      "artist": "Marvin Gaye"
+    },
+    {
+      "title": "Are You Gonna Be My Girl",
+      "artist": "Jet"
+    },
+    {
+      "title": "Last Nite",
+      "artist": "The Strokes"
+    },
+    {
+      "title": "Chicago",
+      "artist": "Sufjan Stevens"
+    },
+    {
+      "title": "Best of My Love",
+      "artist": "The Emotions"
+    },
+    {
+      "title": "Got to Be Real",
+      "artist": "Cheryl Lynn"
+    },
+    {
+      "title": "Let's Dance - 1999 Remaster",
+      "artist": "David Bowie"
+    },
+    {
+      "title": "Children Of The Revolution",
+      "artist": "T. Rex"
+    },
+    {
+      "title": "Dog Days Are Over",
+      "artist": "Florence + The Machine"
+    },
+    {
+      "title": "Young Folks",
+      "artist": "Peter Bjorn and John"
+    },
+    {
+      "title": "A-Punk",
+      "artist": "Vampire Weekend"
+    },
+    {
+      "title": "For Once In My Life",
+      "artist": "Stevie Wonder"
+    },
+    {
+      "title": "One Day Like This",
+      "artist": "Elbow"
+    },
+    {
+      "title": "I'm Still Standing",
+      "artist": "Elton John"
+    },
+    {
+      "title": "You're The First, The Last, My Everything",
+      "artist": "Barry White"
+    },
+    {
+      "title": "Come Fly With Me - Remastered 1998",
+      "artist": "Frank Sinatra"
+    },
+    {
+      "title": "Feeling Good",
+      "artist": "Nina Simone"
+    },
+    {
+      "title": "War",
+      "artist": "Hypnotic Brass Ensemble"
+    },
+    {
+      "title": "Everywhere - 2017 Remaster",
+      "artist": "Fleetwood Mac"
+    },
+    {
+      "title": "Best of My Love",
+      "artist": "The Emotions"
     }
   ]
 }

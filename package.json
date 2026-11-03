@@ -11,7 +11,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "fetch-assets": "node scripts/fetch-assets.mjs",
-    "build-songs": "node scripts/build-songs.mjs"
+    "build-songs": "node scripts/build-songs.mjs",
+    "build-suggestions": "node scripts/build-suggestions.mjs"
   },
   "dependencies": {
     "docx": "^9.15.1",
