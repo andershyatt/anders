@@ -591,6 +591,15 @@
   white-space: nowrap;
 }
 
+.planner-hero__change--default {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.95rem;
+  z-index: 2;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.75);
+}
+
 .planner-hero__change.is-disabled {
   opacity: 0.7;
   pointer-events: none;
