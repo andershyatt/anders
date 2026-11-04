@@ -372,6 +372,17 @@
   line-height: 1.15;
 }
 
+.pipeline-card.is-collapsed .pipeline-name h2 {
+  margin-bottom: 0;
+  font-size: 20px;
+}
+
+.pipeline-progress-num {
+  color: #6f655b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .pipeline-card p {
   margin: 0.1rem 0;
   font-size: 14px;
@@ -418,7 +429,7 @@ a.pipeline-open {
 .pipeline-dialog-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 40;
   display: grid;
   place-items: center;
   padding: 1rem;

@@ -333,7 +333,15 @@ export const REMOVED_SECTIONS_FIELD = 'Removed sections'
 export const PHOTOGRAPHER_LATE_FIELD = 'How late is the photographer scheduled?'
 export const VIDEOGRAPHER_LATE_FIELD = 'How late is the videographer scheduled?'
 
-export const MANAGED_SECTION_IDS = new Set(['vendors', 'timeline', 'ceremony', 'cocktail-hour', 'reception'])
+export const MANAGED_SECTION_IDS = new Set([
+  'wedding-details',
+  'venue-questions',
+  'vendors',
+  'timeline',
+  'ceremony',
+  'cocktail-hour',
+  'reception',
+])
 
 export const plannerFieldKeys: string[] = [
   ...plannerSections.flatMap((section) => section.fields.map((field) => field.key)),

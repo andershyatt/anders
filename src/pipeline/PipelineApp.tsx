@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import defaultCouplePhoto from '../assets/default-couple-photo.png'
 import { formatCoupleDate } from '../planner/format'
+import '../planner/planner.css'
+import VenueField from '../planner/VenueField'
 import { loadGooglePlace, searchVenues, type VenueMatch } from '../planner/venueSearch'
 import {
   adminAddCouple,
@@ -29,6 +31,27 @@ import PullToRefresh from '../PullToRefresh'
 import { usePullToRefresh, useStandalone } from '../standalone'
 
 const STAGES: BookingStage[] = ['Booked', 'Not yet booked', 'Completed']
+const UPDATED_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** `yyyy-MM-dd HH:mm` from Apps Script, already in America/New_York, as “Nov 4, 2:31 PM”. */
+function formatUpdatedStamp(raw: string): string {
+  const iso = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(raw.trim())
+  if (!iso) return raw.trim()
+  const month = UPDATED_MONTHS[Number(iso[2]) - 1] ?? iso[2]
+  const day = Number(iso[3])
+  if (!iso[4]) return `${month} ${day}`
+  let hour = Number(iso[4])
+  const suffix = hour >= 12 ? 'PM' : 'AM'
+  hour = hour % 12 || 12
+  return `${month} ${day}, ${hour}:${iso[5]} ${suffix}`
+}
+
+function updatedLineFor(couple: PipelineCouple): string {
+  if (!couple.lastUpdated?.trim()) return ''
+  const when = formatUpdatedStamp(couple.lastUpdated)
+  const who = couple.updatedBy === 'Anders' ? 'by Anders' : 'by couple'
+  return `Last updated ${when} ${who}`
+}
 
 function spotifyOauthMessage(code: string): string {
   if (code === 'access_denied') return 'Spotify sign-in was cancelled. The playlist was not created.'
@@ -98,7 +121,7 @@ export default function PipelineApp() {
   const [created, setCreated] = useState('')
   const [spotifyReady, setSpotifyReady] = useState(spotifySessionReady)
   const [createdPlaylist, setCreatedPlaylist] = useState<SpotifyPlaylistResult | null>(null)
-  const [collapsedCards, setCollapsedCards] = useState<Set<string>>(() => new Set())
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(() => new Set())
 
   const visible = useMemo(() => sortCouples(couples).filter((couple) => matchesStages(couple, stages)), [couples, stages])
 
@@ -285,13 +308,10 @@ export default function PipelineApp() {
             <button type="button" className="gold" onClick={() => setAdding((current) => !current)}>
               {adding ? 'Close form' : 'Add couple'}
             </button>
-            <button type="button" onClick={() => setCollapsedCards(new Set())}>
+            <button type="button" onClick={() => setExpandedCards(new Set(couples.map((couple) => couple.token)))}>
               Expand all
             </button>
-            <button
-              type="button"
-              onClick={() => setCollapsedCards(new Set(couples.map((couple) => couple.token)))}
-            >
+            <button type="button" onClick={() => setExpandedCards(new Set())}>
               Collapse all
             </button>
           </div>
@@ -471,9 +491,9 @@ export default function PipelineApp() {
                   onCreated={setCreatedPlaylist}
                   run={withDetail}
                   standalone={standalone}
-                  collapsed={collapsedCards.has(couple.token)}
+                  collapsed={!expandedCards.has(couple.token)}
                   onToggle={() =>
-                    setCollapsedCards((current) => {
+                    setExpandedCards((current) => {
                       const next = new Set(current)
                       if (next.has(couple.token)) next.delete(couple.token)
                       else next.add(couple.token)
@@ -566,6 +586,9 @@ function CoupleCard({
   const [busy, setBusy] = useState('')
   const [statusOpen, setStatusOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [venueDraft, setVenueDraft] = useState(couple.venue)
+  const [pendingVenue, setPendingVenue] = useState<VenueMatch | null>(null)
+  const [pendingServices, setPendingServices] = useState<PipelineCouple['services'] | null>(null)
   const [docNote, setDocNote] = useState('')
   const [pendingDelete, setPendingDelete] = useState('')
   const tone = stageOf(couple.bookingStatus)
@@ -573,7 +596,15 @@ function CoupleCard({
   const progress = coupleProgress(couple)
   const booked = SERVICE_TOGGLES.filter(([key]) => couple.services[key]).map(([, label]) => label)
 
-  async function save(patch: { bookingStatus?: BookingStage; team?: string; date?: string; venue?: string; guestCount?: string }) {
+  async function save(patch: {
+    bookingStatus?: BookingStage
+    team?: string
+    date?: string
+    venue?: string
+    venueAddress?: string
+    guestCount?: string
+    services?: PipelineCouple['services']
+  }) {
     await adminSetStatus(adminKey, couple.token, patch)
     onChange({ ...couple, ...patch, updatedBy: 'Anders' })
   }
@@ -591,9 +622,11 @@ function CoupleCard({
     onError(messageFor(reason))
   }
 
-  const updatedLine = couple.lastUpdated
-    ? `Last updated ${couple.lastUpdated}${couple.updatedBy ? ` by ${couple.updatedBy}` : ''}`
-    : ''
+  const updatedLine = updatedLineFor(couple)
+
+  useEffect(() => {
+    if (!pendingVenue) setVenueDraft(couple.venue)
+  }, [couple.venue, pendingVenue])
 
   return (
     <article className={`pipeline-card${collapsed ? ' is-collapsed' : ''}`}>
@@ -635,6 +668,7 @@ function CoupleCard({
           </div>
         </div>
         <p className="pipeline-meta">{formatCoupleDate(couple.date) || couple.date}</p>
+        {collapsed && progress !== null && <span className="pipeline-progress-num">{progress}%</span>}
       </div>
       {!collapsed && (
       <>
@@ -656,13 +690,13 @@ function CoupleCard({
             if (date) void save({ date }).catch((reason: unknown) => onError(messageFor(reason)))
           }}
         />
-        <label htmlFor={`venue-${couple.token}`}>Venue</label>
-        <input
+        <VenueField
           id={`venue-${couple.token}`}
-          value={couple.venue}
-          onChange={(event) => onChange({ ...couple, venue: event.target.value })}
-          onBlur={(event) => {
-            void save({ venue: event.target.value }).catch((reason: unknown) => onError(messageFor(reason)))
+          value={venueDraft}
+          onChange={setVenueDraft}
+          onPick={(place) => {
+            setVenueDraft(place.name)
+            setPendingVenue((current) => (current && current.id === place.id ? { ...current, ...place } : place))
           }}
         />
         <label htmlFor={`guests-${couple.token}`}>Guest count</label>
@@ -688,11 +722,7 @@ function CoupleCard({
               type="button"
               aria-pressed={couple.services[key]}
               className={couple.services[key] ? 'is-on' : ''}
-              onClick={() => {
-                const services = { ...couple.services, [key]: !couple.services[key] }
-                onChange({ ...couple, services })
-                void adminSetStatus(adminKey, couple.token, { services }).catch((reason: unknown) => onError(messageFor(reason)))
-              }}
+              onClick={() => setPendingServices({ ...couple.services, [key]: !couple.services[key] })}
             >
               {label}
             </button>
@@ -851,6 +881,74 @@ function CoupleCard({
                   }}
                 >
                   Delete wedding
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {pendingVenue && (
+          <div className="pipeline-dialog-backdrop" onClick={() => { setPendingVenue(null); setVenueDraft(couple.venue) }}>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`venue-${couple.token}-confirm`}
+              className="pipeline-dialog"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <p id={`venue-${couple.token}-confirm`}>
+                Change venue to {pendingVenue.name}
+                {pendingVenue.address ? `, address ${pendingVenue.address}` : ''}?
+              </p>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingVenue(null)
+                    setVenueDraft(couple.venue)
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="gold"
+                  onClick={() => {
+                    const next = pendingVenue
+                    setPendingVenue(null)
+                    setVenueDraft(next.name)
+                    void save({ venue: next.name, venueAddress: next.address }).catch((reason: unknown) => onError(messageFor(reason)))
+                  }}
+                >
+                  Change venue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {pendingServices && (
+          <div className="pipeline-dialog-backdrop" onClick={() => setPendingServices(null)}>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`services-${couple.token}`}
+              className="pipeline-dialog"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <p id={`services-${couple.token}`}>Are you sure you want to change services booked?</p>
+              <div>
+                <button type="button" onClick={() => setPendingServices(null)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="gold"
+                  onClick={() => {
+                    const services = pendingServices
+                    setPendingServices(null)
+                    void save({ services }).catch((reason: unknown) => onError(messageFor(reason)))
+                  }}
+                >
+                  Change services
                 </button>
               </div>
             </div>
