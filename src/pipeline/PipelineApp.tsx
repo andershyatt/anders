@@ -25,6 +25,8 @@ import { clearPipelineCache, coupleLocallyEdited, readPipelineCache, writePipeli
 import { couplePlaylistName, liveChartText, playlistChoices, seratoText } from './songs'
 import type { PendingPlaylist, SpotifyPlaylistResult } from './spotify'
 import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } from './types'
+import PullToRefresh from '../PullToRefresh'
+import { usePullToRefresh, useStandalone } from '../standalone'
 
 const STAGES: BookingStage[] = ['Booked', 'Not yet booked', 'Completed']
 
@@ -72,6 +74,8 @@ function messageFor(error: unknown): string {
 }
 
 export default function PipelineApp() {
+  const standalone = useStandalone()
+  const pull = usePullToRefresh(standalone)
   const [key, setKey] = useState(storedAdminKey)
   const [draftKey, setDraftKey] = useState('')
   const cachedCouples = useMemo(() => readPipelineCache(), [])
@@ -235,25 +239,33 @@ export default function PipelineApp() {
 
   return (
     <div className="pipeline">
+      <PullToRefresh pull={pull} />
       <div className="pipeline-pin">
       <header className="pipeline-top">
         <div>
           <h1>Anders Hyatt Music</h1>
           <p>Pipeline</p>
         </div>
-        {status === 'ready' && (
-          <button
-            type="button"
-            onClick={() => {
-              clearAdminKey()
-              setKey('')
-              setCouples([])
-              setStatus('gate')
-            }}
-          >
-            Lock
-          </button>
-        )}
+        <div className="pipeline-top__actions">
+          {standalone && (
+            <button type="button" className="app-refresh" onClick={() => window.location.reload()}>
+              Refresh
+            </button>
+          )}
+          {status === 'ready' && (
+            <button
+              type="button"
+              onClick={() => {
+                clearAdminKey()
+                setKey('')
+                setCouples([])
+                setStatus('gate')
+              }}
+            >
+              Lock
+            </button>
+          )}
+        </div>
       </header>
       {status === 'ready' && (
         <div className="pipeline-filters-bar">
@@ -448,6 +460,7 @@ export default function PipelineApp() {
                   onError={setError}
                   onCreated={setCreatedPlaylist}
                   run={withDetail}
+                  standalone={standalone}
                 />
               ))}
             </div>
@@ -512,6 +525,7 @@ function CoupleCard({
   onError,
   onCreated,
   run,
+  standalone,
 }: {
   couple: PipelineCouple
   adminKey: string
@@ -522,6 +536,7 @@ function CoupleCard({
   onError: (value: string) => void
   onCreated: (result: SpotifyPlaylistResult) => void
   run: (couple: PipelineCouple, task: (detail: PipelineDetail) => Promise<void>) => Promise<void>
+  standalone: boolean
 }) {
   const [menu, setMenu] = useState<'playlist' | ''>('')
   const [detail, setDetail] = useState<PipelineDetail | null>(null)
@@ -622,7 +637,11 @@ function CoupleCard({
           }}
         />
         <div className="pipeline-actions">
-          <a className="pipeline-open" href={plannerLink(couple.token)} target="_blank" rel="noopener">
+          <a
+            className="pipeline-open"
+            href={plannerLink(couple.token, standalone)}
+            {...(standalone ? {} : { target: '_blank', rel: 'noopener' })}
+          >
             Open planner
           </a>
           <button

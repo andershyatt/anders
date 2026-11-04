@@ -4,23 +4,67 @@ import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } 
 
 const KEY_STORAGE = 'anders-pipeline-admin-key'
 
+function readCookie(): string {
+  for (const part of document.cookie.split(';')) {
+    const [name, ...rest] = part.trim().split('=')
+    if (name === KEY_STORAGE) return decodeURIComponent(rest.join('='))
+  }
+  return ''
+}
+
+function writeCookie(key: string) {
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${KEY_STORAGE}=${encodeURIComponent(key)}; Max-Age=31536000; Path=/; SameSite=Lax${secure}`
+}
+
+function clearCookie() {
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${KEY_STORAGE}=; Max-Age=0; Path=/; SameSite=Lax${secure}`
+}
+
+/** localStorage is the source of truth. A cookie restores it if a home-screen webview drops storage. */
 export function storedAdminKey(): string {
-  return localStorage.getItem(KEY_STORAGE) ?? ''
+  try {
+    const saved = localStorage.getItem(KEY_STORAGE) ?? ''
+    if (saved) return saved
+    const fromCookie = readCookie()
+    if (fromCookie) {
+      localStorage.setItem(KEY_STORAGE, fromCookie)
+      return fromCookie
+    }
+  } catch {
+    return readCookie()
+  }
+  return ''
 }
 
 export function saveAdminKey(key: string) {
-  localStorage.setItem(KEY_STORAGE, key)
+  try {
+    localStorage.setItem(KEY_STORAGE, key)
+  } catch {
+    // The cookie below still keeps the passphrase for the next launch.
+  }
+  writeCookie(key)
+  void navigator.storage?.persist?.()
 }
 
 export function clearAdminKey() {
-  localStorage.removeItem(KEY_STORAGE)
+  try {
+    localStorage.removeItem(KEY_STORAGE)
+  } catch {
+    // Ignore a blocked storage API and still clear the cookie.
+  }
+  clearCookie()
 }
 
-export function plannerLink(token: string): string {
+export function plannerLink(token: string, fromPipeline = false): string {
   const url = new URL(window.location.href)
   url.hash = ''
   url.pathname = url.pathname.replace(/pipeline\/?(index\.html)?$/, 'planner/')
-  url.search = `?c=${encodeURIComponent(token)}`
+  const params = new URLSearchParams()
+  params.set('c', token)
+  if (fromPipeline) params.set('from', 'pipeline')
+  url.search = `?${params.toString()}`
   return url.toString()
 }
 

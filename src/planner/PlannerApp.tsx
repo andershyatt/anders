@@ -59,6 +59,8 @@ const SECTION_FOLD: Record<string, string> = {
   'Introductions happening': 'Introductions section',
 }
 import './planner.css'
+import PullToRefresh from '../PullToRefresh'
+import { usePullToRefresh, useStandalone } from '../standalone'
 
 const LINK_MESSAGE = "This planner link doesn't look right, please check the link Anders sent you."
 
@@ -830,9 +832,16 @@ export default function PlannerApp() {
   }, [])
   const welcomeDate = basics.date.trim() ? formatCoupleDate(basics.date) : ''
   const welcomeBits = [welcomeDate, basics.venue.trim()].filter(Boolean)
+  const standalone = useStandalone()
+  const pull = usePullToRefresh(standalone)
+  const fromPipeline = new URLSearchParams(window.location.search).get('from') === 'pipeline'
+  const pipelineHome = new URL('../pipeline/', window.location.href)
+  pipelineHome.search = ''
+  pipelineHome.hash = ''
 
   return (
     <div className="planner">
+      <PullToRefresh pull={pull} />
       <header className="planner-top">
         <SectionMenu sections={status.kind === 'ready' ? sections : []} />
         <div className="planner-top__title">
@@ -840,6 +849,18 @@ export default function PlannerApp() {
           <p>Wedding planner</p>
           {place && <p className="planner-top__place">{place}</p>}
         </div>
+        {standalone ? (
+          <button type="button" className="app-refresh" onClick={() => window.location.reload()}>
+            Refresh
+          </button>
+        ) : (
+          <span />
+        )}
+        {fromPipeline && (
+          <a className="planner-back" href={pipelineHome.toString()}>
+            Back to pipeline
+          </a>
+        )}
       </header>
 
       <main className="planner-main">
