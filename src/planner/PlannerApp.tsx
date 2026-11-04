@@ -373,6 +373,7 @@ function FieldControl({
         legend={field.label}
         options={field.options ?? []}
         value={value}
+        help={field.help}
         onChange={onChange}
       />
     )

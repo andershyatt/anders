@@ -114,6 +114,8 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
   {
     title: 'Ceremony',
     keys: [
+      'Officiant microphone',
+      'Other ceremony speakers',
       'Pre-ceremony performance',
       'Pre-ceremony music type',
       'Pre-ceremony music',

@@ -16,11 +16,12 @@ interface ChoiceWithOtherProps {
   legend: string
   options: readonly string[]
   value: string
+  help?: string
   onChange: (next: string) => void
 }
 
 /** Single-choice answers that include Other. The typed text is the saved value. */
-export default function ChoiceWithOther({ name, legend, options, value, onChange }: ChoiceWithOtherProps) {
+export default function ChoiceWithOther({ name, legend, options, value, help, onChange }: ChoiceWithOtherProps) {
   const match = matchesOption(options, value)
   const [otherOn, setOtherOn] = useState(() => value.trim() !== '' && !match)
   const otherRef = useRef<HTMLInputElement>(null)
@@ -46,6 +47,7 @@ export default function ChoiceWithOther({ name, legend, options, value, onChange
   return (
     <fieldset className="planner-choices planner-choices--stack">
       <legend>{legend}</legend>
+      {help && <p className="planner-field__help">{help}</p>}
       <div className="planner-choices__row" role="radiogroup" aria-label={legend}>
         {options.map((option) => {
           const selected = !otherOn && match === option

@@ -28,6 +28,20 @@ const STOP_CUE = 'Cue for when to stop the song'
 /** New answers only a live-and-DJ couple is asked. Order is the order to append in Apps Script. */
 export const LIVE_DJ_EXTRA: PlannerField[] = [
   {
+    key: 'Officiant microphone',
+    label: 'Would you like us to provide a microphone for the officiant to use during the ceremony?',
+    kind: 'choice-other',
+    heading: 'Ceremony details',
+    help: 'We can provide a wireless microphone. The mic can be handheld or we can provide a mic stand.',
+    options: ['Yes', 'No'],
+  },
+  {
+    key: 'Other ceremony speakers',
+    label: 'Besides the officiant, are you having any other speakers? (poem reading, scripture reading, etc.)',
+    kind: 'choice-other',
+    options: ['Yes', 'No'],
+  },
+  {
     key: 'Pre-ceremony performance',
     label: 'What kind of performance would you like during this time?',
     kind: 'checks',
@@ -316,6 +330,8 @@ export function liveDjCeremony(find: FindField): PlannerSection {
     title: 'Ceremony',
     blurb: 'Music for walking down and back up the aisle, plus music before the ceremony to set the mood.',
     fields: [
+      take(find, 'Officiant microphone'),
+      take(find, 'Other ceremony speakers'),
       take(find, 'Pre-ceremony performance'),
       take(find, 'Pre-ceremony music type'),
       take(find, 'Pre-ceremony music', { label: 'Notes' }),
@@ -416,6 +432,8 @@ export function liveDjReception(find: FindField): PlannerSection {
       take(find, 'Open dancing songs'),
       take(find, 'DJ music requests', {
         label: 'Notes',
+        // The shared field is a song list for DJ-only couples. Open dancing notes stay plain text.
+        song: undefined,
         note: "Feel free to give any type of general guidance you would like. Musician's/DJ's choice is also an option!",
       }),
       take(find, 'Slow songs preference'),
