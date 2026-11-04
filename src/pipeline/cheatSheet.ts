@@ -2,6 +2,7 @@ import JSZip from 'jszip'
 import templateUrl from './cheat-sheet-template.docx?url'
 import { formatCoupleDate } from '../planner/format'
 import type { PipelineDetail } from './types'
+import { usesDjOnlyTemplate } from '../planner/fields'
 import { sheetTitle } from './files'
 import { field, parseSongList, songLine } from './songs'
 
@@ -69,6 +70,7 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
     }
   }
 
+  const djOnly = usesDjOnlyTemplate(detail.services)
   const ceremonyNotes = [
     ['Officiant microphone', 'Officiant microphone'],
     ['Other ceremony speakers', 'Other ceremony speakers'],
@@ -85,7 +87,7 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
   const ceremonyLines = ceremonyNotes.concat(ceremony.flatMap(([label, songKey, styleKey]) => {
     const song = field(detail, songKey)
     if (!song) return []
-    const style = styleKey ? field(detail, styleKey) : ''
+    const style = !djOnly && styleKey ? field(detail, styleKey) : ''
     const cue = songKey === 'Recessional song' ? field(detail, 'Recessional cue') : ''
     return [[label, [song, style, cue].filter(Boolean).join(' — ')].join(' - ')]
   }))
@@ -99,7 +101,7 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
     {
       label: "COUPLE'S FIRST DANCE",
       lines: linesOf(field(detail, "Couple's first dance song")).map((line) => {
-        const format = field(detail, 'First dance format (live/DJ, full/shortened)')
+        const format = djOnly ? '' : field(detail, 'First dance format (live/DJ, full/shortened)')
         return format ? `${line} [${format}]` : line
       }),
     },

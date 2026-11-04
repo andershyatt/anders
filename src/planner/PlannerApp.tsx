@@ -20,6 +20,8 @@ import {
   visibleSections,
   usesDjOnlyTemplate,
   answeredProgress,
+  DJ_POWER_OPTION,
+  MUSICIAN_POWER_OPTION,
   neutralizeField,
   applyRemovedSections,
   MANAGED_SECTION_IDS,
@@ -377,12 +379,15 @@ function FieldControl({
   }
 
   if (field.kind === 'choice-other') {
+    const options = field.options ?? []
+    const choiceValue =
+      options.includes(DJ_POWER_OPTION) && value.trim() === MUSICIAN_POWER_OPTION ? DJ_POWER_OPTION : value
     return (
       <ChoiceWithOther
         name={id}
         legend={field.label}
-        options={field.options ?? []}
-        value={value}
+        options={options}
+        value={choiceValue}
         help={field.help}
         onChange={onChange}
       />

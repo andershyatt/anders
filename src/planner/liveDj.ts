@@ -480,10 +480,16 @@ function djOnlyFields(fields: PlannerField[]): PlannerField[] {
     }
     const kept = carry ? { ...field, heading: field.heading ?? carry.heading, note: field.note ?? carry.note } : field
     carry = null
-    if (kept.key === 'Pre-ceremony music type') {
-      next.push({ ...kept, options: (kept.options ?? []).filter((option) => option !== LIVE_VOCALS_OPTION) })
+    const djChoice = (value: string | undefined) => value?.replaceAll("Musician's/DJ's choice", "DJ's choice")
+    const rewritten = { ...kept, label: djChoice(kept.label) ?? kept.label, note: djChoice(kept.note), help: djChoice(kept.help) }
+    if (rewritten.key === 'Pre-ceremony music type') {
+      next.push({
+        ...rewritten,
+        help: 'Light instrumental background music from the DJ works well at this time, but we are open to your input.',
+        options: (rewritten.options ?? []).filter((option) => option !== LIVE_VOCALS_OPTION),
+      })
     } else {
-      next.push(kept)
+      next.push(rewritten)
     }
   }
   return next

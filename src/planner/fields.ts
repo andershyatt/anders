@@ -70,6 +70,16 @@ export const POWER_OPTIONS = [
   'Please check with the venue.',
 ] as const
 
+/** DJ-only wording. The musician/DJ sentence is still treated as this same answer. */
+export const DJ_POWER_OPTIONS = [
+  'Yes, there is power available.',
+  'No, the DJ will need a battery powered option.',
+  'Please check with the venue.',
+] as const
+
+export const MUSICIAN_POWER_OPTION = POWER_OPTIONS[1]
+export const DJ_POWER_OPTION = DJ_POWER_OPTIONS[1]
+
 export const COCKTAIL_LOCATION_OPTIONS = [
   'Same area as the ceremony',
   'Same area as the reception',
@@ -853,10 +863,19 @@ export function visibleSections(
   if (usesDjOnlyTemplate(services)) {
     return plannerSections.flatMap((section) => {
       if (LIVE_DJ_SKIP.has(section.id)) return []
-      if (section.id === 'ceremony') return sectionWithVisibleFields(djOnlyCeremony(findPlannerField), services, answers)
-      if (section.id === 'cocktail-hour') return sectionWithVisibleFields(djOnlyCocktail(findPlannerField), services, answers)
-      if (section.id === 'reception') return sectionWithVisibleFields(djOnlyReception(findPlannerField), services, answers)
-      return sectionWithVisibleFields(section, services, answers)
+      const built =
+        section.id === 'ceremony'
+          ? djOnlyCeremony(findPlannerField)
+          : section.id === 'cocktail-hour'
+            ? djOnlyCocktail(findPlannerField)
+            : section.id === 'reception'
+              ? djOnlyReception(findPlannerField)
+              : section
+      const withDjPower = {
+        ...built,
+        fields: built.fields.map((field) => (field.options === POWER_OPTIONS ? { ...field, options: DJ_POWER_OPTIONS } : field)),
+      }
+      return sectionWithVisibleFields(withDjPower, services, answers)
     })
   }
   return plannerSections.flatMap((section) => sectionWithVisibleFields(section, services, answers))
