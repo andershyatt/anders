@@ -197,6 +197,7 @@ export async function adminSetStatus(
     services?: { live?: boolean; dj?: boolean; photobooth?: boolean }
     date?: string
     venue?: string
+    venueAddress?: string
     guestCount?: string
   },
 ): Promise<void> {

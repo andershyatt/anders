@@ -233,6 +233,10 @@
   margin-bottom: 0;
 }
 
+.planner-section.is-collapsed > :not(.planner-section__head) {
+  display: none;
+}
+
 .planner-section__tools {
   display: flex;
   flex: 0 0 auto;
