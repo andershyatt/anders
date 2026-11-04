@@ -8,6 +8,7 @@ import {
   TextRun,
   WidthType,
 } from 'docx'
+import { sheetTitle } from './files'
 import type { PipelineDetail } from './types'
 import { field, parseSongList, songLine } from './songs'
 
@@ -172,7 +173,7 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
 export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
   const children: Array<Paragraph | Table> = [
     new Paragraph({
-      children: [new TextRun({ text: `${detail.names || 'Couple'}'s info sheet`, bold: true, font: FONT, size: 32, color: '3C342C' })],
+      children: [new TextRun({ text: sheetTitle(detail.names, 'info sheet'), bold: true, font: FONT, size: 32, color: '3C342C' })],
       spacing: { after: 80 },
     }),
     para([detail.date, detail.venue, detail.bookingStatus].filter(Boolean).join(' · ')),
@@ -215,7 +216,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
     children.push(pairTable(leftovers))
   }
   const doc = new Document({
-    title: `${detail.names || 'Couple'}'s info sheet`,
+    title: sheetTitle(detail.names, 'info sheet'),
     description: 'Full planner rundown. This is not the day-of cheat sheet.',
     sections: [
       {
