@@ -20,6 +20,13 @@ import {
   visibleSections,
   answeredProgress,
   neutralizeField,
+  applyRemovedSections,
+  MANAGED_SECTION_IDS,
+  REMOVED_SECTIONS_FIELD,
+  parseRemovedSections,
+  removedSectionEntries,
+  serializeRemovedSections,
+  subsectionId,
   type BookedServices,
   type PlannerBasics,
   type PlannerField,
@@ -778,7 +785,10 @@ export default function PlannerApp() {
     if (!genderNeutral) return visible
     return visible.map((section) => ({ ...section, fields: section.fields.map(neutralizeField) }))
   }, [services, fields, genderNeutral])
-  const progress = answeredProgress(sections, fields)
+  const shownSections = useMemo(() => applyRemovedSections(sections, fields), [sections, fields])
+  const removedSections = useMemo(() => removedSectionEntries(sections, fields), [sections, fields])
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set())
+  const progress = answeredProgress(shownSections, fields)
   const savedLabel = formatSavedAt(lastUpdated)
   const [place, setPlace] = useState('')
   useEffect(() => {
@@ -790,7 +800,7 @@ export default function PlannerApp() {
       const line = (header?.getBoundingClientRect().bottom ?? 0) + 4
       let section = ''
       let sub = ''
-      for (const el of document.querySelectorAll('.planner-section > h2, .planner-subhead')) {
+      for (const el of document.querySelectorAll('.planner-section h2, .planner-subhead')) {
         if (el.getBoundingClientRect().top > line) break
         if (el.classList.contains('planner-subhead')) sub = el.textContent?.trim() ?? ''
         else {
@@ -813,7 +823,7 @@ export default function PlannerApp() {
       window.removeEventListener('resize', onScroll)
       if (frame) window.cancelAnimationFrame(frame)
     }
-  }, [status.kind, sections])
+  }, [status.kind, shownSections])
   useEffect(() => {
     const viewport = window.visualViewport
     if (!viewport) return
@@ -839,11 +849,32 @@ export default function PlannerApp() {
   pipelineHome.search = ''
   pipelineHome.hash = ''
 
+  function toggleCollapsed(id: string) {
+    setCollapsedIds((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function removeManaged(id: string) {
+    const next = parseRemovedSections(fields[REMOVED_SECTIONS_FIELD])
+    next.add(id)
+    updateField(REMOVED_SECTIONS_FIELD, serializeRemovedSections(next))
+  }
+
+  function restoreManaged(id: string) {
+    const next = parseRemovedSections(fields[REMOVED_SECTIONS_FIELD])
+    next.delete(id)
+    updateField(REMOVED_SECTIONS_FIELD, serializeRemovedSections(next))
+  }
+
   return (
     <div className="planner">
       <PullToRefresh pull={pull} />
       <header className="planner-top">
-        <SectionMenu sections={status.kind === 'ready' ? sections : []} />
+        <SectionMenu sections={status.kind === 'ready' ? shownSections : []} />
         <div className="planner-top__title">
           <a href="../">Anders Hyatt Music</a>
           <p>Wedding planner</p>
@@ -901,10 +932,49 @@ export default function PlannerApp() {
                 void onSave()
               }}
             >
-              {sections.map((section) => (
-                <section key={section.id} id={section.id} className="planner-section">
-                  <h2>{section.title}</h2>
-                  {section.blurb && <p className="planner-section__blurb">{section.blurb}</p>}
+              {removedSections.length > 0 && (
+                <section className="planner-removed" aria-label="Removed sections">
+                  <h2>Removed sections</h2>
+                  <ul>
+                    {removedSections.map((item) => (
+                      <li key={item.id}>
+                        <span>{item.label}</span>
+                        <button type="button" onClick={() => restoreManaged(item.id)}>
+                          Restore
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {shownSections.map((section) => {
+                const sectionCollapsed = collapsedIds.has(section.id)
+                const managed = MANAGED_SECTION_IDS.has(section.id)
+                let hideSubsection = false
+                return (
+                <section key={section.id} id={section.id} className={`planner-section${sectionCollapsed ? ' is-collapsed' : ''}`}>
+                  <div className="planner-section__head">
+                    <h2>{section.title}</h2>
+                    {managed && (
+                      <div className="planner-section__tools">
+                        <button
+                          type="button"
+                          aria-expanded={!sectionCollapsed}
+                          onClick={() => toggleCollapsed(section.id)}
+                        >
+                          {sectionCollapsed ? 'Expand' : 'Collapse'}
+                        </button>
+                        <button type="button" onClick={() => removeManaged(section.id)}>
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {!sectionCollapsed && section.blurb && (
+                    <p className="planner-callout">
+                      <span>{section.blurb}</span>
+                    </p>
+                  )}
                   {section.id === 'basics' && (
                     <BasicsCard basics={basics} services={services} status={bookingStatus} eventDate={basics.date} />
                   )}
@@ -949,20 +1019,49 @@ export default function PlannerApp() {
                       {timelineMessage && <p className="planner-pdf__error">{timelineMessage}</p>}
                     </div>
                   )}
-                  {section.fields.map((field) => (
+                  {section.fields.map((field) => {
+                    const subId = field.heading && section.id === 'reception' ? subsectionId(section.id, field.key) : ''
+                    if (subId) hideSubsection = collapsedIds.has(subId)
+                    if (hideSubsection && !subId) return null
+                    const showField = !hideSubsection
+                    return (
                     <Fragment key={field.key}>
                       {field.heading && (
-                        <h3 className="planner-subhead" id={`sub-${sectionSlug(field.heading)}`}>
-                          {field.heading}
-                        </h3>
+                        <div className="planner-subhead-row">
+                          <h3 className="planner-subhead" id={`sub-${sectionSlug(field.heading)}`}>
+                            {field.heading}
+                          </h3>
+                          {section.id === 'reception' && (
+                            <div className="planner-section__tools">
+                              <button
+                                type="button"
+                                aria-expanded={showField}
+                                onClick={() => toggleCollapsed(subId)}
+                              >
+                                {showField ? 'Collapse' : 'Expand'}
+                              </button>
+                              <button type="button" onClick={() => removeManaged(subId)}>
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       )}
-                      {field.callout && (
+                      {showField && field.callout && (
                         <p className="planner-callout">
                           <span>{field.callout}</span>
                         </p>
                       )}
-                      {field.note && <p className="planner-note">{field.note}</p>}
-                      {field.kind === 'floorplan' ? (
+                      {showField && field.note && (
+                        field.heading ? (
+                          <p className="planner-callout">
+                            <span>{field.note}</span>
+                          </p>
+                        ) : (
+                          <p className="planner-note">{field.note}</p>
+                        )
+                      )}
+                      {showField && (field.kind === 'floorplan' ? (
                       <div className="planner-pdf">
                         <p className="planner-dance__label">{field.label}</p>
                         {floorPlan && (
@@ -1060,8 +1159,8 @@ export default function PlannerApp() {
                           </p>
                         )}
                       </>
-                    )}
-                      {SECTION_FOLD[field.key] &&
+                    ))}
+                      {showField && SECTION_FOLD[field.key] &&
                         (fields[field.key] ?? '').trim().toLowerCase() === 'no' &&
                         (fields[SECTION_FOLD[field.key]] ?? '').trim().toLowerCase() !== 'removed' &&
                         (fields[SECTION_FOLD[field.key]] ?? '').trim().toLowerCase() !== 'kept' && (
@@ -1075,7 +1174,7 @@ export default function PlannerApp() {
                             </button>
                           </p>
                         )}
-                      {field.image === 'chauvet' && (
+                      {showField && field.image === 'chauvet' && (
                         <img
                           className="planner-lighting"
                           src={`${import.meta.env.BASE_URL}../chauvet-freedom-par.jpg`}
@@ -1083,9 +1182,11 @@ export default function PlannerApp() {
                         />
                       )}
                     </Fragment>
-                  ))}
+                    )
+                  })}
                 </section>
-              ))}
+                )
+              })}
 
               <figure className="planner-quote">
                 <blockquote>You must always believe that life is as extraordinary as music says it is.</blockquote>

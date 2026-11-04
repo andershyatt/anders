@@ -122,6 +122,8 @@ function coupleOf(value: unknown): PipelineCouple | null {
     knownVenue: record.knownVenue !== false,
     photo: text(record.photo),
     fields: fieldsOf(record.fields),
+    lastUpdated: text(record.lastUpdated),
+    updatedBy: record.updatedBy === 'Anders' || record.updatedBy === 'couple' ? record.updatedBy : '',
   }
 }
 
@@ -193,6 +195,9 @@ export async function adminSetStatus(
     bookingStatus?: BookingStage
     team?: string
     services?: { live?: boolean; dj?: boolean; photobooth?: boolean }
+    date?: string
+    venue?: string
+    guestCount?: string
   },
 ): Promise<void> {
   await postAdmin({ action: 'adminSetStatus', key, token, ...patch })

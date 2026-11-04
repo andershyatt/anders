@@ -74,6 +74,12 @@ export const plannerSections: PlannerSection[] = [
     id: 'basics',
     title: 'Basics',
     blurb: '',
+    fields: [],
+  },
+  {
+    id: 'wedding-details',
+    title: 'Wedding Details',
+    blurb: 'Website, sharing, colors, dress, and how lively you expect the room to be.',
     fields: [
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
       {
@@ -125,7 +131,17 @@ export const plannerSections: PlannerSection[] = [
       },
       { key: 'Venue manager', label: 'Venue manager', kind: 'text' },
       { key: 'Photographer', label: 'Photographer', kind: 'text' },
+      {
+        key: 'How late is the photographer scheduled?',
+        label: 'How late is the photographer scheduled?',
+        kind: 'text',
+      },
       { key: 'Videographer', label: 'Videographer', kind: 'text' },
+      {
+        key: 'How late is the videographer scheduled?',
+        label: 'How late is the videographer scheduled?',
+        kind: 'text',
+      },
       { key: 'Caterer info', label: 'Caterer', kind: 'text' },
     ],
   },
@@ -313,10 +329,17 @@ export const plannerSections: PlannerSection[] = [
   },
 ]
 
+export const REMOVED_SECTIONS_FIELD = 'Removed sections'
+export const PHOTOGRAPHER_LATE_FIELD = 'How late is the photographer scheduled?'
+export const VIDEOGRAPHER_LATE_FIELD = 'How late is the videographer scheduled?'
+
+export const MANAGED_SECTION_IDS = new Set(['vendors', 'timeline', 'ceremony', 'cocktail-hour', 'reception'])
+
 export const plannerFieldKeys: string[] = [
   ...plannerSections.flatMap((section) => section.fields.map((field) => field.key)),
   ...LIVE_DJ_EXTRA.map((field) => field.key),
   ...PHOTO_BOOTH_FIELDS.map((field) => field.key),
+  REMOVED_SECTIONS_FIELD,
 ]
 
 /** Shown on the Basics card. Couples cannot edit these, and saves omit them. */
@@ -614,6 +637,8 @@ export function fieldAnswerVisible(
   if (!fieldVisible(key, services)) return false
   if (key === WIFI_DETAILS_FIELD) return wifiDetailsVisible(fields)
   if (key === WEBSITE_PASSWORD_FIELD) return websitePasswordVisible(fields)
+  if (key === PHOTOGRAPHER_LATE_FIELD) return (fields.Photographer ?? '').trim() !== ''
+  if (key === VIDEOGRAPHER_LATE_FIELD) return (fields.Videographer ?? '').trim() !== ''
   const gate = YES_GATED[key]
   if (gate && !answerIsYes(fields, gate)) return false
   if (key === 'Private last dance' && services.live && services.dj && !answerIsYes(fields, 'Private last dance wanted')) {
@@ -658,6 +683,59 @@ export function answeredProgress(sections: PlannerSection[], fields: Record<stri
   return Math.round((answered / total) * 100)
 }
 
+export function subsectionId(sectionId: string, fieldKey: string): string {
+  return `${sectionId}:${fieldKey}`
+}
+
+export function parseRemovedSections(raw: string | undefined): Set<string> {
+  const trimmed = (raw ?? '').trim()
+  if (!trimmed) return new Set()
+  try {
+    const data = JSON.parse(trimmed) as unknown
+    if (!Array.isArray(data)) return new Set()
+    return new Set(data.filter((item): item is string => typeof item === 'string' && item.trim() !== ''))
+  } catch {
+    return new Set()
+  }
+}
+
+export function serializeRemovedSections(ids: ReadonlySet<string>): string {
+  const list = [...ids]
+  return list.length ? JSON.stringify(list) : ''
+}
+
+/** Drop sections and reception subsections the couple marked not applicable. */
+export function applyRemovedSections(sections: PlannerSection[], fields: Record<string, string>): PlannerSection[] {
+  const removed = parseRemovedSections(fields[REMOVED_SECTIONS_FIELD])
+  if (removed.size === 0) return sections
+  return sections.flatMap((section) => {
+    if (removed.has(section.id)) return []
+    if (section.id !== 'reception') return [section]
+    let current = ''
+    const kept = section.fields.filter((field) => {
+      if (field.heading) current = subsectionId(section.id, field.key)
+      return current === '' || !removed.has(current)
+    })
+    return [{ ...section, fields: kept }]
+  })
+}
+
+export function removedSectionEntries(
+  sections: PlannerSection[],
+  fields: Record<string, string>,
+): Array<{ id: string; label: string }> {
+  const removed = parseRemovedSections(fields[REMOVED_SECTIONS_FIELD])
+  const labels = new Map<string, string>()
+  for (const section of sections) {
+    labels.set(section.id, section.title)
+    if (section.id !== 'reception') continue
+    for (const field of section.fields) {
+      if (field.heading) labels.set(subsectionId(section.id, field.key), field.heading)
+    }
+  }
+  return [...removed].map((id) => ({ id, label: labels.get(id) ?? id }))
+}
+
 const NEUTRAL_SWAPS: Array<[RegExp, string]> = [
   [/Father-daughter/g, 'Parent'],
   [/father-daughter/g, 'parent'],
@@ -696,6 +774,7 @@ export function fieldIncludedInSave(
   services: BookedServices,
   fields: Record<string, string>,
 ): boolean {
+  if (key === REMOVED_SECTIONS_FIELD || key === PHOTOGRAPHER_LATE_FIELD || key === VIDEOGRAPHER_LATE_FIELD) return true
   if (fieldAnswerVisible(key, services, fields)) return true
   const fold = FOLDED_ANSWER[key]
   return Boolean(fold && (fields[fold] ?? '').trim().toLowerCase() === 'removed')
@@ -720,6 +799,7 @@ function sectionWithVisibleFields(
   answers: Record<string, string>,
 ): PlannerSection[] {
   if (section.id === 'photo-booth') return services.photobooth ? [{ ...section, fields: [] }] : []
+  if (section.id === 'basics') return [{ ...section, fields: [] }]
   const fields = section.fields.filter((field) => fieldAnswerVisible(field.key, services, answers))
   if (fields.length === 0) return []
   return [{ ...section, fields }]

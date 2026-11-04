@@ -207,7 +207,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
   }
   const leftovers = Object.entries(detail.fields).flatMap(([key, value]) => {
     if (used.has(key) || !value.trim()) return []
-    if (key === 'Couple photo' || key.endsWith('section')) return []
+    if (key === 'Couple photo' || key === 'Removed sections' || key.endsWith('section')) return []
     return [[key, readable(key, value)] as [string, string]]
   })
   if (leftovers.length) {

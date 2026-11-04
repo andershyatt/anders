@@ -208,13 +208,92 @@
 }
 
 .planner-section h2 {
-  margin: 0 0 0.25rem;
+  margin: 0;
   color: var(--color-accent-dark);
   font-family: var(--font-nav);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.planner-section__head,
+.planner-subhead-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.planner-section__head {
+  margin-bottom: 0.7rem;
+}
+
+.planner-section.is-collapsed .planner-section__head {
+  margin-bottom: 0;
+}
+
+.planner-section__tools {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.3rem;
+}
+
+.planner-section__tools button,
+.planner-removed button {
+  border: 1px solid #c4b4a4;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #3c342c;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0.22rem 0.5rem;
+  cursor: pointer;
+}
+
+.planner-subhead-row {
+  margin: 1.35rem 0 0.45rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.planner-subhead-row .planner-subhead {
+  margin: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.planner-removed {
+  margin: 0 0 0.9rem;
+  padding: 0.85rem 1rem;
+  background: #fffdf8;
+  border: 1px dashed #c4b4a4;
+  border-radius: 10px;
+}
+
+.planner-removed h2 {
+  margin: 0 0 0.55rem;
+  color: var(--color-accent-dark);
+  font-family: var(--font-nav);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.planner-removed ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.planner-removed li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
 }
 
 .planner-subtitle {

@@ -17,12 +17,12 @@ import {
   type NewCoupleInput,
 } from './api'
 import { buildCheatSheet } from './cheatSheet'
-import { downloadBlob, sheetFileName } from './files'
+import { sheetFileName } from './files'
 import { buildInfoSheet } from './infoSheet'
 import { coupleProgress } from './progress'
-import { copyAndRunShortcut } from './shortcuts'
+import { clientFolderName, saveClientDocument } from './shortcuts'
 import { clearPipelineCache, coupleLocallyEdited, readPipelineCache, writePipelineCache } from './listCache'
-import { couplePlaylistName, liveChartText, playlistChoices, seratoText } from './songs'
+import { couplePlaylistName, playlistChoices } from './songs'
 import type { PendingPlaylist, SpotifyPlaylistResult } from './spotify'
 import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } from './types'
 import PullToRefresh from '../PullToRefresh'
@@ -98,6 +98,7 @@ export default function PipelineApp() {
   const [created, setCreated] = useState('')
   const [spotifyReady, setSpotifyReady] = useState(spotifySessionReady)
   const [createdPlaylist, setCreatedPlaylist] = useState<SpotifyPlaylistResult | null>(null)
+  const [collapsedCards, setCollapsedCards] = useState<Set<string>>(() => new Set())
 
   const visible = useMemo(() => sortCouples(couples).filter((couple) => matchesStages(couple, stages)), [couples, stages])
 
@@ -242,9 +243,9 @@ export default function PipelineApp() {
       <PullToRefresh pull={pull} />
       <div className="pipeline-pin">
       <header className="pipeline-top">
-        <div>
-          <h1>Anders Hyatt Music</h1>
-          <p>Pipeline</p>
+        <div className="pipeline-brand">
+          <h1>PIPELINE</h1>
+          <p>AH Music</p>
         </div>
         <div className="pipeline-top__actions">
           {standalone && (
@@ -283,6 +284,15 @@ export default function PipelineApp() {
             ))}
             <button type="button" className="gold" onClick={() => setAdding((current) => !current)}>
               {adding ? 'Close form' : 'Add couple'}
+            </button>
+            <button type="button" onClick={() => setCollapsedCards(new Set())}>
+              Expand all
+            </button>
+            <button
+              type="button"
+              onClick={() => setCollapsedCards(new Set(couples.map((couple) => couple.token)))}
+            >
+              Collapse all
             </button>
           </div>
         </div>
@@ -461,6 +471,15 @@ export default function PipelineApp() {
                   onCreated={setCreatedPlaylist}
                   run={withDetail}
                   standalone={standalone}
+                  collapsed={collapsedCards.has(couple.token)}
+                  onToggle={() =>
+                    setCollapsedCards((current) => {
+                      const next = new Set(current)
+                      if (next.has(couple.token)) next.delete(couple.token)
+                      else next.add(couple.token)
+                      return next
+                    })
+                  }
                 />
               ))}
             </div>
@@ -526,6 +545,8 @@ function CoupleCard({
   onCreated,
   run,
   standalone,
+  collapsed,
+  onToggle,
 }: {
   couple: PipelineCouple
   adminKey: string
@@ -537,34 +558,49 @@ function CoupleCard({
   onCreated: (result: SpotifyPlaylistResult) => void
   run: (couple: PipelineCouple, task: (detail: PipelineDetail) => Promise<void>) => Promise<void>
   standalone: boolean
+  collapsed: boolean
+  onToggle: () => void
 }) {
   const [menu, setMenu] = useState<'playlist' | ''>('')
   const [detail, setDetail] = useState<PipelineDetail | null>(null)
   const [busy, setBusy] = useState('')
   const [statusOpen, setStatusOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [docNote, setDocNote] = useState('')
+  const [pendingDelete, setPendingDelete] = useState('')
   const tone = stageOf(couple.bookingStatus)
   const toneClass = tone === 'Booked' ? 'booked' : tone === 'Completed' ? 'done' : 'pending'
   const progress = coupleProgress(couple)
   const booked = SERVICE_TOGGLES.filter(([key]) => couple.services[key]).map(([, label]) => label)
 
-  async function save(patch: { bookingStatus?: BookingStage; team?: string }) {
+  async function save(patch: { bookingStatus?: BookingStage; team?: string; date?: string; venue?: string; guestCount?: string }) {
     await adminSetStatus(adminKey, couple.token, patch)
-    onChange({ ...couple, ...patch })
+    onChange({ ...couple, ...patch, updatedBy: 'Anders' })
+  }
+
+  async function storeDoc(kind: 'info sheet' | 'cheat sheet', folder: string) {
+    await run(couple, async (full) => {
+      const blob = kind === 'info sheet' ? await buildInfoSheet(full) : await buildCheatSheet(full)
+      const filename = sheetFileName(full.names, kind)
+      const note = await saveClientDocument(blob, filename, folder)
+      setDocNote(note)
+    })
   }
 
   function failSpotify(reason: unknown) {
     onError(messageFor(reason))
   }
 
+  const updatedLine = couple.lastUpdated
+    ? `Last updated ${couple.lastUpdated}${couple.updatedBy ? ` by ${couple.updatedBy}` : ''}`
+    : ''
+
   return (
-    <article className="pipeline-card">
-      {couple.photo ? (
-        <img src={couple.photo} alt="" loading="lazy" decoding="async" />
-      ) : (
-        <img className="is-default" src={defaultCouplePhoto} alt="" loading="lazy" decoding="async" />
-      )}
-      <div>
+    <article className={`pipeline-card${collapsed ? ' is-collapsed' : ''}`}>
+      <div className="pipeline-card__summary">
+        <button type="button" className="pipeline-fold" aria-expanded={!collapsed} onClick={onToggle}>
+          {collapsed ? 'Expand' : 'Collapse'}
+        </button>
         <div className="pipeline-name">
           <h2>{couple.names || 'Untitled couple'}</h2>
           <div className="pipeline-status">
@@ -598,9 +634,46 @@ function CoupleCard({
             )}
           </div>
         </div>
-        <p className="pipeline-meta">
-          {[formatCoupleDate(couple.date) || couple.date, couple.venue].filter(Boolean).join(' · ')}
-        </p>
+        <p className="pipeline-meta">{formatCoupleDate(couple.date) || couple.date}</p>
+      </div>
+      {!collapsed && (
+      <>
+      {couple.photo ? (
+        <img src={couple.photo} alt="" loading="lazy" decoding="async" />
+      ) : (
+        <img className="is-default" src={defaultCouplePhoto} alt="" loading="lazy" decoding="async" />
+      )}
+      <div>
+        {updatedLine && <p className="pipeline-updated">{updatedLine}</p>}
+        <label htmlFor={`date-${couple.token}`}>Wedding date</label>
+        <input
+          id={`date-${couple.token}`}
+          type="date"
+          value={/^\d{4}-\d{2}-\d{2}$/.test(couple.date) ? couple.date : ''}
+          onChange={(event) => {
+            const date = event.target.value
+            onChange({ ...couple, date })
+            if (date) void save({ date }).catch((reason: unknown) => onError(messageFor(reason)))
+          }}
+        />
+        <label htmlFor={`venue-${couple.token}`}>Venue</label>
+        <input
+          id={`venue-${couple.token}`}
+          value={couple.venue}
+          onChange={(event) => onChange({ ...couple, venue: event.target.value })}
+          onBlur={(event) => {
+            void save({ venue: event.target.value }).catch((reason: unknown) => onError(messageFor(reason)))
+          }}
+        />
+        <label htmlFor={`guests-${couple.token}`}>Guest count</label>
+        <input
+          id={`guests-${couple.token}`}
+          value={couple.guestCount}
+          onChange={(event) => onChange({ ...couple, guestCount: event.target.value })}
+          onBlur={(event) => {
+            void save({ guestCount: event.target.value }).catch((reason: unknown) => onError(messageFor(reason)))
+          }}
+        />
         {progress !== null && (
           <div className="pipeline-progress" aria-label={`Planner progress ${progress} percent`}>
             <div className="pipeline-progress__fill" style={{ width: `${progress}%` }} />
@@ -649,10 +722,7 @@ function CoupleCard({
             disabled={busy === 'info'}
             onClick={() => {
               setBusy('info')
-              void run(couple, async (full) => {
-                downloadBlob(await buildInfoSheet(full), sheetFileName(full.names, 'info sheet'))
-                onNotice(`Downloaded ${full.names || 'the'} info sheet.`)
-              }).finally(() => setBusy(''))
+              void storeDoc('info sheet', clientFolderName(couple.date, couple.names)).finally(() => setBusy(''))
             }}
           >
             Make info sheet
@@ -662,35 +732,10 @@ function CoupleCard({
             disabled={busy === 'cheat'}
             onClick={() => {
               setBusy('cheat')
-              void run(couple, async (full) => {
-                downloadBlob(await buildCheatSheet(full), sheetFileName(full.names, 'cheat sheet'))
-                onNotice(`Downloaded ${full.names || 'the'} cheat sheet.`)
-              }).finally(() => setBusy(''))
+              void storeDoc('cheat sheet', clientFolderName(couple.date, couple.names)).finally(() => setBusy(''))
             }}
           >
             Make cheat sheet
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void run(couple, async (full) => {
-                const text = seratoText(full)
-                onNotice(await copyAndRunShortcut('Make Serato Crate', text || 'No DJ songs yet.'))
-              })
-            }}
-          >
-            Export Serato crate
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void run(couple, async (full) => {
-                const text = liveChartText(full)
-                onNotice(await copyAndRunShortcut('Tag Song Charts', text || 'No live songs yet.'))
-              })
-            }}
-          >
-            Tag live songs
           </button>
           <button
             type="button"
@@ -708,7 +753,21 @@ function CoupleCard({
           >
             Make playlist
           </button>
-          <button type="button" className="pipeline-delete" onClick={() => setConfirming(true)}>
+          <button
+            type="button"
+            className="pipeline-delete"
+            disabled={busy === 'delete'}
+            onClick={() => {
+              setBusy('delete')
+              void run(couple, async (full) => {
+                const blob = await buildInfoSheet(full)
+                const filename = sheetFileName(full.names, 'info sheet')
+                const note = await saveClientDocument(blob, filename, 'DELETED PLANNERS')
+                setPendingDelete(note)
+                setConfirming(true)
+              }).finally(() => setBusy(''))
+            }}
+          >
             Delete wedding
           </button>
         </div>
@@ -772,7 +831,7 @@ function CoupleCard({
               onClick={(event) => event.stopPropagation()}
             >
               <p id={`delete-${couple.token}`}>
-                Delete {couple.names || 'this wedding'}? This removes the couple and their planner answers.
+                {pendingDelete} Delete {couple.names || 'this wedding'}? This removes the couple and their planner answers.
               </p>
               <div>
                 <button type="button" onClick={() => setConfirming(false)}>
@@ -797,7 +856,27 @@ function CoupleCard({
             </div>
           </div>
         )}
+        {docNote && (
+          <div className="pipeline-dialog-backdrop" onClick={() => setDocNote('')}>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`doc-${couple.token}`}
+              className="pipeline-dialog"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <p id={`doc-${couple.token}`}>{docNote}</p>
+              <div>
+                <button type="button" className="gold" onClick={() => setDocNote('')}>
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+      </>
+      )}
     </article>
   )
 }
