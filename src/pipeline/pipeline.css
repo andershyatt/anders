@@ -15,9 +15,15 @@
   justify-content: space-between;
   gap: 0.75rem;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: calc(0.75rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right)) 0.75rem calc(1rem + env(safe-area-inset-left));
   background: #1c1916;
   color: #fffdf8;
+}
+
+.pipeline-top__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .pipeline-top h1,
@@ -54,7 +60,7 @@
 .pipeline-main {
   max-width: 980px;
   margin: 0 auto;
-  padding: 1rem 1rem 3rem;
+  padding: 1rem calc(1rem + env(safe-area-inset-right)) calc(3rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
 }
 
 .pipeline-gate,
@@ -122,7 +128,7 @@
   gap: 0.4rem;
   max-width: 980px;
   margin: 0 auto;
-  padding: 0.7rem 1rem;
+  padding: 0.7rem calc(1rem + env(safe-area-inset-right)) 0.7rem calc(1rem + env(safe-area-inset-left));
 }
 
 .pipeline-filters button {
