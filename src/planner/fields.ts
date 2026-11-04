@@ -1,4 +1,12 @@
-import { LIVE_DJ_EXTRA, liveDjCeremony, liveDjCocktail, liveDjReception } from './liveDj'
+import {
+  LIVE_DJ_EXTRA,
+  djOnlyCeremony,
+  djOnlyCocktail,
+  djOnlyReception,
+  liveDjCeremony,
+  liveDjCocktail,
+  liveDjReception,
+} from './liveDj'
 import { PHOTO_BOOTH_FIELDS } from './photoBooth'
 import type { SuggestionListId } from './suggestions'
 
@@ -61,6 +69,16 @@ export const POWER_OPTIONS = [
   'No, the musician/DJ will need a battery powered option.',
   'Please check with the venue.',
 ] as const
+
+/** DJ-only wording. The musician/DJ sentence is still treated as this same answer. */
+export const DJ_POWER_OPTIONS = [
+  'Yes, there is power available.',
+  'No, the DJ will need a battery powered option.',
+  'Please check with the venue.',
+] as const
+
+export const MUSICIAN_POWER_OPTION = POWER_OPTIONS[1]
+export const DJ_POWER_OPTION = DJ_POWER_OPTIONS[1]
 
 export const COCKTAIL_LOCATION_OPTIONS = [
   'Same area as the ceremony',
@@ -636,20 +654,44 @@ export function websitePasswordVisible(fields: Record<string, string>): boolean 
   return (fields['Wedding website'] ?? '').trim() !== ''
 }
 
+/** DJ booked, live music not booked. Uses the cloned live+DJ template. */
+export function usesDjOnlyTemplate(services: { live: boolean; dj: boolean }): boolean {
+  return services.dj && !services.live
+}
+
+const DJ_ONLY_HIDDEN = new Set([
+  'Pre-ceremony performance',
+  'Wedding party processional style (instrumental/vocals)',
+  'Bridal processional style',
+  'Recessional style',
+  'Cocktail hour music type',
+  'Dinner music type',
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+  'Songs to learn',
+])
+
 /** Hidden follow-ups stay out of the section so they are not shown or counted. */
 export function fieldAnswerVisible(
   key: string,
   services: BookedServices,
   fields: Record<string, string>,
 ): boolean {
-  if (!fieldVisible(key, services)) return false
+  if (usesDjOnlyTemplate(services) && DJ_ONLY_HIDDEN.has(key)) return false
+  const asked = usesDjOnlyTemplate(services) && LIVE_DJ_ONLY.has(key) ? { ...services, live: true } : services
+  if (!fieldVisible(key, asked)) return false
   if (key === WIFI_DETAILS_FIELD) return wifiDetailsVisible(fields)
   if (key === WEBSITE_PASSWORD_FIELD) return websitePasswordVisible(fields)
   if (key === PHOTOGRAPHER_LATE_FIELD) return (fields.Photographer ?? '').trim() !== ''
   if (key === VIDEOGRAPHER_LATE_FIELD) return (fields.Videographer ?? '').trim() !== ''
   const gate = YES_GATED[key]
   if (gate && !answerIsYes(fields, gate)) return false
-  if (key === 'Private last dance' && services.live && services.dj && !answerIsYes(fields, 'Private last dance wanted')) {
+  if (
+    key === 'Private last dance' &&
+    (services.live && services.dj || usesDjOnlyTemplate(services)) &&
+    !answerIsYes(fields, 'Private last dance wanted')
+  ) {
     return false
   }
   const declined = HIDE_WHEN_NO[key]
@@ -817,16 +859,34 @@ export function visibleSections(
   services: BookedServices,
   answers: Record<string, string> = {},
 ): PlannerSection[] {
-  if (!(services.live && services.dj)) {
-    return plannerSections.flatMap((section) => sectionWithVisibleFields(section, services, answers))
+  if (services.live && services.dj) {
+    return plannerSections.flatMap((section) => {
+      if (LIVE_DJ_SKIP.has(section.id)) return []
+      if (section.id === 'ceremony') return sectionWithVisibleFields(liveDjCeremony(findPlannerField), services, answers)
+      if (section.id === 'cocktail-hour') return sectionWithVisibleFields(liveDjCocktail(findPlannerField), services, answers)
+      if (section.id === 'reception') return sectionWithVisibleFields(liveDjReception(findPlannerField), services, answers)
+      return sectionWithVisibleFields(section, services, answers)
+    })
   }
-  return plannerSections.flatMap((section) => {
-    if (LIVE_DJ_SKIP.has(section.id)) return []
-    if (section.id === 'ceremony') return sectionWithVisibleFields(liveDjCeremony(findPlannerField), services, answers)
-    if (section.id === 'cocktail-hour') return sectionWithVisibleFields(liveDjCocktail(findPlannerField), services, answers)
-    if (section.id === 'reception') return sectionWithVisibleFields(liveDjReception(findPlannerField), services, answers)
-    return sectionWithVisibleFields(section, services, answers)
-  })
+  if (usesDjOnlyTemplate(services)) {
+    return plannerSections.flatMap((section) => {
+      if (LIVE_DJ_SKIP.has(section.id)) return []
+      const built =
+        section.id === 'ceremony'
+          ? djOnlyCeremony(findPlannerField)
+          : section.id === 'cocktail-hour'
+            ? djOnlyCocktail(findPlannerField)
+            : section.id === 'reception'
+              ? djOnlyReception(findPlannerField)
+              : section
+      const withDjPower = {
+        ...built,
+        fields: built.fields.map((field) => (field.options === POWER_OPTIONS ? { ...field, options: DJ_POWER_OPTIONS } : field)),
+      }
+      return sectionWithVisibleFields(withDjPower, services, answers)
+    })
+  }
+  return plannerSections.flatMap((section) => sectionWithVisibleFields(section, services, answers))
 }
 
 /** Not a form field. Uploaded separately and never included in a normal save. */

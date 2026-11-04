@@ -8,6 +8,7 @@ import {
   TextRun,
   WidthType,
 } from 'docx'
+import { usesDjOnlyTemplate } from '../planner/fields'
 import { sheetTitle } from './files'
 import type { PipelineDetail } from './types'
 import { field, parseSongList, songLine } from './songs'
@@ -170,6 +171,22 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
   },
 ]
 
+const DJ_ONLY_SHEET_SKIP = new Set([
+  'Wedding party processional style (instrumental/vocals)',
+  'Bridal processional style',
+  'Recessional style',
+  'Pre-ceremony performance',
+  'Cocktail hour music type',
+  'Dinner music type',
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+])
+
+function hiddenOnDjOnlySheet(detail: PipelineDetail, key: string): boolean {
+  return usesDjOnlyTemplate(detail.services) && DJ_ONLY_SHEET_SKIP.has(key)
+}
+
 export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
   const children: Array<Paragraph | Table> = [
     new Paragraph({
@@ -181,6 +198,10 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
   const used = new Set<string>()
   for (const group of GROUPS) {
     const rows = group.keys.flatMap((key) => {
+      if (hiddenOnDjOnlySheet(detail, key)) {
+        used.add(key)
+        return []
+      }
       const value = key === 'Who did you book?' ? detail.team || field(detail, key) : field(detail, key)
       if (!value) return []
       used.add(key)
@@ -191,6 +212,10 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
       return [[key, shown] as [string, string]]
     })
     const songBlocks = group.keys.flatMap((key) => {
+      if (hiddenOnDjOnlySheet(detail, key)) {
+        used.add(key)
+        return []
+      }
       const value = field(detail, key)
       if (!value || !SONG_KEYS.has(key)) return []
       const lines = readable(key, value).split('\n').filter(Boolean)
@@ -207,7 +232,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
     }
   }
   const leftovers = Object.entries(detail.fields).flatMap(([key, value]) => {
-    if (used.has(key) || !value.trim()) return []
+    if (used.has(key) || !value.trim() || hiddenOnDjOnlySheet(detail, key)) return []
     if (key === 'Couple photo' || key === 'Removed sections' || key.endsWith('section')) return []
     return [[key, readable(key, value)] as [string, string]]
   })

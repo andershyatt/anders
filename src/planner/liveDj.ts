@@ -454,3 +454,61 @@ export function liveDjReception(find: FindField): PlannerSection {
     ],
   }
 }
+
+const DJ_ONLY_SKIP = new Set([
+  'Pre-ceremony performance',
+  'Wedding party processional style (instrumental/vocals)',
+  'Bridal processional style',
+  'Recessional style',
+  'Cocktail hour music type',
+  'Dinner music type',
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+])
+
+const LIVE_VOCALS_OPTION = "Live music with vocals - musician's choice"
+
+/** Drop live-only questions and keep their subsection heading on the next question. */
+function djOnlyFields(fields: PlannerField[]): PlannerField[] {
+  const next: PlannerField[] = []
+  let carry: { heading?: string; note?: string } | null = null
+  for (const field of fields) {
+    if (DJ_ONLY_SKIP.has(field.key)) {
+      if (field.heading || field.note) carry = { heading: field.heading, note: field.note }
+      continue
+    }
+    const kept = carry ? { ...field, heading: field.heading ?? carry.heading, note: field.note ?? carry.note } : field
+    carry = null
+    const djChoice = (value: string | undefined) => value?.replaceAll("Musician's/DJ's choice", "DJ's choice")
+    const rewritten = { ...kept, label: djChoice(kept.label) ?? kept.label, note: djChoice(kept.note), help: djChoice(kept.help) }
+    if (rewritten.key === 'Pre-ceremony music type') {
+      next.push({
+        ...rewritten,
+        help: 'Light instrumental background music from the DJ works well at this time, but we are open to your input.',
+        options: (rewritten.options ?? []).filter((option) => option !== LIVE_VOCALS_OPTION),
+      })
+    } else {
+      next.push(rewritten)
+    }
+  }
+  return next
+}
+
+/** Same ceremony as live + DJ, without the live-performance choices. */
+export function djOnlyCeremony(find: FindField): PlannerSection {
+  const section = liveDjCeremony(find)
+  return { ...section, fields: djOnlyFields(section.fields) }
+}
+
+/** Same cocktail hour as live + DJ, without the live/DJ choice. */
+export function djOnlyCocktail(find: FindField): PlannerSection {
+  const section = liveDjCocktail(find)
+  return { ...section, fields: djOnlyFields(section.fields) }
+}
+
+/** Same reception as live + DJ, without live-versus-DJ questions. */
+export function djOnlyReception(find: FindField): PlannerSection {
+  const section = liveDjReception(find)
+  return { ...section, fields: djOnlyFields(section.fields) }
+}
