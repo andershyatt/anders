@@ -9,7 +9,11 @@ export function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-export function sheetFileName(names: string, kind: 'info sheet' | 'cheat sheet'): string {
+export function sheetTitle(names: string, kind: 'info sheet' | 'cheat sheet'): string {
   const base = names.trim() || 'Couple'
-  return `${base}'s ${kind}.docx`
+  return `${base} ${kind}`
+}
+
+export function sheetFileName(names: string, kind: 'info sheet' | 'cheat sheet'): string {
+  return `${sheetTitle(names, kind)}.docx`
 }
