@@ -33,7 +33,14 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
           </p>
 
           <h2>Song choices</h2>
-          <p>Suggestions for live songs and DJ songs are right here in the app.</p>
+          {dj && !live ? (
+            <p>
+              Suggestions for each part of your day are right here in the app. Keep in mind, you aren’t limited to the
+              suggested songs. You’re welcome to choose your own songs or share a playlist.
+            </p>
+          ) : (
+            <p>Suggestions for live songs and DJ songs are right here in the app.</p>
+          )}
           <p>
             You don't have to pick songs for every section, or fill a list all the way to its maximum. Part of why
             you hire us is so we can use our expertise to turn your preferences into a setlist that fits your taste
@@ -47,7 +54,7 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
               </a>
             </p>
           )}
-          {dj && (
+          {dj && live && (
             <p>For DJ music, the suggestions aren't a limit. You're welcome to share a playlist of your own.</p>
           )}
           {live && (

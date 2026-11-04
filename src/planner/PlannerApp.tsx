@@ -18,6 +18,7 @@ import {
   TIMELINE_PREFILL,
   stripOldTimelineHeader,
   visibleSections,
+  usesDjOnlyTemplate,
   answeredProgress,
   neutralizeField,
   applyRemovedSections,
@@ -1124,10 +1125,11 @@ export default function PlannerApp() {
                           services={services}
                           token={token}
                           repertoireOnly={
+                            !usesDjOnlyTemplate(services) &&
                             Boolean(SONG_LIVE_CONTROL[field.key]) &&
                             isLivePerformance(fields[SONG_LIVE_CONTROL[field.key]] ?? '')
                           }
-                          pickerMode={songListMode(field.key, fields)}
+                          pickerMode={usesDjOnlyTemplate(services) ? 'dj' : songListMode(field.key, fields)}
                           sectionNote={fields[SECTION_NOTE_FIELD[field.key] ?? ''] ?? ''}
                           onChange={(value) => updateField(field.key, value)}
                         />
