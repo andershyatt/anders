@@ -31,17 +31,20 @@
   margin: 0;
 }
 
-.pipeline-top h1 {
+.pipeline-brand h1 {
   font-family: var(--font-nav);
-  font-size: 15px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   color: #fffdf8;
 }
 
-.pipeline-top p {
-  color: rgba(255, 253, 248, 0.72);
-  font-size: 13px;
+.pipeline-brand p {
+  margin-top: 0.1rem;
+  color: rgba(255, 253, 248, 0.78);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .pipeline-top button,
@@ -171,6 +174,36 @@
   border: 1px solid #c4b4a4;
   border-radius: 10px;
   padding: 0.8rem;
+}
+
+.pipeline-card.is-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pipeline-card__summary {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+}
+
+.pipeline-fold {
+  border: 1px solid #c4b4a4;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #3c342c;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+}
+
+.pipeline-updated {
+  margin: 0 0 0.45rem;
+  color: #6f655b;
+  font-size: 12px;
 }
 
 .pipeline-card img,

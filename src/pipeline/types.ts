@@ -22,6 +22,9 @@ export interface PipelineCouple {
   photo: string
   /** Planner answers, when the admin list includes them. Omitted on an older backend. */
   fields?: Record<string, string>
+  /** Couples-sheet stamp. Empty until Apps Script records it. */
+  lastUpdated?: string
+  updatedBy?: '' | 'Anders' | 'couple'
 }
 
 export interface PipelineDetail extends PipelineCouple {

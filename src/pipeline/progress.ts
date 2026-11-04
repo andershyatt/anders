@@ -6,6 +6,7 @@ import {
   cocktailMusicChoices,
   plannerFieldKeys,
   stripOldTimelineHeader,
+  applyRemovedSections,
   visibleSections,
   type BookedServices,
 } from '../planner/fields'
@@ -42,5 +43,5 @@ export function coupleProgress(couple: PipelineCouple): number | null {
   const choices = cocktailMusicChoices(services)
   if (choices.length === 1) fields['Cocktail hour music type'] = choices[0]
   fields = applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(fields, services), services)
-  return answeredProgress(visibleSections(services, fields), fields)
+  return answeredProgress(applyRemovedSections(visibleSections(services, fields), fields), fields)
 }
