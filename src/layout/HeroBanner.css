@@ -1,27 +1,35 @@
 .hero-banner {
   position: relative;
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: stretch;
   overflow: hidden;
+  background-color: #0b0b0b;
+}
+
+.hero-banner__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
 }
 
 .hero-banner--home {
   aspect-ratio: 2000 / 878;
   min-height: 320px;
   max-height: 720px;
-  background-color: #0b0b0b;
 }
 
 .hero-banner--guitar {
   aspect-ratio: 2400 / 1040;
   min-height: 300px;
   max-height: 640px;
-  /* The source is a 3:2 portrait-ish photo; bias the banner crop upward so the
-     guitar and hands stay in frame instead of the bottom of the body. */
-  background-position: center 38%;
-  background-color: #0b0b0b;
+}
+
+/* Desktop keeps a wide crop, biased upward so the guitar and hands stay in frame. */
+.hero-banner--guitar .hero-banner__image {
+  object-position: center 38%;
 }
 
 .hero-banner--home::before {
@@ -96,9 +104,16 @@
     max-height: none;
   }
 
+  /* The photo is 3:2. Matching that ratio shows the whole frame, including the
+     circular logo on the right, instead of zooming in and cutting it off. */
   .hero-banner--guitar {
-    min-height: 220px;
+    aspect-ratio: 3 / 2;
+    min-height: 0;
     max-height: none;
+  }
+
+  .hero-banner--guitar .hero-banner__image {
+    object-position: center center;
   }
 
   .hero-banner__inner {

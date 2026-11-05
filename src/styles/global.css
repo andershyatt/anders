@@ -98,6 +98,34 @@ button {
   margin-right: auto;
 }
 
+.page-title {
+  margin: 0 auto 1.15rem;
+  max-width: 18em;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--color-black);
+}
+
+.page-content:has(> .page-title) {
+  padding-top: 1.5rem;
+}
+
+/* 20% larger than the 15px body copy. Quotes set their own size. */
+.copy-lg {
+  font-size: 1.2em;
+  line-height: 1.55;
+}
+
+.placeholder-note {
+  max-width: 720px;
+  margin: 0 auto 0.85rem;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
 .divider {
   width: 80px;
   height: 1px;
@@ -165,6 +193,14 @@ button {
   margin: 1.75rem auto 2.25rem;
 }
 
+.cta-row--wide {
+  max-width: 960px;
+}
+
+.cta-row--wide .cta-btn {
+  max-width: none;
+}
+
 .cta-btn {
   flex: 1 1 260px;
   max-width: 320px;
@@ -229,5 +265,9 @@ button {
 
   h2 {
     font-size: 18px;
+  }
+
+  .page-title {
+    font-size: 22px;
   }
 }

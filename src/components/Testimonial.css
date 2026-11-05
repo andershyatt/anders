@@ -43,3 +43,26 @@
   text-transform: none;
   letter-spacing: normal;
 }
+
+.testimonial--box {
+  margin: 0;
+  padding: 1.35rem 1.4rem 1.15rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  background: #f4f6f3;
+}
+
+.testimonial--tone-1 {
+  background: #eef3e6;
+}
+
+.testimonial--tone-2 {
+  background: #eef0f3;
+}
+
+.testimonial-list {
+  display: grid;
+  gap: 1rem;
+  max-width: 720px;
+  margin: 0.25rem auto 0.25rem;
+}

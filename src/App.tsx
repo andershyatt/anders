@@ -4,7 +4,7 @@ import Home from './pages/Home'
 import LiveMusic from './pages/LiveMusic'
 import DuoAngella from './pages/DuoAngella'
 import DuoBen from './pages/DuoBen'
-import Video from './pages/Video'
+import Trio from './pages/Trio'
 import Faq from './pages/Faq'
 import Dj from './pages/Dj'
 import DjFaq from './pages/DjFaq'
@@ -23,7 +23,7 @@ export default function App() {
           <Route path="live-music" element={<LiveMusic />} />
           <Route path="duo-angella" element={<DuoAngella />} />
           <Route path="duo-ben" element={<DuoBen />} />
-          <Route path="video" element={<Video />} />
+          <Route path="trio" element={<Trio />} />
           <Route path="faq" element={<Faq />} />
           <Route path="songlist" element={<SongList />} />
           <Route path="playlist" element={<Playlist />} />

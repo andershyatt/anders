@@ -6,7 +6,8 @@ import { homeGallery } from '../data/media'
 export default function LiveMusic() {
   return (
     <div className="page-content">
-      <div className="lead">
+      <h1 className="page-title">Live Music</h1>
+      <div className="lead copy-lg">
         <p>
           As an experienced performer, Anders brings a friendly and inviting energy to every event,
           and is capable of captivating his audience while making them feel immediately at home.
@@ -21,12 +22,31 @@ export default function LiveMusic() {
         </p>
       </div>
 
-      <div className="cta-row">
+      <div className="testimonial-list">
+        <Testimonial
+          tone={0}
+          quote="Anders is awesome to work with! Incredibly talented, easy-going and such an amazing performer! He kept our guest entertained before the ceremony through to our cocktail hour. He really helped set the tone for the rest of the night. Thank you, Anders, for being such an amazing part of our big day!"
+          author="Ashley F."
+          source="The Knot"
+        />
+
+        <Testimonial
+          tone={1}
+          quote="Anders was so professional and easy to work with from the beginning of our party planning right through the last song at our event. Anders always responded to questions that I asked within a very timely basis and was willing to provide entertainment according to my specifics. His performance at our party far exceeded my expectations, which were set high. Our guests could not stop complimenting us on his talent through our party and afterwards as well. Even the staff at the our venue enjoyed his songs so much that they too advised that they would recommend Anders to future clients."
+          author="Sophia W."
+          source="Bash"
+        />
+      </div>
+
+      <div className="cta-row cta-row--wide">
         <Link to="/duo-angella" className="cta-btn">
           Duo &mdash; Anders &amp; Angella
         </Link>
         <Link to="/duo-ben" className="cta-btn">
           Duo &mdash; Anders &amp; Ben
+        </Link>
+        <Link to="/trio" className="cta-btn">
+          Trio &mdash; Anders, Angella &amp; Ben
         </Link>
         <Link to="/songlist" className="cta-btn">
           Song List
@@ -35,18 +55,6 @@ export default function LiveMusic() {
           Book Anders
         </Link>
       </div>
-
-      <Testimonial
-        quote="Anders is awesome to work with! Incredibly talented, easy-going and such an amazing performer! He kept our guest entertained before the ceremony through to our cocktail hour. He really helped set the tone for the rest of the night. Thank you, Anders, for being such an amazing part of our big day!"
-        author="Ashley F."
-        source="The Knot"
-      />
-
-      <Testimonial
-        quote="Anders was so professional and easy to work with from the beginning of our party planning right through the last song at our event. Anders always responded to questions that I asked within a very timely basis and was willing to provide entertainment according to my specifics. His performance at our party far exceeded my expectations, which were set high. Our guests could not stop complimenting us on his talent through our party and afterwards as well. Even the staff at the our venue enjoyed his songs so much that they too advised that they would recommend Anders to future clients."
-        author="Sophia W."
-        source="Bash"
-      />
 
       <Slideshow images={homeGallery} altPrefix="Live music" />
     </div>

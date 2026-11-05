@@ -6,23 +6,28 @@ import { homeGallery, images } from '../data/media'
 export default function DuoBen() {
   return (
     <div className="page-content">
-      <div className="lead">
-        <Testimonial
-          quote="We hired Anders and Ben to perform at our small wedding in PA. They did such a fantastic job, and Anders was great at communicating with us. We changed a few things the day of, and he was flexible and willing to accommodate our changes. I also liked how they could provide a violin for our ceremony, live performances when we wanted that, and then turn full DJ by the end of the night. I recommend Anders+Ben for any wedding and am so happy we went with them!"
-          author="Kelly C"
-        />
-
-        <Testimonial
-          quote="My wife and I found Anders Hyatt music and we could not be more impressed with his professionalism, candor, responsiveness to all our questions. He, along with Ben, performed our wedding on September 9th at Stella and I must say that from the ceremony music, to the camaraderie, to the DJ services the team made our guests feel welcomed and they all stated that Anders and Ben were one of the best ceremony/DJ combo services they ever seen (and heard). I would definitely recommend Anders...you will not be disappointed."
-          author="James C"
-        />
-
+      <h1 className="page-title">Anders &amp; Ben Acoustic Duo</h1>
+      <div className="lead copy-lg">
         <p>
           Anders and Ben have been playing together for years. Ben Rogers is an extremely talented
           violinist and vocalist. As a duo, these two can provide both beautiful instrumental music
           as well as upbeat party music. No matter the occasion, Ben and Anders will be sure to leave
           you and your guests musically satisfied.
         </p>
+      </div>
+
+      <div className="testimonial-list">
+        <Testimonial
+          tone={0}
+          quote="We hired Anders and Ben to perform at our small wedding in PA. They did such a fantastic job, and Anders was great at communicating with us. We changed a few things the day of, and he was flexible and willing to accommodate our changes. I also liked how they could provide a violin for our ceremony, live performances when we wanted that, and then turn full DJ by the end of the night. I recommend Anders+Ben for any wedding and am so happy we went with them!"
+          author="Kelly C"
+        />
+
+        <Testimonial
+          tone={1}
+          quote="My wife and I found Anders Hyatt music and we could not be more impressed with his professionalism, candor, responsiveness to all our questions. He, along with Ben, performed our wedding on September 9th at Stella and I must say that from the ceremony music, to the camaraderie, to the DJ services the team made our guests feel welcomed and they all stated that Anders and Ben were one of the best ceremony/DJ combo services they ever seen (and heard). I would definitely recommend Anders...you will not be disappointed."
+          author="James C"
+        />
       </div>
 
       <div className="cta-row">

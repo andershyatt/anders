@@ -15,10 +15,10 @@ interface RouteMeta {
 
 const routeMeta: Record<string, RouteMeta> = {
   '/': { hero: 'home' },
-  '/live-music': { hero: 'guitar', title: 'Live Music' },
-  '/duo-angella': { hero: 'guitar', title: 'Anders & Angella' },
-  '/duo-ben': { hero: 'guitar', title: 'Anders & Ben' },
-  '/video': { hero: 'guitar', title: 'Video' },
+  '/live-music': { hero: 'guitar' },
+  '/duo-angella': { hero: 'guitar' },
+  '/duo-ben': { hero: 'guitar' },
+  '/trio': { hero: 'guitar' },
   '/faq': { hero: 'guitar', title: 'FAQ' },
   '/songlist': { hero: 'songlist', title: 'Song List' },
   '/playlist': { hero: 'songlist', title: 'Build Playlist' },
