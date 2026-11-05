@@ -9,6 +9,7 @@ import {
 } from './cocktailSongs'
 import { importPlaylist } from './api'
 import RepertoireBrowser from './RepertoireBrowser'
+import { repertoireMatch } from './repertoire'
 import { searchSongs, type SongMatch } from './songSearch'
 import SuggestionPlaylists from './SuggestionPlaylists'
 import type { SuggestionPlaylist, SuggestedSong } from './suggestions'
@@ -35,6 +36,8 @@ interface CocktailSongsProps {
   token?: string
   /** live = repertoire only, dj = Apple Music tools, mix = a toggle between them. */
   pickerMode?: 'live' | 'dj' | 'mix'
+  /** Live-only lists search the repertoire and do not offer the DJ catalog. */
+  repertoireOnly?: boolean
   sectionNote?: string
 }
 
@@ -63,6 +66,7 @@ export default function CocktailSongs({
   allowImport = false,
   token = '',
   pickerMode = 'dj',
+  repertoireOnly = false,
   sectionNote = '',
 }: CocktailSongsProps) {
   const listId = useId()
@@ -127,7 +131,10 @@ export default function CocktailSongs({
     const seq = ++requestSeq.current
     const timer = window.setTimeout(() => {
       setLoading(true)
-      searchSongs(query.trim(), controller.signal)
+      const search = repertoireOnly
+        ? Promise.resolve(repertoireMatch(query.trim()))
+        : searchSongs(query.trim(), controller.signal)
+      search
         .then((matches) => {
           if (seq !== requestSeq.current) return
           setResults(matches)
@@ -147,7 +154,7 @@ export default function CocktailSongs({
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [open, query])
+  }, [open, query, repertoireOnly])
 
   useLayoutEffect(() => {
     if (!retainFocus.current) return
@@ -259,7 +266,7 @@ export default function CocktailSongs({
         })
         return
       }
-      if (typed) addSong(typed)
+      if (!repertoireOnly && typed) addSong(typed)
     }
   }
 
@@ -276,7 +283,7 @@ export default function CocktailSongs({
     >
       <div className="planner-songlist__heading">
         <p className="planner-dance__label" id={`${listId}-label`}>
-          {picker ? "DJ'ed songs" : label}
+          {picker && !repertoireOnly ? "DJ'ed songs" : label}
         </p>
         <p className="planner-songlist__count">
           {countLabel}
@@ -290,7 +297,7 @@ export default function CocktailSongs({
           aria-expanded={showList}
           aria-controls={`${listId}-results`}
           aria-autocomplete="list"
-          placeholder={full ? 'Song list is full' : 'Search Apple Music or type a song'}
+          placeholder={full ? 'Song list is full' : repertoireOnly ? "Search Anders's repertoire" : 'Search Apple Music or type a song'}
           ref={searchRef}
           value={query}
           disabled={full}

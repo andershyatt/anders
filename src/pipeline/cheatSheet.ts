@@ -2,7 +2,7 @@ import JSZip from 'jszip'
 import templateUrl from './cheat-sheet-template.docx?url'
 import { formatCoupleDate } from '../planner/format'
 import type { PipelineDetail } from './types'
-import { usesDjOnlyTemplate } from '../planner/fields'
+import { usesDjOnlyTemplate, usesLiveOnlyTemplate } from '../planner/fields'
 import { sheetTitle } from './files'
 import { field, parseSongList, songLine } from './songs'
 
@@ -71,6 +71,7 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
   }
 
   const djOnly = usesDjOnlyTemplate(detail.services)
+  const liveOnly = usesLiveOnlyTemplate(detail.services)
   const ceremonyNotes = [
     ['Officiant microphone', 'Officiant microphone'],
     ['Other ceremony speakers', 'Other ceremony speakers'],
@@ -101,7 +102,7 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
     {
       label: "COUPLE'S FIRST DANCE",
       lines: linesOf(field(detail, "Couple's first dance song")).map((line) => {
-        const format = djOnly ? '' : field(detail, 'First dance format (live/DJ, full/shortened)')
+        const format = djOnly || liveOnly ? '' : field(detail, 'First dance format (live/DJ, full/shortened)')
         return format ? `${line} [${format}]` : line
       }),
     },
@@ -128,7 +129,17 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
     { label: 'LAST SONG OF THE NIGHT', lines: linesOf(field(detail, 'Last song of the night with guests')) },
     { label: 'DO NOT PLAY', lines: linesOf(field(detail, 'Do not play songs')).concat(linesOf(field(detail, 'Do-not-play list'))).slice(0, 20) },
   ]
+  const liveOnlySkip = new Set([
+    'INTRODUCTIONS',
+    'DJ NOTES',
+    'MUST PLAYS',
+    'OPEN DANCING',
+    'SLOW SONGS',
+    'LAST SONG OF THE NIGHT',
+    'DO NOT PLAY',
+  ])
   for (const section of sections) {
+    if (liveOnly && liveOnlySkip.has(section.label)) continue
     if (section.lines.length === 0) continue
     blocks.push(blank(), paragraph(section.label, 'body'))
     for (const line of section.lines) blocks.push(paragraph(line, 'bullet'))

@@ -8,7 +8,7 @@ import {
   TextRun,
   WidthType,
 } from 'docx'
-import { usesDjOnlyTemplate } from '../planner/fields'
+import { usesDjOnlyTemplate, usesLiveOnlyTemplate } from '../planner/fields'
 import { sheetTitle } from './files'
 import type { PipelineDetail } from './types'
 import { field, parseSongList, songLine } from './songs'
@@ -187,6 +187,46 @@ function hiddenOnDjOnlySheet(detail: PipelineDetail, key: string): boolean {
   return usesDjOnlyTemplate(detail.services) && DJ_ONLY_SHEET_SKIP.has(key)
 }
 
+const LIVE_ONLY_SHEET_SKIP = new Set([
+  'High school graduation year(s)',
+  'Crowd party rating',
+  'Internet access',
+  'WiFi network and password',
+  'Cell reception',
+  'Cocktail hour music type',
+  'Dinner music type',
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+  'Introductions happening',
+  'Who is being introduced',
+  'Couple introduction name',
+  'Introduction songs',
+  'Introductions',
+  'Clean music edits',
+  'Open dancing Anders chooses',
+  'Open dancing songs',
+  'DJ music requests',
+  'Slow songs preference',
+  'Slow dance songs',
+  'Dance floor lighting',
+  'Last song of the night with guests',
+  'Private last dance wanted',
+  'Private last dance',
+  'Do not play songs',
+  'Do-not-play list',
+  'Songs to learn',
+  'Things to remember',
+])
+
+function hiddenOnLiveOnlySheet(detail: PipelineDetail, key: string): boolean {
+  return usesLiveOnlyTemplate(detail.services) && LIVE_ONLY_SHEET_SKIP.has(key)
+}
+
+function hiddenOnSheet(detail: PipelineDetail, key: string): boolean {
+  return hiddenOnDjOnlySheet(detail, key) || hiddenOnLiveOnlySheet(detail, key)
+}
+
 export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
   const children: Array<Paragraph | Table> = [
     new Paragraph({
@@ -198,7 +238,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
   const used = new Set<string>()
   for (const group of GROUPS) {
     const rows = group.keys.flatMap((key) => {
-      if (hiddenOnDjOnlySheet(detail, key)) {
+      if (hiddenOnSheet(detail, key)) {
         used.add(key)
         return []
       }
@@ -212,7 +252,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
       return [[key, shown] as [string, string]]
     })
     const songBlocks = group.keys.flatMap((key) => {
-      if (hiddenOnDjOnlySheet(detail, key)) {
+      if (hiddenOnSheet(detail, key)) {
         used.add(key)
         return []
       }
@@ -232,7 +272,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
     }
   }
   const leftovers = Object.entries(detail.fields).flatMap(([key, value]) => {
-    if (used.has(key) || !value.trim() || hiddenOnDjOnlySheet(detail, key)) return []
+    if (used.has(key) || !value.trim() || hiddenOnSheet(detail, key)) return []
     if (key === 'Couple photo' || key === 'Removed sections' || key.endsWith('section')) return []
     return [[key, readable(key, value)] as [string, string]]
   })

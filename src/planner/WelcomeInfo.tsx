@@ -38,6 +38,8 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
               Suggestions for each part of your day are right here in the app. Keep in mind, you aren’t limited to the
               suggested songs. You’re welcome to choose your own songs or share a playlist.
             </p>
+          ) : live && !dj ? (
+            <p>Suggestions for live songs are right here in the app.</p>
           ) : (
             <p>Suggestions for live songs and DJ songs are right here in the app.</p>
           )}

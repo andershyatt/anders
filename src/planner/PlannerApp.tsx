@@ -19,6 +19,7 @@ import {
   stripOldTimelineHeader,
   visibleSections,
   usesDjOnlyTemplate,
+  usesLiveOnlyTemplate,
   answeredProgress,
   DJ_POWER_OPTION,
   MUSICIAN_POWER_OPTION,
@@ -347,6 +348,7 @@ function FieldControl({
         allowImport={suggestionIds(field.suggestions).some((id) => id === 'cocktail-dinner' || id === 'open-dancing')}
         token={token}
         pickerMode={pickerMode}
+        repertoireOnly={repertoireOnly}
         sectionNote={sectionNote}
       />
     )
@@ -1130,11 +1132,18 @@ export default function PlannerApp() {
                           services={services}
                           token={token}
                           repertoireOnly={
-                            !usesDjOnlyTemplate(services) &&
-                            Boolean(SONG_LIVE_CONTROL[field.key]) &&
-                            isLivePerformance(fields[SONG_LIVE_CONTROL[field.key]] ?? '')
+                            usesLiveOnlyTemplate(services) ||
+                            (!usesDjOnlyTemplate(services) &&
+                              Boolean(SONG_LIVE_CONTROL[field.key]) &&
+                              isLivePerformance(fields[SONG_LIVE_CONTROL[field.key]] ?? ''))
                           }
-                          pickerMode={usesDjOnlyTemplate(services) ? 'dj' : songListMode(field.key, fields)}
+                          pickerMode={
+                            usesLiveOnlyTemplate(services)
+                              ? 'live'
+                              : usesDjOnlyTemplate(services)
+                                ? 'dj'
+                                : songListMode(field.key, fields)
+                          }
                           sectionNote={fields[SECTION_NOTE_FIELD[field.key] ?? ''] ?? ''}
                           onChange={(value) => updateField(field.key, value)}
                         />

@@ -1,3 +1,4 @@
+import { usesLiveOnlyTemplate } from '../planner/fields'
 import { isLiveOrMixture, isLivePerformance } from '../planner/repertoire'
 import type { PipelineDetail } from './types'
 
@@ -78,36 +79,47 @@ function single(title: string, value: string): SongGroup | null {
   return group(title, songs)
 }
 
+/** Live-only couples have no DJ, so every kept song is a live song even when the style says Instrumental or Vocals. */
+function treatAsLive(detail: PipelineDetail, value: string): boolean {
+  if (usesLiveOnlyTemplate(detail.services)) return true
+  return isLivePerformance(value)
+}
+
 /** Text the Make Serato Crate shortcut receives, and the clipboard copy. */
 export function seratoText(detail: PipelineDetail): string {
+  const liveOnly = usesLiveOnlyTemplate(detail.services)
   const groups: Array<SongGroup | null> = []
   const cocktailType = field(detail, 'Cocktail hour music type')
   const dinnerType = field(detail, 'Dinner music type')
-  if (!isLivePerformance(cocktailType)) groups.push(group('Cocktail hour', parseSongList(field(detail, 'Cocktail hour songs'))))
-  if (!isLivePerformance(dinnerType)) groups.push(group('Dinner', parseSongList(field(detail, 'Dinner songs'))))
-  groups.push(group('Open dancing', parseSongList(field(detail, 'Open dancing songs'))))
-  groups.push(group('Slow songs', parseSongList(field(detail, 'Slow dance songs'))))
-  groups.push(single('Introductions', field(detail, 'Introduction songs')))
-  if (!isLivePerformance(field(detail, 'Wedding party processional style (instrumental/vocals)'))) {
+  if (!treatAsLive(detail, cocktailType)) groups.push(group('Cocktail hour', parseSongList(field(detail, 'Cocktail hour songs'))))
+  if (!treatAsLive(detail, dinnerType)) groups.push(group('Dinner', parseSongList(field(detail, 'Dinner songs'))))
+  if (!liveOnly) {
+    groups.push(group('Open dancing', parseSongList(field(detail, 'Open dancing songs'))))
+    groups.push(group('Slow songs', parseSongList(field(detail, 'Slow dance songs'))))
+    groups.push(single('Introductions', field(detail, 'Introduction songs')))
+  }
+  if (!treatAsLive(detail, field(detail, 'Wedding party processional style (instrumental/vocals)'))) {
     groups.push(single('Wedding party processional', field(detail, 'Wedding party processional song')))
   }
-  if (!isLivePerformance(field(detail, 'Bridal processional style'))) {
+  if (!treatAsLive(detail, field(detail, 'Bridal processional style'))) {
     groups.push(single('Bridal processional', field(detail, 'Bridal processional song')))
   }
-  if (!isLivePerformance(field(detail, 'Recessional style'))) {
+  if (!treatAsLive(detail, field(detail, 'Recessional style'))) {
     groups.push(single('Recessional', field(detail, 'Recessional song')))
   }
-  if (!isLivePerformance(field(detail, 'First dance format (live/DJ, full/shortened)'))) {
+  if (!treatAsLive(detail, field(detail, 'First dance format (live/DJ, full/shortened)'))) {
     groups.push(single("Couple's first dance", field(detail, "Couple's first dance song")))
   }
-  if (!isLivePerformance(field(detail, 'Father/daughter format'))) {
+  if (!treatAsLive(detail, field(detail, 'Father/daughter format'))) {
     groups.push(single('Father-daughter dance', field(detail, 'Father/daughter dance song')))
   }
-  if (!isLivePerformance(field(detail, 'Mother/son format'))) {
+  if (!treatAsLive(detail, field(detail, 'Mother/son format'))) {
     groups.push(single('Mother-son dance', field(detail, 'Mother/son dance song')))
   }
-  groups.push(single('Last song of the night', field(detail, 'Last song of the night with guests')))
-  groups.push(single('Private last dance', field(detail, 'Private last dance')))
+  if (!liveOnly) {
+    groups.push(single('Last song of the night', field(detail, 'Last song of the night with guests')))
+    groups.push(single('Private last dance', field(detail, 'Private last dance')))
+  }
   return groups
     .filter((item): item is SongGroup => item !== null && item.lines.length > 0)
     .map((item) => `${item.title.toUpperCase()}\n${item.lines.join('\n')}`)
@@ -117,31 +129,31 @@ export function seratoText(detail: PipelineDetail): string {
 /** Text the Tag Song Charts shortcut receives. */
 export function liveChartText(detail: PipelineDetail): string {
   const groups: Array<SongGroup | null> = []
-  if (isLivePerformance(field(detail, 'Wedding party processional style (instrumental/vocals)'))) {
+  if (treatAsLive(detail, field(detail, 'Wedding party processional style (instrumental/vocals)'))) {
     groups.push(single('Wedding party processional', field(detail, 'Wedding party processional song')))
   }
-  if (isLivePerformance(field(detail, 'Bridal processional style'))) {
+  if (treatAsLive(detail, field(detail, 'Bridal processional style'))) {
     groups.push(single('Bridal processional', field(detail, 'Bridal processional song')))
   }
-  if (isLivePerformance(field(detail, 'Recessional style'))) {
+  if (treatAsLive(detail, field(detail, 'Recessional style'))) {
     groups.push(single('Recessional', field(detail, 'Recessional song')))
   }
-  if (isLivePerformance(field(detail, 'First dance format (live/DJ, full/shortened)'))) {
+  if (treatAsLive(detail, field(detail, 'First dance format (live/DJ, full/shortened)'))) {
     groups.push(single("Couple's first dance", field(detail, "Couple's first dance song")))
   }
-  if (isLivePerformance(field(detail, 'Father/daughter format'))) {
+  if (treatAsLive(detail, field(detail, 'Father/daughter format'))) {
     groups.push(single('Father-daughter dance', field(detail, 'Father/daughter dance song')))
   }
-  if (isLivePerformance(field(detail, 'Mother/son format'))) {
+  if (treatAsLive(detail, field(detail, 'Mother/son format'))) {
     groups.push(single('Mother-son dance', field(detail, 'Mother/son dance song')))
   }
   const cocktailType = field(detail, 'Cocktail hour music type')
-  if (isLivePerformance(cocktailType) || isLiveOrMixture(cocktailType)) {
-    groups.push(group(isLiveOrMixture(cocktailType) && !isLivePerformance(cocktailType) ? 'Cocktail hour (mixture)' : 'Cocktail hour', parseSongList(field(detail, 'Cocktail hour songs'))))
+  if (treatAsLive(detail, cocktailType) || isLiveOrMixture(cocktailType)) {
+    groups.push(group(isLiveOrMixture(cocktailType) && !treatAsLive(detail, cocktailType) ? 'Cocktail hour (mixture)' : 'Cocktail hour', parseSongList(field(detail, 'Cocktail hour songs'))))
   }
   const dinnerType = field(detail, 'Dinner music type')
-  if (isLivePerformance(dinnerType) || isLiveOrMixture(dinnerType)) {
-    groups.push(group(isLiveOrMixture(dinnerType) && !isLivePerformance(dinnerType) ? 'Dinner (mixture)' : 'Dinner', parseSongList(field(detail, 'Dinner songs'))))
+  if (treatAsLive(detail, dinnerType) || isLiveOrMixture(dinnerType)) {
+    groups.push(group(isLiveOrMixture(dinnerType) && !treatAsLive(detail, dinnerType) ? 'Dinner (mixture)' : 'Dinner', parseSongList(field(detail, 'Dinner songs'))))
   }
   return groups
     .filter((item): item is SongGroup => item !== null && item.lines.length > 0)
@@ -164,8 +176,17 @@ export function couplePlaylistName(names: string, section: string): string {
   return `${compact} ${section}`.trim()
 }
 
+const LIVE_ONLY_PLAYLIST_SKIP = new Set([
+  'Open dancing songs',
+  'Do not play songs',
+  'Slow dance songs',
+  'Introduction songs',
+])
+
 export function playlistChoices(detail: PipelineDetail): Array<{ key: string; label: string; songs: ListedSong[] }> {
+  const liveOnly = usesLiveOnlyTemplate(detail.services)
   return PLAYLIST_LISTS.flatMap((list) => {
+    if (liveOnly && LIVE_ONLY_PLAYLIST_SKIP.has(list.key)) return []
     const songs = parseSongList(field(detail, list.key))
     return songs.length ? [{ ...list, songs }] : []
   })

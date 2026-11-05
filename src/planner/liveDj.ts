@@ -512,3 +512,83 @@ export function djOnlyReception(find: FindField): PlannerSection {
   const section = liveDjReception(find)
   return { ...section, fields: djOnlyFields(section.fields) }
 }
+
+const LIVE_ONLY_SECTION_HEADINGS = new Set([
+  'Introductions',
+  'Open Dancing',
+  'Slow Dance Songs',
+  'Dance Floor Lighting',
+  'Last song of the night (with guests)',
+  'Private last dance',
+  'Do Not Play',
+])
+
+const LIVE_ONLY_SKIP_KEYS = new Set([
+  'Introductions section',
+  'Cocktail hour music type',
+  'Dinner music type',
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+])
+
+/** Same questions as live + DJ, with DJ choices and DJ sections left out. */
+function liveOnlyFields(fields: PlannerField[]): PlannerField[] {
+  const next: PlannerField[] = []
+  let carry: { heading?: string; note?: string } | null = null
+  let skipping = false
+  for (const field of fields) {
+    if (field.heading && LIVE_ONLY_SECTION_HEADINGS.has(field.heading)) {
+      skipping = true
+      continue
+    }
+    if (field.heading && skipping) skipping = false
+    if (
+      skipping &&
+      field.kind === 'fold' &&
+      field.foldLabel &&
+      !LIVE_ONLY_SECTION_HEADINGS.has(field.foldLabel)
+    ) {
+      skipping = false
+    }
+    if (skipping || LIVE_ONLY_SKIP_KEYS.has(field.key)) {
+      if (!skipping && (field.heading || field.note)) carry = { heading: field.heading, note: field.note }
+      continue
+    }
+    const kept = carry ? { ...field, heading: field.heading ?? carry.heading, note: field.note ?? carry.note } : field
+    carry = null
+    const musicianChoice = (value: string | undefined) => value?.replaceAll("Musician's/DJ's choice", "Musician's choice")
+    let rewritten: PlannerField = {
+      ...kept,
+      label: musicianChoice(kept.label) ?? kept.label,
+      note: musicianChoice(kept.note),
+      help: musicianChoice(kept.help),
+    }
+    if (rewritten.key === 'Pre-ceremony performance') {
+      rewritten = {
+        ...rewritten,
+        options: (rewritten.options ?? []).filter((option) => option !== 'DJ playing music'),
+      }
+    }
+    next.push(rewritten)
+  }
+  return next
+}
+
+/** Same ceremony as live + DJ, without DJ performance choices. */
+export function liveOnlyCeremony(find: FindField): PlannerSection {
+  const section = liveDjCeremony(find)
+  return { ...section, fields: liveOnlyFields(section.fields) }
+}
+
+/** Same cocktail hour as live + DJ, without the live/DJ choice. */
+export function liveOnlyCocktail(find: FindField): PlannerSection {
+  const section = liveDjCocktail(find)
+  return { ...section, fields: liveOnlyFields(section.fields) }
+}
+
+/** Same reception as live + DJ, without the DJ sections and live/DJ questions. */
+export function liveOnlyReception(find: FindField): PlannerSection {
+  const section = liveDjReception(find)
+  return { ...section, fields: liveOnlyFields(section.fields) }
+}
