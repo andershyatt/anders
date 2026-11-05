@@ -118,6 +118,15 @@
   text-transform: uppercase;
 }
 
+.planner-top p.planner-top__names {
+  margin-top: 0.15rem;
+  color: #fffdf8;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
 .planner-top p.planner-top__place {
   color: #e4c98a;
   letter-spacing: 0.02em;

@@ -462,12 +462,20 @@ const DJ_ONLY_SKIP = new Set([
   'Recessional style',
   'Cocktail hour music type',
   'Dinner music type',
+])
+
+const LIVE_VOCALS_OPTION = "Live music with vocals - musician's choice"
+
+const DANCE_LENGTH_KEYS = new Set([
   'First dance format (live/DJ, full/shortened)',
   'Father/daughter format',
   'Mother/son format',
 ])
 
-const LIVE_VOCALS_OPTION = "Live music with vocals - musician's choice"
+function asLengthQuestion(field: PlannerField): PlannerField {
+  if (!DANCE_LENGTH_KEYS.has(field.key)) return field
+  return { ...field, kind: 'yesno', label: 'Full length or shortened?', options: ['Full', 'Shortened'] }
+}
 
 /** Drop live-only questions and keep their subsection heading on the next question. */
 function djOnlyFields(fields: PlannerField[]): PlannerField[] {
@@ -489,7 +497,7 @@ function djOnlyFields(fields: PlannerField[]): PlannerField[] {
         options: (rewritten.options ?? []).filter((option) => option !== LIVE_VOCALS_OPTION),
       })
     } else {
-      next.push(rewritten)
+      next.push(asLengthQuestion(rewritten))
     }
   }
   return next
@@ -527,9 +535,6 @@ const LIVE_ONLY_SKIP_KEYS = new Set([
   'Introductions section',
   'Cocktail hour music type',
   'Dinner music type',
-  'First dance format (live/DJ, full/shortened)',
-  'Father/daughter format',
-  'Mother/son format',
 ])
 
 /** Same questions as live + DJ, with DJ choices and DJ sections left out. */
@@ -570,7 +575,7 @@ function liveOnlyFields(fields: PlannerField[]): PlannerField[] {
         options: (rewritten.options ?? []).filter((option) => option !== 'DJ playing music'),
       }
     }
-    next.push(rewritten)
+    next.push(asLengthQuestion(rewritten))
   }
   return next
 }

@@ -7,7 +7,9 @@ import {
   ceremonyStyleOptions,
   ceremonyStyleValue,
   applyDjCeremonyStyleLabels,
+  applyDanceLengthAnswers,
   applyLiveOnlyPreCeremony,
+  COLLAPSED_SECTIONS_FIELD,
   ALL_SERVICES,
   COUPLE_PHOTO_FIELD,
   EMPTY_BASICS,
@@ -558,8 +560,11 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
   const services = preview ?? result.services
   const musicChoices = cocktailMusicChoices(services)
   if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
-  const fields = applyLiveOnlyPreCeremony(
-    applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services),
+  const fields = applyDanceLengthAnswers(
+    applyLiveOnlyPreCeremony(
+      applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services),
+      services,
+    ),
     services,
   )
   const photo = result.fields[COUPLE_PHOTO_FIELD]
@@ -805,7 +810,10 @@ export default function PlannerApp() {
   }, [services, fields, genderNeutral])
   const shownSections = useMemo(() => applyRemovedSections(sections, fields), [sections, fields])
   const removedSections = useMemo(() => removedSectionEntries(sections, fields), [sections, fields])
-  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set())
+  const collapsedIds = useMemo(
+    () => parseRemovedSections(fields[COLLAPSED_SECTIONS_FIELD]),
+    [fields],
+  )
   const progress = answeredProgress(shownSections, fields)
   const savedLabel = formatSavedAt(lastUpdated)
   const [place, setPlace] = useState('')
@@ -868,12 +876,10 @@ export default function PlannerApp() {
   pipelineHome.hash = ''
 
   function toggleCollapsed(id: string) {
-    setCollapsedIds((current) => {
-      const next = new Set(current)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+    const next = parseRemovedSections(fields[COLLAPSED_SECTIONS_FIELD])
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    updateField(COLLAPSED_SECTIONS_FIELD, serializeRemovedSections(next))
   }
 
   function removeManaged(id: string) {
@@ -895,6 +901,7 @@ export default function PlannerApp() {
         <SectionMenu sections={status.kind === 'ready' ? shownSections : []} />
         <div className="planner-top__title">
           <a href="../">Anders Hyatt Music</a>
+          {basics.names.trim() && <p className="planner-top__names">{basics.names.trim()}</p>}
           <p>Wedding planner</p>
           {place && <p className="planner-top__place">{place}</p>}
         </div>
