@@ -7,6 +7,7 @@ import {
   ceremonyStyleOptions,
   ceremonyStyleValue,
   applyDjCeremonyStyleLabels,
+  applyLiveOnlyPreCeremony,
   ALL_SERVICES,
   COUPLE_PHOTO_FIELD,
   EMPTY_BASICS,
@@ -22,6 +23,7 @@ import {
   usesLiveOnlyTemplate,
   answeredProgress,
   DJ_POWER_OPTION,
+  LIVE_POWER_OPTION,
   MUSICIAN_POWER_OPTION,
   neutralizeField,
   applyRemovedSections,
@@ -384,7 +386,11 @@ function FieldControl({
   if (field.kind === 'choice-other') {
     const options = field.options ?? []
     const choiceValue =
-      options.includes(DJ_POWER_OPTION) && value.trim() === MUSICIAN_POWER_OPTION ? DJ_POWER_OPTION : value
+      options.includes(DJ_POWER_OPTION) && value.trim() === MUSICIAN_POWER_OPTION
+        ? DJ_POWER_OPTION
+        : options.includes(LIVE_POWER_OPTION) && value.trim() === MUSICIAN_POWER_OPTION
+          ? LIVE_POWER_OPTION
+          : value
     return (
       <ChoiceWithOther
         name={id}
@@ -552,7 +558,10 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
   const services = preview ?? result.services
   const musicChoices = cocktailMusicChoices(services)
   if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
-  const fields = applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services)
+  const fields = applyLiveOnlyPreCeremony(
+    applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services),
+    services,
+  )
   const photo = result.fields[COUPLE_PHOTO_FIELD]
   return {
     fields,

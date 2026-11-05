@@ -11,6 +11,7 @@ import {
   liveOnlyCocktail,
   liveOnlyReception,
 } from './liveDj'
+import { parseChecks, serializeChecks } from './checks'
 import { PHOTO_BOOTH_FIELDS } from './photoBooth'
 import type { SuggestionListId } from './suggestions'
 
@@ -83,6 +84,15 @@ export const DJ_POWER_OPTIONS = [
 
 export const MUSICIAN_POWER_OPTION = POWER_OPTIONS[1]
 export const DJ_POWER_OPTION = DJ_POWER_OPTIONS[1]
+
+/** Live-only wording. The musician/DJ sentence is still treated as this same answer. */
+export const LIVE_POWER_OPTIONS = [
+  'Yes, there is power available.',
+  'No, the musician will need a battery powered option.',
+  'Please check with the venue.',
+] as const
+
+export const LIVE_POWER_OPTION = LIVE_POWER_OPTIONS[1]
 
 export const COCKTAIL_LOCATION_OPTIONS = [
   'Same area as the ceremony',
@@ -949,7 +959,11 @@ export function visibleSections(
             : section.id === 'reception'
               ? liveOnlyReception(findPlannerField)
               : section
-      return sectionWithVisibleFields(built, services, answers)
+      const withLivePower = {
+        ...built,
+        fields: built.fields.map((field) => (field.options === POWER_OPTIONS ? { ...field, options: LIVE_POWER_OPTIONS } : field)),
+      }
+      return sectionWithVisibleFields(withLivePower, services, answers)
     })
   }
   return plannerSections.flatMap((section) => sectionWithVisibleFields(section, services, answers))
@@ -961,12 +975,35 @@ export const COUPLE_PHOTO_FIELD = 'Couple photo'
 /** Not a form answer. Uploaded separately and never included in a normal save. */
 export const FLOOR_PLAN_FIELD = 'Floor plan PDF'
 
+const PRE_CEREMONY_PERFORMANCE = 'Pre-ceremony performance'
+const REMOVED_PRE_CEREMONY = 'dj playing music'
+const LIVE_ONLY_PRE_CEREMONY = ['Instrumental live music', 'Live music with vocals', 'Up to Anders']
+
+/** Drop a saved DJ pre-ceremony choice once that option is no longer offered. */
+export function applyLiveOnlyPreCeremony(
+  fields: Record<string, string>,
+  services: BookedServices,
+): Record<string, string> {
+  if (!usesLiveOnlyTemplate(services)) return fields
+  const raw = fields[PRE_CEREMONY_PERFORMANCE] ?? ''
+  if (!raw.toLowerCase().includes(REMOVED_PRE_CEREMONY)) return fields
+  const parsed = parseChecks(raw, LIVE_ONLY_PRE_CEREMONY)
+  const other = parsed.other
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '' && item.toLowerCase() !== REMOVED_PRE_CEREMONY)
+    .join(', ')
+  const next = serializeChecks(parsed.selected, other)
+  if (next === raw) return fields
+  return { ...fields, [PRE_CEREMONY_PERFORMANCE]: next }
+}
+
 /** Hidden answers are omitted so a save does not wipe them with empty strings. */
 export function fieldsForSave(
   fields: Record<string, string>,
   services: BookedServices,
 ): Record<string, string> {
-  const normalized = applyDjCeremonyStyleLabels(fields, services)
+  const normalized = applyLiveOnlyPreCeremony(applyDjCeremonyStyleLabels(fields, services), services)
   return Object.fromEntries(
     Object.entries(normalized).filter(
       ([key]) =>
@@ -1024,12 +1061,22 @@ const LIVE_DJ_CEREMONY_ALIASES: Record<string, string> = {
   'dj - vocals': 'DJ',
 }
 
+/** Live-only couples no longer choose a DJ. The combined DJ answer has no vocal split, so it stays instrumental. */
+const LIVE_ONLY_CEREMONY_ALIASES: Record<string, string> = {
+  'live - instrumental': 'Instrumental',
+  'live - vocals': 'Vocals',
+  'dj - instrumental': 'Instrumental',
+  'dj - vocals': 'Vocals',
+  dj: 'Instrumental',
+}
+
 /** Older saves used separate DJ instrumental and vocal labels. Those map onto the choice shown now. */
 export function ceremonyStyleValue(key: string, value: string, services: BookedServices): string {
   if (!CEREMONY_STYLE_KEYS.has(key)) return value
   const saved = value.trim().toLowerCase()
   if (services.live && services.dj) return LIVE_DJ_CEREMONY_ALIASES[saved] ?? value
   if (!services.live && services.dj) return DJ_CEREMONY_STYLE_ALIASES[saved] ?? value
+  if (usesLiveOnlyTemplate(services)) return LIVE_ONLY_CEREMONY_ALIASES[saved] ?? value
   return value
 }
 
