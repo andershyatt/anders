@@ -202,6 +202,16 @@ export async function loadPlanner(token: string): Promise<PlannerLoadResult> {
   }
 }
 
+/** Present only when Anders opened this planner from the pipeline. */
+function plannerAdminKey(): string {
+  if (new URLSearchParams(window.location.search).get('from') !== 'pipeline') return ''
+  try {
+    return localStorage.getItem('anders-pipeline-admin-key')?.trim() ?? ''
+  } catch {
+    return ''
+  }
+}
+
 export async function savePlanner(
   token: string,
   fields: Record<string, string>,
@@ -213,7 +223,7 @@ export async function savePlanner(
       const response = await fetch(PLANNER_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ c: token, fields }),
+        body: JSON.stringify({ c: token, fields, adminKey: plannerAdminKey() }),
       })
       const parsed = parseSave(await readJson(response))
       last = parsed ?? { ok: false, error: 'server_error' }
@@ -267,6 +277,7 @@ export async function uploadCouplePhoto(
         filename: file.filename,
         mimeType: file.mimeType,
         data: file.data,
+        adminKey: plannerAdminKey(),
       }),
     })
     const parsed = parsePhotoUpload(await readJson(response))
@@ -291,6 +302,7 @@ async function uploadNamedPdf(
         c: token,
         name: file.name,
         dataUrl: file.dataUrl,
+        adminKey: plannerAdminKey(),
       }),
     })
     const record = asRecord(await readJson(response))

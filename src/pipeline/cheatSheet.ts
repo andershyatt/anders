@@ -102,7 +102,7 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
     {
       label: "COUPLE'S FIRST DANCE",
       lines: linesOf(field(detail, "Couple's first dance song")).map((line) => {
-        const format = djOnly || liveOnly ? '' : field(detail, 'First dance format (live/DJ, full/shortened)')
+        const format = field(detail, 'First dance format (live/DJ, full/shortened)')
         return format ? `${line} [${format}]` : line
       }),
     },
@@ -110,8 +110,14 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
     {
       label: 'PARENT DANCES',
       lines: [
-        ...linesOf(field(detail, 'Father/daughter dance song')).map((line) => `Father-daughter - ${line}`),
-        ...linesOf(field(detail, 'Mother/son dance song')).map((line) => `Mother-son - ${line}`),
+        ...linesOf(field(detail, 'Father/daughter dance song')).map((line) => {
+          const format = field(detail, 'Father/daughter format')
+          return format ? `Father-daughter - ${line} [${format}]` : `Father-daughter - ${line}`
+        }),
+        ...linesOf(field(detail, 'Mother/son dance song')).map((line) => {
+          const format = field(detail, 'Mother/son format')
+          return format ? `Mother-son - ${line} [${format}]` : `Mother-son - ${line}`
+        }),
       ],
     },
     {

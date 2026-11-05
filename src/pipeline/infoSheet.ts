@@ -183,9 +183,6 @@ const DJ_ONLY_SHEET_SKIP = new Set([
   'Pre-ceremony performance',
   'Cocktail hour music type',
   'Dinner music type',
-  'First dance format (live/DJ, full/shortened)',
-  'Father/daughter format',
-  'Mother/son format',
 ])
 
 function hiddenOnDjOnlySheet(detail: PipelineDetail, key: string): boolean {
@@ -200,9 +197,6 @@ const LIVE_ONLY_SHEET_SKIP = new Set([
   'Cell reception',
   'Cocktail hour music type',
   'Dinner music type',
-  'First dance format (live/DJ, full/shortened)',
-  'Father/daughter format',
-  'Mother/son format',
   'Introductions happening',
   'Who is being introduced',
   'Couple introduction name',
@@ -278,7 +272,15 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
   }
   const leftovers = Object.entries(detail.fields).flatMap(([key, value]) => {
     if (used.has(key) || !value.trim() || hiddenOnSheet(detail, key)) return []
-    if (key === 'Couple photo' || key === 'Removed sections' || key.endsWith('section')) return []
+    if (
+      key === 'Couple photo' ||
+      key === 'Removed sections' ||
+      key === 'Collapsed sections' ||
+      key === 'How late is the videographer scheduled?' ||
+      key.endsWith('section')
+    ) {
+      return []
+    }
     return [[key, readable(key, value)] as [string, string]]
   })
   if (leftovers.length) {

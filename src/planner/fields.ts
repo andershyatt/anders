@@ -110,8 +110,8 @@ export const plannerSections: PlannerSection[] = [
   },
   {
     id: 'wedding-details',
-    title: 'Wedding Details',
-    blurb: 'Website, sharing, colors, dress, and how lively you expect the room to be.',
+    title: 'Details',
+    blurb: '',
     fields: [
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
       {
@@ -362,6 +362,7 @@ export const plannerSections: PlannerSection[] = [
 ]
 
 export const REMOVED_SECTIONS_FIELD = 'Removed sections'
+export const COLLAPSED_SECTIONS_FIELD = 'Collapsed sections'
 export const PHOTOGRAPHER_LATE_FIELD = 'How late is the photographer scheduled?'
 export const VIDEOGRAPHER_LATE_FIELD = 'How late is the videographer scheduled?'
 
@@ -381,6 +382,7 @@ export const plannerFieldKeys: string[] = [
   ...LIVE_ONLY_EXTRA.map((field) => field.key),
   ...PHOTO_BOOTH_FIELDS.map((field) => field.key),
   REMOVED_SECTIONS_FIELD,
+  COLLAPSED_SECTIONS_FIELD,
 ]
 
 /** Shown on the Basics card. Couples cannot edit these, and saves omit them. */
@@ -653,7 +655,7 @@ export function fieldVisible(key: string, services: BookedServices): boolean {
     return services.photobooth && !services.knownVenue
   }
   if (key.startsWith('Photo Booth')) return services.photobooth
-  if (LIVE_AND_DJ_FIELDS.has(key)) return services.live && services.dj
+  if (LIVE_AND_DJ_FIELDS.has(key)) return services.live || services.dj
   if (VENUE_QUESTION_FIELDS.has(key)) return services.venueQuestions
   if (CEREMONY_FIELDS.has(key)) return services.live || services.dj
   if (COCKTAIL_FIELDS.has(key)) return services.live || services.dj
@@ -689,9 +691,6 @@ const LIVE_ONLY_HIDDEN = new Set([
   'Cell reception',
   'Cocktail hour music type',
   'Dinner music type',
-  'First dance format (live/DJ, full/shortened)',
-  'Father/daughter format',
-  'Mother/son format',
   'Introductions section',
   'Introductions happening',
   'Who is being introduced',
@@ -722,9 +721,6 @@ const DJ_ONLY_HIDDEN = new Set([
   'Recessional style',
   'Cocktail hour music type',
   'Dinner music type',
-  'First dance format (live/DJ, full/shortened)',
-  'Father/daughter format',
-  'Mother/son format',
   'Songs to learn',
 ])
 
@@ -744,8 +740,8 @@ export function fieldAnswerVisible(
   if (!fieldVisible(key, asked)) return false
   if (key === WIFI_DETAILS_FIELD) return wifiDetailsVisible(fields)
   if (key === WEBSITE_PASSWORD_FIELD) return websitePasswordVisible(fields)
+  if (key === VIDEOGRAPHER_LATE_FIELD) return false
   if (key === PHOTOGRAPHER_LATE_FIELD) return (fields.Photographer ?? '').trim() !== ''
-  if (key === VIDEOGRAPHER_LATE_FIELD) return (fields.Videographer ?? '').trim() !== ''
   const gate = YES_GATED[key]
   if (gate && !answerIsYes(fields, gate)) return false
   if (
@@ -886,7 +882,7 @@ export function fieldIncludedInSave(
   services: BookedServices,
   fields: Record<string, string>,
 ): boolean {
-  if (key === REMOVED_SECTIONS_FIELD || key === PHOTOGRAPHER_LATE_FIELD || key === VIDEOGRAPHER_LATE_FIELD) return true
+  if (key === REMOVED_SECTIONS_FIELD || key === COLLAPSED_SECTIONS_FIELD || key === PHOTOGRAPHER_LATE_FIELD) return true
   if (fieldAnswerVisible(key, services, fields)) return true
   const fold = FOLDED_ANSWER[key]
   return Boolean(fold && (fields[fold] ?? '').trim().toLowerCase() === 'removed')
@@ -975,6 +971,38 @@ export const COUPLE_PHOTO_FIELD = 'Couple photo'
 /** Not a form answer. Uploaded separately and never included in a normal save. */
 export const FLOOR_PLAN_FIELD = 'Floor plan PDF'
 
+const DANCE_FORMAT_KEYS = [
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+] as const
+
+/** Keep only Full or Shortened once the live/DJ choice is gone. */
+function danceLengthAnswer(value: string): string {
+  const text = value.trim().toLowerCase()
+  if (!text) return ''
+  if (/\bshort/.test(text)) return 'Shortened'
+  if (/\bfull\b/.test(text)) return 'Full'
+  return ''
+}
+
+export function applyDanceLengthAnswers(
+  fields: Record<string, string>,
+  services: BookedServices,
+): Record<string, string> {
+  if (!usesDjOnlyTemplate(services) && !usesLiveOnlyTemplate(services)) return fields
+  let copy: Record<string, string> | null = null
+  for (const key of DANCE_FORMAT_KEYS) {
+    const current = fields[key] ?? ''
+    if (!current.trim()) continue
+    const next = danceLengthAnswer(current)
+    if (next === current) continue
+    if (!copy) copy = { ...fields }
+    copy[key] = next
+  }
+  return copy ?? fields
+}
+
 const PRE_CEREMONY_PERFORMANCE = 'Pre-ceremony performance'
 const REMOVED_PRE_CEREMONY = 'dj playing music'
 const LIVE_ONLY_PRE_CEREMONY = ['Instrumental live music', 'Live music with vocals', 'Up to Anders']
@@ -1003,7 +1031,10 @@ export function fieldsForSave(
   fields: Record<string, string>,
   services: BookedServices,
 ): Record<string, string> {
-  const normalized = applyLiveOnlyPreCeremony(applyDjCeremonyStyleLabels(fields, services), services)
+  const normalized = applyDanceLengthAnswers(
+    applyLiveOnlyPreCeremony(applyDjCeremonyStyleLabels(fields, services), services),
+    services,
+  )
   return Object.fromEntries(
     Object.entries(normalized).filter(
       ([key]) =>

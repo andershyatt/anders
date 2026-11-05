@@ -374,7 +374,12 @@
 
 .pipeline-card.is-collapsed .pipeline-name h2 {
   margin-bottom: 0;
-  font-size: 20px;
+  font-size: 15px;
+}
+
+.pipeline-card.is-collapsed .pipeline-updated,
+.pipeline-card.is-collapsed .pipeline-booked {
+  margin: 0;
 }
 
 .pipeline-progress-num {

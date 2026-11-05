@@ -46,11 +46,18 @@ function formatUpdatedStamp(raw: string): string {
   return `${month} ${day}, ${hour}:${iso[5]} ${suffix}`
 }
 
+/** Collapsed cards use a short calendar date. Other dates stay as stored. */
+function formatCardDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim())
+  if (!match) return value.trim()
+  return `${match[2]}/${match[3]}/${match[1].slice(2)}`
+}
+
 function updatedLineFor(couple: PipelineCouple): string {
   if (!couple.lastUpdated?.trim()) return ''
   const when = formatUpdatedStamp(couple.lastUpdated)
-  const who = couple.updatedBy === 'Anders' ? 'by Anders' : 'by couple'
-  return `Last updated ${when} ${who}`
+  const who = couple.updatedBy === 'Anders' ? 'by Anders' : couple.updatedBy === 'couple' ? 'by couple' : ''
+  return who ? `Last updated ${when} ${who}` : `Last updated ${when}`
 }
 
 function spotifyOauthMessage(code: string): string {
@@ -667,7 +674,22 @@ function CoupleCard({
             )}
           </div>
         </div>
-        <p className="pipeline-meta">{formatCoupleDate(couple.date) || couple.date}</p>
+        {collapsed ? (
+          <p className="pipeline-meta">{formatCardDate(couple.date)}</p>
+        ) : (
+          <p className="pipeline-meta">{formatCoupleDate(couple.date) || couple.date}</p>
+        )}
+        {collapsed && booked.length > 0 && <p className="pipeline-booked">{booked.join(' + ')}</p>}
+        {collapsed && updatedLine && <p className="pipeline-updated">{updatedLine}</p>}
+        {collapsed && (
+          <a
+            className="pipeline-open"
+            href={plannerLink(couple.token, standalone)}
+            {...(standalone ? {} : { target: '_blank', rel: 'noopener' })}
+          >
+            Open
+          </a>
+        )}
         {collapsed && progress !== null && <span className="pipeline-progress-num">{progress}%</span>}
       </div>
       {!collapsed && (
