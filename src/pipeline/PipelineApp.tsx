@@ -105,7 +105,19 @@ function messageFor(error: unknown): string {
 
 export default function PipelineApp() {
   const standalone = useStandalone()
-  const pull = usePullToRefresh(standalone)
+  const [refreshing, setRefreshing] = useState(false)
+  async function refreshPipeline() {
+    if (!key || refreshing) return
+    setRefreshing(true)
+    try {
+      await load(key)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+  const pull = usePullToRefresh(standalone, () => {
+    void refreshPipeline()
+  })
   const [key, setKey] = useState(storedAdminKey)
   const [draftKey, setDraftKey] = useState('')
   const cachedCouples = useMemo(() => readPipelineCache(), [])
@@ -271,6 +283,12 @@ export default function PipelineApp() {
   return (
     <div className="pipeline">
       <PullToRefresh pull={pull} />
+      {refreshing && (
+        <div className="pipeline-refreshing" role="status">
+          <span className="pipeline-spinner" aria-hidden="true" />
+          Refreshing…
+        </div>
+      )}
       <div className="pipeline-pin">
       <header className="pipeline-top">
         <div className="pipeline-brand">
@@ -279,8 +297,8 @@ export default function PipelineApp() {
         </div>
         <div className="pipeline-top__actions">
           {standalone && (
-            <button type="button" className="app-refresh" onClick={() => window.location.reload()}>
-              Refresh
+            <button type="button" className="app-refresh" disabled={refreshing} onClick={() => void refreshPipeline()}>
+              {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
           )}
           {status === 'ready' && (

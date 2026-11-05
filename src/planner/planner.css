@@ -28,12 +28,22 @@
 .planner-top a.planner-back {
   grid-column: 1 / -1;
   justify-self: start;
-  margin-top: 0.15rem;
-  color: #e4c98a;
+  margin-top: 0.45rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: #e4c98a;
+  color: #1c1916;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: none;
+  text-decoration: none;
+}
+
+.planner-top a.planner-back:hover {
+  background: #f3e2b4;
+  color: #1c1916;
+  text-decoration: none;
 }
 
 .planner-top__title {
@@ -335,8 +345,20 @@
 
 .planner-booth-form legend,
 .planner-booth-form .planner-field > span {
-  font-size: 15px;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  background: #e7e5e1;
+  font-size: 18.75px;
   font-weight: 800;
+  line-height: 1.35;
+}
+
+.planner-booth-form__schedule {
+  margin-top: 0.15rem;
 }
 
 .planner-note {
@@ -1659,6 +1681,21 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 1.45;
+}
+
+.planner-booth-form .planner-gallery legend,
+.planner-booth-form .planner-choices legend,
+.planner-booth-form .planner-field > span {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  background: #e7e5e1;
+  font-size: 18.75px;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .planner-gallery__grid {

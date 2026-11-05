@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type StandaloneNavigator = Navigator & { standalone?: boolean }
 
@@ -41,9 +41,13 @@ function atScrollTop(): boolean {
   return (scrolling?.scrollTop ?? window.scrollY) <= 0
 }
 
-/** iOS standalone has no browser refresh. A downward pull from the top reloads the page. */
-export function usePullToRefresh(enabled: boolean): number {
+/** iOS standalone has no browser refresh. A downward pull from the top reloads the page, or runs onRefresh. */
+export function usePullToRefresh(enabled: boolean, onRefresh?: () => void): number {
   const [pull, setPull] = useState(0)
+  const refreshRef = useRef(onRefresh)
+  useEffect(() => {
+    refreshRef.current = onRefresh
+  }, [onRefresh])
   useEffect(() => {
     if (!enabled) return
     let startX = 0
@@ -76,7 +80,11 @@ export function usePullToRefresh(enabled: boolean): number {
       if (!armed) return
       armed = false
       if (distance > 72 && atScrollTop()) {
-        window.location.reload()
+        distance = 0
+        setPull(0)
+        const refresh = refreshRef.current
+        if (refresh) refresh()
+        else window.location.reload()
         return
       }
       distance = 0

@@ -22,7 +22,7 @@ export default function WelcomeInfo({ live, dj }: WelcomeInfoProps) {
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        {open ? 'Helpful info before you start ▾' : 'Tap to read some helpful info before you start ▸'}
+        {open ? 'Helpful info before you start ▾' : 'Tap for some helpful info before you start ▸'}
       </button>
       {open && (
         <div className="planner-welcome-info__body">
