@@ -14,8 +14,8 @@ export default function SongList() {
         Browse Anders&apos;s repertoire of {songs.length} songs. Want to pick favorites for
         your event? Use the playlist builder to search, filter, and send a list.
       </p>
-      <div className="btn-row">
-        <Link to="/playlist" className="btn">
+      <div className="cta-row">
+        <Link to="/playlist" className="cta-btn">
           Build a Playlist
         </Link>
       </div>

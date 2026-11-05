@@ -75,3 +75,8 @@
   margin-top: 2rem;
   text-align: center;
 }
+
+.faq-accordion__cta .cta-row {
+  margin-top: 0.85rem;
+  margin-bottom: 0;
+}

@@ -24,11 +24,11 @@ export default function HeroBanner({
       className={`hero-banner${isHomeStyle ? ' hero-banner--home' : ' hero-banner--guitar'}`}
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
+      {title && <h1 className="sr-only">{title}</h1>}
       <div className="hero-banner__inner">
-        {(title || subtitle) && (
+        {subtitle && (
           <div className="hero-banner__content">
-            {title && <h1 className="hero-banner__title">{title}</h1>}
-            {subtitle && <p className="hero-banner__subtitle">{subtitle}</p>}
+            <p className="hero-banner__subtitle">{subtitle}</p>
           </div>
         )}
         <div className="hero-banner__bottom">

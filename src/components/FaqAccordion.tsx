@@ -6,9 +6,15 @@ import './FaqAccordion.css'
 interface FaqAccordionProps {
   items: FaqItem[]
   showConnectLink?: boolean
+  /** FAQ page only. DJ FAQ keeps the inline sentence link. */
+  connectAsButton?: boolean
 }
 
-export default function FaqAccordion({ items, showConnectLink = true }: FaqAccordionProps) {
+export default function FaqAccordion({
+  items,
+  showConnectLink = true,
+  connectAsButton = false,
+}: FaqAccordionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
@@ -39,12 +45,22 @@ export default function FaqAccordion({ items, showConnectLink = true }: FaqAccor
         )
       })}
 
-      {showConnectLink && (
-        <p className="faq-accordion__cta">
-          Don&apos;t see the answer to your question?{' '}
-          <Link to="/connect">Ask Anders directly!</Link>
-        </p>
-      )}
+      {showConnectLink &&
+        (connectAsButton ? (
+          <div className="faq-accordion__cta">
+            <p>Don&apos;t see the answer to your question?</p>
+            <div className="cta-row">
+              <Link to="/connect" className="cta-btn">
+                Ask Anders directly
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <p className="faq-accordion__cta">
+            Don&apos;t see the answer to your question?{' '}
+            <Link to="/connect">Ask Anders directly!</Link>
+          </p>
+        ))}
     </div>
   )
 }

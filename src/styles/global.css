@@ -153,6 +153,64 @@ button {
   margin: 1.5rem 0;
 }
 
+/* Content-page calls to action. Same treatment as the home page block
+   buttons (gray fill, Open Sans, uppercase) without changing that page. */
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1rem 1.25rem;
+  max-width: 680px;
+  margin: 1.75rem auto 2.25rem;
+}
+
+.cta-btn {
+  flex: 1 1 260px;
+  max-width: 320px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 3.25rem;
+  padding: 1.05rem 1.15rem;
+  background: #747a86;
+  color: #ffffff;
+  font-family: var(--font-nav);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 4px;
+}
+
+.cta-btn:hover,
+.cta-btn:focus-visible {
+  background: #9a9ea7;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.cta-btn:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .cta-row {
+    max-width: 420px;
+  }
+
+  .cta-btn {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

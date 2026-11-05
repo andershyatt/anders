@@ -1,4 +1,4 @@
-import PhotoGallery from '../components/PhotoGallery'
+import Slideshow from '../components/Slideshow'
 import { photoBoothGallery } from '../data/media'
 import './PhotoBooth.css'
 
@@ -56,7 +56,7 @@ export default function PhotoBooth() {
         to view our back drop options
       </p>
 
-      <PhotoGallery images={photoBoothGallery} altPrefix="Photo booth" />
+      <Slideshow images={photoBoothGallery} altPrefix="Photo booth" />
     </div>
   )
 }

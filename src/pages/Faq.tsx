@@ -6,7 +6,7 @@ export default function Faq() {
     <div className="page-content">
       <h2>Frequently Asked Questions</h2>
       <div className="divider" />
-      <FaqAccordion items={liveMusicFaq} />
+      <FaqAccordion items={liveMusicFaq} connectAsButton />
     </div>
   )
 }
