@@ -587,8 +587,44 @@ export function liveOnlyCocktail(find: FindField): PlannerSection {
   return { ...section, fields: liveOnlyFields(section.fields) }
 }
 
+const RECEPTION_MUSIC_VIBE =
+  "If you don't have specific song requests, what type of vibe/genres would you like to hear? Feel free to give any type of general guidance you would like. Musician's choice is also an option!"
+
+/** Live-only answers. Appended in Apps Script after the shared planner columns. */
+export const LIVE_ONLY_EXTRA: PlannerField[] = [
+  {
+    key: 'Reception music notes',
+    label: RECEPTION_MUSIC_VIBE,
+    kind: 'textarea',
+    rows: 3,
+    heading: 'Reception music (post dinner)',
+  },
+  {
+    key: 'Reception music Anders chooses',
+    label: "We're comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
+    kind: 'check',
+  },
+  {
+    key: 'Reception music songs',
+    label: 'Songs',
+    kind: 'songlist',
+    picker: true,
+    screenTitle: 'Reception Music Songs',
+    suggestions: 'cocktail-dinner',
+    note: 'Add as many or as few songs as you like.',
+    maxSongs: 50,
+    maxMustPlays: 10,
+  },
+]
+
 /** Same reception as live + DJ, without the DJ sections and live/DJ questions. */
 export function liveOnlyReception(find: FindField): PlannerSection {
   const section = liveDjReception(find)
-  return { ...section, fields: liveOnlyFields(section.fields) }
+  const fields = liveOnlyFields(section.fields)
+  const dinnerSongs = fields.findIndex((field) => field.key === 'Dinner songs')
+  const at = dinnerSongs === -1 ? fields.length : dinnerSongs + 1
+  return {
+    ...section,
+    fields: [...fields.slice(0, at), ...LIVE_ONLY_EXTRA, ...fields.slice(at)],
+  }
 }

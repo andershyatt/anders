@@ -114,6 +114,10 @@ export function cheatSheetParagraphs(detail: PipelineDetail): string[] {
         ...linesOf(field(detail, 'Mother/son dance song')).map((line) => `Mother-son - ${line}`),
       ],
     },
+    {
+      label: 'RECEPTION MUSIC (POST DINNER)',
+      lines: [field(detail, 'Reception music notes'), ...linesOf(field(detail, 'Reception music songs'))].filter(Boolean),
+    },
     { label: 'DJ NOTES', lines: [field(detail, 'DJ music requests'), field(detail, 'Clean music edits')].filter(Boolean) },
     {
       label: 'MUST PLAYS',

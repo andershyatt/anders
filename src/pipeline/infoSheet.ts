@@ -70,6 +70,7 @@ function songColumns(lines: string[]): Table {
 const SONG_KEYS = new Set([
   'Cocktail hour songs',
   'Dinner songs',
+  'Reception music songs',
   'Open dancing songs',
   'Slow dance songs',
   'Introduction songs',
@@ -143,6 +144,10 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
       'Dinner music notes',
       'Dinner songs',
     ],
+  },
+  {
+    title: 'Reception music (post dinner)',
+    keys: ['Reception music notes', 'Reception music Anders chooses', 'Reception music songs'],
   },
   {
     title: 'Reception',

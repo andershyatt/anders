@@ -155,6 +155,9 @@ export function liveChartText(detail: PipelineDetail): string {
   if (treatAsLive(detail, dinnerType) || isLiveOrMixture(dinnerType)) {
     groups.push(group(isLiveOrMixture(dinnerType) && !treatAsLive(detail, dinnerType) ? 'Dinner (mixture)' : 'Dinner', parseSongList(field(detail, 'Dinner songs'))))
   }
+  if (usesLiveOnlyTemplate(detail.services)) {
+    groups.push(group('Reception music (post dinner)', parseSongList(field(detail, 'Reception music songs'))))
+  }
   return groups
     .filter((item): item is SongGroup => item !== null && item.lines.length > 0)
     .map((item) => `${item.title.toUpperCase()}\n${item.lines.join('\n')}`)
@@ -164,6 +167,7 @@ export function liveChartText(detail: PipelineDetail): string {
 const PLAYLIST_LISTS: Array<{ key: string; label: string }> = [
   { key: 'Cocktail hour songs', label: 'cocktails' },
   { key: 'Dinner songs', label: 'dinner' },
+  { key: 'Reception music songs', label: 'post dinner' },
   { key: 'Open dancing songs', label: 'dance' },
   { key: 'Do not play songs', label: "don't play" },
   { key: 'Slow dance songs', label: 'slow songs' },

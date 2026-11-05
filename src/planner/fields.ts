@@ -6,6 +6,7 @@ import {
   liveDjCeremony,
   liveDjCocktail,
   liveDjReception,
+  LIVE_ONLY_EXTRA,
   liveOnlyCeremony,
   liveOnlyCocktail,
   liveOnlyReception,
@@ -367,6 +368,7 @@ export const MANAGED_SECTION_IDS = new Set([
 export const plannerFieldKeys: string[] = [
   ...plannerSections.flatMap((section) => section.fields.map((field) => field.key)),
   ...LIVE_DJ_EXTRA.map((field) => field.key),
+  ...LIVE_ONLY_EXTRA.map((field) => field.key),
   ...PHOTO_BOOTH_FIELDS.map((field) => field.key),
   REMOVED_SECTIONS_FIELD,
 ]
@@ -537,6 +539,7 @@ const COCKTAIL_FIELDS = new Set([
 ])
 
 const LIVE_DJ_ONLY = new Set(LIVE_DJ_EXTRA.map((field) => field.key))
+const LIVE_ONLY_FIELDS = new Set(LIVE_ONLY_EXTRA.map((field) => field.key))
 
 const YES_GATED: Record<string, string> = {
   'First dance start cue': 'First dance choreographed',
@@ -632,6 +635,7 @@ export function cocktailMusicChoices(services: BookedServices): readonly string[
 export function fieldVisible(key: string, services: BookedServices): boolean {
   if ((key === 'Songs to learn' || key === 'Things to remember') && services.live && services.dj) return false
   if (key === 'Cocktail hour timing notes' && services.live && services.dj) return false
+  if (LIVE_ONLY_FIELDS.has(key)) return services.live && !services.dj
   if (LIVE_DJ_ONLY.has(key)) return services.live && services.dj
   if (LIVE_FIELDS.has(key)) return services.live
   if (DJ_FIELDS.has(key)) return services.dj
@@ -761,6 +765,7 @@ const PROGRESS_SKIP = new Set([
   'Cocktail hour Anders chooses',
   'Dinner Anders chooses',
   'Open dancing Anders chooses',
+  'Reception music Anders chooses',
 ])
 
 /** Share of visible questions that have an answer. Declined or removed sections are already hidden. */

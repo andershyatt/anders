@@ -84,6 +84,7 @@ type Status =
 const SECTION_NOTE_FIELD: Record<string, string> = {
   'Cocktail hour songs': 'Cocktail hour vibe',
   'Dinner songs': 'Dinner music notes',
+  'Reception music songs': 'Reception music notes',
   'Open dancing songs': 'DJ music requests',
   'Do not play songs': 'Do-not-play list',
 }
