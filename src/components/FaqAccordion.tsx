@@ -51,7 +51,7 @@ export default function FaqAccordion({
             <p>Don&apos;t see the answer to your question?</p>
             <div className="cta-row">
               <Link to="/connect" className="cta-btn">
-                Ask Anders directly!
+                Ask Anders directly
               </Link>
             </div>
           </div>
