@@ -174,14 +174,16 @@ export default function PhotoBoothPanel({ knownVenue, fields, locked, onChange }
               if (item.kind === 'heading') return <h3 key={item.text} className="planner-subhead">{item.text}</h3>
               if (item.kind === 'note') {
                 return (
-                  <p key={item.text} className="planner-note">
-                    {item.text}{' '}
+                  <div key={item.text}>
+                    <p className="planner-note">{item.text}</p>
                     {item.href && (
-                      <a href={item.href} target="_blank" rel="noopener noreferrer">
-                        {item.linkLabel}
-                      </a>
+                      <p>
+                        <a className="btn planner-booth-form__schedule" href={item.href} target="_blank" rel="noopener noreferrer">
+                          {item.linkLabel ?? 'Schedule a call'}
+                        </a>
+                      </p>
                     )}
-                  </p>
+                  </div>
                 )
               }
               return (

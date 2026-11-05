@@ -199,7 +199,7 @@ export const PHOTO_BOOTH_ITEMS: BoothItem[] = [
     kind: 'note',
     text: 'Want to chat through the details? Design elements like print layouts, text/logos, and booth screen graphics can be easier to finalize over a quick call. Totally optional, but welcomed!',
     href: 'https://andershyattmusic.hbportal.co/schedule/5f7224dbc62f230597f7c446',
-    linkLabel: 'Click here to schedule a call',
+    linkLabel: 'Schedule a call',
   },
 ]
 
