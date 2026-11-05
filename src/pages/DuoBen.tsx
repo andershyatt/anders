@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
-import PhotoGallery from '../components/PhotoGallery'
+import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import { homeGallery, images } from '../data/media'
-import './Duo.css'
 
 export default function DuoBen() {
   return (
@@ -26,17 +25,16 @@ export default function DuoBen() {
         </p>
       </div>
 
-      <div className="btn-row">
-        <Link to="/connect" className="btn">
+      <div className="cta-row">
+        <Link to="/connect" className="cta-btn">
           Get a Quote
+        </Link>
+        <Link to="/duo-angella" className="cta-btn">
+          Duo &mdash; Anders &amp; Angella
         </Link>
       </div>
 
-      <PhotoGallery images={[images.duoBen, ...homeGallery.slice(0, 6)]} altPrefix="Anders and Ben" />
-
-      <div className="duo-links">
-        <Link to="/duo-angella">Duo &mdash; Anders &amp; Angella</Link>
-      </div>
+      <Slideshow images={[images.duoBen, ...homeGallery.slice(0, 6)]} altPrefix="Anders and Ben" />
     </div>
   )
 }

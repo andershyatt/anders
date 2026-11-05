@@ -73,15 +73,6 @@
   width: 100%;
 }
 
-.hero-banner__title {
-  font-family: var(--font-heading);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--color-white);
-  margin: 0 0 0.25rem;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
 .hero-banner__subtitle {
   font-family: var(--font-nav);
   font-size: 14px;
@@ -112,9 +103,5 @@
 
   .hero-banner__inner {
     padding: 1.25rem 1rem 1rem;
-  }
-
-  .hero-banner__title {
-    font-size: 22px;
   }
 }

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import PhotoGallery from '../components/PhotoGallery'
+import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import YouTubeEmbed from '../components/YouTubeEmbed'
 import { djGallery } from '../data/media'
@@ -20,11 +20,11 @@ export default function Dj() {
         </p>
       </div>
 
-      <div className="btn-row">
-        <Link to="/dj-faq" className="btn btn-outline">
+      <div className="cta-row">
+        <Link to="/dj-faq" className="cta-btn">
           DJ FAQ
         </Link>
-        <Link to="/connect" className="btn">
+        <Link to="/connect" className="cta-btn">
           Get a Quote
         </Link>
       </div>
@@ -37,7 +37,7 @@ export default function Dj() {
 
       <YouTubeEmbed videoId="lyWz78KfERk" title="Anders Hyatt DJ Reel" />
 
-      <PhotoGallery images={djGallery} altPrefix="DJ services" />
+      <Slideshow images={djGallery} altPrefix="DJ services" />
     </div>
   )
 }

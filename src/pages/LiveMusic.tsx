@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
-import PhotoGallery from '../components/PhotoGallery'
+import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import { homeGallery } from '../data/media'
-import './LiveMusic.css'
 
 export default function LiveMusic() {
   return (
@@ -22,11 +21,19 @@ export default function LiveMusic() {
         </p>
       </div>
 
-      <div className="live-music-links">
-        <Link to="/duo-angella">Duo &mdash; Anders &amp; Angella</Link>
-        <Link to="/duo-ben">Duo &mdash; Anders &amp; Ben</Link>
-        <Link to="/songlist">Song List</Link>
-        <Link to="/connect">Book Anders</Link>
+      <div className="cta-row">
+        <Link to="/duo-angella" className="cta-btn">
+          Duo &mdash; Anders &amp; Angella
+        </Link>
+        <Link to="/duo-ben" className="cta-btn">
+          Duo &mdash; Anders &amp; Ben
+        </Link>
+        <Link to="/songlist" className="cta-btn">
+          Song List
+        </Link>
+        <Link to="/connect" className="cta-btn">
+          Book Anders
+        </Link>
       </div>
 
       <Testimonial
@@ -41,7 +48,7 @@ export default function LiveMusic() {
         source="Bash"
       />
 
-      <PhotoGallery images={homeGallery} altPrefix="Live music" />
+      <Slideshow images={homeGallery} altPrefix="Live music" />
     </div>
   )
 }
