@@ -6,7 +6,12 @@ import {
   liveDjCeremony,
   liveDjCocktail,
   liveDjReception,
+  LIVE_ONLY_EXTRA,
+  liveOnlyCeremony,
+  liveOnlyCocktail,
+  liveOnlyReception,
 } from './liveDj'
+import { parseChecks, serializeChecks } from './checks'
 import { PHOTO_BOOTH_FIELDS } from './photoBooth'
 import type { SuggestionListId } from './suggestions'
 
@@ -79,6 +84,15 @@ export const DJ_POWER_OPTIONS = [
 
 export const MUSICIAN_POWER_OPTION = POWER_OPTIONS[1]
 export const DJ_POWER_OPTION = DJ_POWER_OPTIONS[1]
+
+/** Live-only wording. The musician/DJ sentence is still treated as this same answer. */
+export const LIVE_POWER_OPTIONS = [
+  'Yes, there is power available.',
+  'No, the musician will need a battery powered option.',
+  'Please check with the venue.',
+] as const
+
+export const LIVE_POWER_OPTION = LIVE_POWER_OPTIONS[1]
 
 export const COCKTAIL_LOCATION_OPTIONS = [
   'Same area as the ceremony',
@@ -364,6 +378,7 @@ export const MANAGED_SECTION_IDS = new Set([
 export const plannerFieldKeys: string[] = [
   ...plannerSections.flatMap((section) => section.fields.map((field) => field.key)),
   ...LIVE_DJ_EXTRA.map((field) => field.key),
+  ...LIVE_ONLY_EXTRA.map((field) => field.key),
   ...PHOTO_BOOTH_FIELDS.map((field) => field.key),
   REMOVED_SECTIONS_FIELD,
 ]
@@ -534,6 +549,7 @@ const COCKTAIL_FIELDS = new Set([
 ])
 
 const LIVE_DJ_ONLY = new Set(LIVE_DJ_EXTRA.map((field) => field.key))
+const LIVE_ONLY_FIELDS = new Set(LIVE_ONLY_EXTRA.map((field) => field.key))
 
 const YES_GATED: Record<string, string> = {
   'First dance start cue': 'First dance choreographed',
@@ -629,6 +645,7 @@ export function cocktailMusicChoices(services: BookedServices): readonly string[
 export function fieldVisible(key: string, services: BookedServices): boolean {
   if ((key === 'Songs to learn' || key === 'Things to remember') && services.live && services.dj) return false
   if (key === 'Cocktail hour timing notes' && services.live && services.dj) return false
+  if (LIVE_ONLY_FIELDS.has(key)) return services.live && !services.dj
   if (LIVE_DJ_ONLY.has(key)) return services.live && services.dj
   if (LIVE_FIELDS.has(key)) return services.live
   if (DJ_FIELDS.has(key)) return services.dj
@@ -659,6 +676,45 @@ export function usesDjOnlyTemplate(services: { live: boolean; dj: boolean }): bo
   return services.dj && !services.live
 }
 
+/** Live music booked, DJ not booked. Uses the cloned live+DJ template. */
+export function usesLiveOnlyTemplate(services: { live: boolean; dj: boolean }): boolean {
+  return services.live && !services.dj
+}
+
+const LIVE_ONLY_HIDDEN = new Set([
+  'High school graduation year(s)',
+  'Crowd party rating',
+  'Internet access',
+  'WiFi network and password',
+  'Cell reception',
+  'Cocktail hour music type',
+  'Dinner music type',
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+  'Introductions section',
+  'Introductions happening',
+  'Who is being introduced',
+  'Couple introduction name',
+  'Introduction songs',
+  'Introductions',
+  'Clean music edits',
+  'Open dancing Anders chooses',
+  'Open dancing songs',
+  'DJ music requests',
+  'Slow songs preference',
+  'Slow dance songs',
+  'Dance floor lighting',
+  'Last song of the night with guests',
+  'Private last dance section',
+  'Private last dance wanted',
+  'Private last dance',
+  'Do not play songs',
+  'Do-not-play list',
+  'Songs to learn',
+  'Things to remember',
+])
+
 const DJ_ONLY_HIDDEN = new Set([
   'Pre-ceremony performance',
   'Wedding party processional style (instrumental/vocals)',
@@ -679,7 +735,12 @@ export function fieldAnswerVisible(
   fields: Record<string, string>,
 ): boolean {
   if (usesDjOnlyTemplate(services) && DJ_ONLY_HIDDEN.has(key)) return false
-  const asked = usesDjOnlyTemplate(services) && LIVE_DJ_ONLY.has(key) ? { ...services, live: true } : services
+  if (usesLiveOnlyTemplate(services) && LIVE_ONLY_HIDDEN.has(key)) return false
+  const asked = usesDjOnlyTemplate(services) && LIVE_DJ_ONLY.has(key)
+    ? { ...services, live: true }
+    : usesLiveOnlyTemplate(services) && LIVE_DJ_ONLY.has(key)
+      ? { ...services, dj: true }
+      : services
   if (!fieldVisible(key, asked)) return false
   if (key === WIFI_DETAILS_FIELD) return wifiDetailsVisible(fields)
   if (key === WEBSITE_PASSWORD_FIELD) return websitePasswordVisible(fields)
@@ -714,6 +775,7 @@ const PROGRESS_SKIP = new Set([
   'Cocktail hour Anders chooses',
   'Dinner Anders chooses',
   'Open dancing Anders chooses',
+  'Reception music Anders chooses',
 ])
 
 /** Share of visible questions that have an answer. Declined or removed sections are already hidden. */
@@ -886,6 +948,24 @@ export function visibleSections(
       return sectionWithVisibleFields(withDjPower, services, answers)
     })
   }
+  if (usesLiveOnlyTemplate(services)) {
+    return plannerSections.flatMap((section) => {
+      if (LIVE_DJ_SKIP.has(section.id)) return []
+      const built =
+        section.id === 'ceremony'
+          ? liveOnlyCeremony(findPlannerField)
+          : section.id === 'cocktail-hour'
+            ? liveOnlyCocktail(findPlannerField)
+            : section.id === 'reception'
+              ? liveOnlyReception(findPlannerField)
+              : section
+      const withLivePower = {
+        ...built,
+        fields: built.fields.map((field) => (field.options === POWER_OPTIONS ? { ...field, options: LIVE_POWER_OPTIONS } : field)),
+      }
+      return sectionWithVisibleFields(withLivePower, services, answers)
+    })
+  }
   return plannerSections.flatMap((section) => sectionWithVisibleFields(section, services, answers))
 }
 
@@ -895,12 +975,35 @@ export const COUPLE_PHOTO_FIELD = 'Couple photo'
 /** Not a form answer. Uploaded separately and never included in a normal save. */
 export const FLOOR_PLAN_FIELD = 'Floor plan PDF'
 
+const PRE_CEREMONY_PERFORMANCE = 'Pre-ceremony performance'
+const REMOVED_PRE_CEREMONY = 'dj playing music'
+const LIVE_ONLY_PRE_CEREMONY = ['Instrumental live music', 'Live music with vocals', 'Up to Anders']
+
+/** Drop a saved DJ pre-ceremony choice once that option is no longer offered. */
+export function applyLiveOnlyPreCeremony(
+  fields: Record<string, string>,
+  services: BookedServices,
+): Record<string, string> {
+  if (!usesLiveOnlyTemplate(services)) return fields
+  const raw = fields[PRE_CEREMONY_PERFORMANCE] ?? ''
+  if (!raw.toLowerCase().includes(REMOVED_PRE_CEREMONY)) return fields
+  const parsed = parseChecks(raw, LIVE_ONLY_PRE_CEREMONY)
+  const other = parsed.other
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '' && item.toLowerCase() !== REMOVED_PRE_CEREMONY)
+    .join(', ')
+  const next = serializeChecks(parsed.selected, other)
+  if (next === raw) return fields
+  return { ...fields, [PRE_CEREMONY_PERFORMANCE]: next }
+}
+
 /** Hidden answers are omitted so a save does not wipe them with empty strings. */
 export function fieldsForSave(
   fields: Record<string, string>,
   services: BookedServices,
 ): Record<string, string> {
-  const normalized = applyDjCeremonyStyleLabels(fields, services)
+  const normalized = applyLiveOnlyPreCeremony(applyDjCeremonyStyleLabels(fields, services), services)
   return Object.fromEntries(
     Object.entries(normalized).filter(
       ([key]) =>
@@ -958,12 +1061,22 @@ const LIVE_DJ_CEREMONY_ALIASES: Record<string, string> = {
   'dj - vocals': 'DJ',
 }
 
+/** Live-only couples no longer choose a DJ. The combined DJ answer has no vocal split, so it stays instrumental. */
+const LIVE_ONLY_CEREMONY_ALIASES: Record<string, string> = {
+  'live - instrumental': 'Instrumental',
+  'live - vocals': 'Vocals',
+  'dj - instrumental': 'Instrumental',
+  'dj - vocals': 'Vocals',
+  dj: 'Instrumental',
+}
+
 /** Older saves used separate DJ instrumental and vocal labels. Those map onto the choice shown now. */
 export function ceremonyStyleValue(key: string, value: string, services: BookedServices): string {
   if (!CEREMONY_STYLE_KEYS.has(key)) return value
   const saved = value.trim().toLowerCase()
   if (services.live && services.dj) return LIVE_DJ_CEREMONY_ALIASES[saved] ?? value
   if (!services.live && services.dj) return DJ_CEREMONY_STYLE_ALIASES[saved] ?? value
+  if (usesLiveOnlyTemplate(services)) return LIVE_ONLY_CEREMONY_ALIASES[saved] ?? value
   return value
 }
 

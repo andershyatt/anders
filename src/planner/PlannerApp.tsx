@@ -7,6 +7,7 @@ import {
   ceremonyStyleOptions,
   ceremonyStyleValue,
   applyDjCeremonyStyleLabels,
+  applyLiveOnlyPreCeremony,
   ALL_SERVICES,
   COUPLE_PHOTO_FIELD,
   EMPTY_BASICS,
@@ -19,8 +20,10 @@ import {
   stripOldTimelineHeader,
   visibleSections,
   usesDjOnlyTemplate,
+  usesLiveOnlyTemplate,
   answeredProgress,
   DJ_POWER_OPTION,
+  LIVE_POWER_OPTION,
   MUSICIAN_POWER_OPTION,
   neutralizeField,
   applyRemovedSections,
@@ -83,6 +86,7 @@ type Status =
 const SECTION_NOTE_FIELD: Record<string, string> = {
   'Cocktail hour songs': 'Cocktail hour vibe',
   'Dinner songs': 'Dinner music notes',
+  'Reception music songs': 'Reception music notes',
   'Open dancing songs': 'DJ music requests',
   'Do not play songs': 'Do-not-play list',
 }
@@ -347,6 +351,7 @@ function FieldControl({
         allowImport={suggestionIds(field.suggestions).some((id) => id === 'cocktail-dinner' || id === 'open-dancing')}
         token={token}
         pickerMode={pickerMode}
+        repertoireOnly={repertoireOnly}
         sectionNote={sectionNote}
       />
     )
@@ -381,7 +386,11 @@ function FieldControl({
   if (field.kind === 'choice-other') {
     const options = field.options ?? []
     const choiceValue =
-      options.includes(DJ_POWER_OPTION) && value.trim() === MUSICIAN_POWER_OPTION ? DJ_POWER_OPTION : value
+      options.includes(DJ_POWER_OPTION) && value.trim() === MUSICIAN_POWER_OPTION
+        ? DJ_POWER_OPTION
+        : options.includes(LIVE_POWER_OPTION) && value.trim() === MUSICIAN_POWER_OPTION
+          ? LIVE_POWER_OPTION
+          : value
     return (
       <ChoiceWithOther
         name={id}
@@ -549,7 +558,10 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
   const services = preview ?? result.services
   const musicChoices = cocktailMusicChoices(services)
   if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
-  const fields = applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services)
+  const fields = applyLiveOnlyPreCeremony(
+    applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services),
+    services,
+  )
   const photo = result.fields[COUPLE_PHOTO_FIELD]
   return {
     fields,
@@ -1130,11 +1142,18 @@ export default function PlannerApp() {
                           services={services}
                           token={token}
                           repertoireOnly={
-                            !usesDjOnlyTemplate(services) &&
-                            Boolean(SONG_LIVE_CONTROL[field.key]) &&
-                            isLivePerformance(fields[SONG_LIVE_CONTROL[field.key]] ?? '')
+                            usesLiveOnlyTemplate(services) ||
+                            (!usesDjOnlyTemplate(services) &&
+                              Boolean(SONG_LIVE_CONTROL[field.key]) &&
+                              isLivePerformance(fields[SONG_LIVE_CONTROL[field.key]] ?? ''))
                           }
-                          pickerMode={usesDjOnlyTemplate(services) ? 'dj' : songListMode(field.key, fields)}
+                          pickerMode={
+                            usesLiveOnlyTemplate(services)
+                              ? 'live'
+                              : usesDjOnlyTemplate(services)
+                                ? 'dj'
+                                : songListMode(field.key, fields)
+                          }
                           sectionNote={fields[SECTION_NOTE_FIELD[field.key] ?? ''] ?? ''}
                           onChange={(value) => updateField(field.key, value)}
                         />

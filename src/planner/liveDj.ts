@@ -512,3 +512,119 @@ export function djOnlyReception(find: FindField): PlannerSection {
   const section = liveDjReception(find)
   return { ...section, fields: djOnlyFields(section.fields) }
 }
+
+const LIVE_ONLY_SECTION_HEADINGS = new Set([
+  'Introductions',
+  'Open Dancing',
+  'Slow Dance Songs',
+  'Dance Floor Lighting',
+  'Last song of the night (with guests)',
+  'Private last dance',
+  'Do Not Play',
+])
+
+const LIVE_ONLY_SKIP_KEYS = new Set([
+  'Introductions section',
+  'Cocktail hour music type',
+  'Dinner music type',
+  'First dance format (live/DJ, full/shortened)',
+  'Father/daughter format',
+  'Mother/son format',
+])
+
+/** Same questions as live + DJ, with DJ choices and DJ sections left out. */
+function liveOnlyFields(fields: PlannerField[]): PlannerField[] {
+  const next: PlannerField[] = []
+  let carry: { heading?: string; note?: string } | null = null
+  let skipping = false
+  for (const field of fields) {
+    if (field.heading && LIVE_ONLY_SECTION_HEADINGS.has(field.heading)) {
+      skipping = true
+      continue
+    }
+    if (field.heading && skipping) skipping = false
+    if (
+      skipping &&
+      field.kind === 'fold' &&
+      field.foldLabel &&
+      !LIVE_ONLY_SECTION_HEADINGS.has(field.foldLabel)
+    ) {
+      skipping = false
+    }
+    if (skipping || LIVE_ONLY_SKIP_KEYS.has(field.key)) {
+      if (!skipping && (field.heading || field.note)) carry = { heading: field.heading, note: field.note }
+      continue
+    }
+    const kept = carry ? { ...field, heading: field.heading ?? carry.heading, note: field.note ?? carry.note } : field
+    carry = null
+    const musicianChoice = (value: string | undefined) => value?.replaceAll("Musician's/DJ's choice", "Musician's choice")
+    let rewritten: PlannerField = {
+      ...kept,
+      label: musicianChoice(kept.label) ?? kept.label,
+      note: musicianChoice(kept.note),
+      help: musicianChoice(kept.help),
+    }
+    if (rewritten.key === 'Pre-ceremony performance') {
+      rewritten = {
+        ...rewritten,
+        options: (rewritten.options ?? []).filter((option) => option !== 'DJ playing music'),
+      }
+    }
+    next.push(rewritten)
+  }
+  return next
+}
+
+/** Same ceremony as live + DJ, without DJ performance choices. */
+export function liveOnlyCeremony(find: FindField): PlannerSection {
+  const section = liveDjCeremony(find)
+  return { ...section, fields: liveOnlyFields(section.fields) }
+}
+
+/** Same cocktail hour as live + DJ, without the live/DJ choice. */
+export function liveOnlyCocktail(find: FindField): PlannerSection {
+  const section = liveDjCocktail(find)
+  return { ...section, fields: liveOnlyFields(section.fields) }
+}
+
+const RECEPTION_MUSIC_VIBE =
+  "If you don't have specific song requests, what type of vibe/genres would you like to hear? Feel free to give any type of general guidance you would like. Musician's choice is also an option!"
+
+/** Live-only answers. Appended in Apps Script after the shared planner columns. */
+export const LIVE_ONLY_EXTRA: PlannerField[] = [
+  {
+    key: 'Reception music notes',
+    label: RECEPTION_MUSIC_VIBE,
+    kind: 'textarea',
+    rows: 3,
+    heading: 'Reception music (post dinner)',
+  },
+  {
+    key: 'Reception music Anders chooses',
+    label: "We're comfortable with Anders choosing songs that complement or enhance the vibe during this time.",
+    kind: 'check',
+  },
+  {
+    key: 'Reception music songs',
+    label: 'Songs',
+    kind: 'songlist',
+    picker: true,
+    screenTitle: 'Reception Music Songs',
+    suggestions: 'cocktail-dinner',
+    note: 'Add as many or as few songs as you like.',
+    maxSongs: 50,
+    maxMustPlays: 10,
+  },
+]
+
+/** Same reception as live + DJ, without the DJ sections and live/DJ questions. */
+export function liveOnlyReception(find: FindField): PlannerSection {
+  const section = liveDjReception(find)
+  const fields = liveOnlyFields(section.fields)
+  const dinnerSongs = fields.findIndex((field) => field.key === 'Dinner songs')
+  const at = dinnerSongs === -1 ? fields.length : dinnerSongs + 1
+  return {
+    ...section,
+    fields: [...fields.slice(0, at), ...LIVE_ONLY_EXTRA, ...fields.slice(at)],
+  }
+}
