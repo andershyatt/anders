@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Nav from './Nav'
 import HeroBanner, { type HeroVariant } from './HeroBanner'
@@ -21,9 +21,9 @@ const routeMeta: Record<string, RouteMeta> = {
   '/duo-ben': { hero: 'guitar' },
   '/trio': { hero: 'guitar' },
   '/faq': { hero: 'guitar', title: 'FAQ' },
-  '/song-list': { hero: 'songlist', title: 'Song List' },
-  '/songlist': { hero: 'songlist', title: 'Song List' },
-  '/playlist': { hero: 'songlist', title: 'Song List' },
+  '/song-list': { hero: 'songlist', title: 'Live Song List' },
+  '/songlist': { hero: 'songlist', title: 'Live Song List' },
+  '/playlist': { hero: 'songlist', title: 'Live Song List' },
   '/dj': { hero: 'guitar', title: 'Wedding DJ Services' },
   '/dj-faq': { hero: 'guitar', title: 'DJ FAQ' },
   '/events': { hero: 'guitar', title: 'Events' },
@@ -33,9 +33,20 @@ const routeMeta: Record<string, RouteMeta> = {
 
 const defaultMeta: RouteMeta = { hero: 'guitar' }
 
+const songListPaths = new Set(['/song-list', '/songlist', '/playlist'])
+
 export default function SiteLayout() {
   const { pathname, hash } = useLocation()
   const meta = routeMeta[pathname] ?? defaultMeta
+
+  useEffect(() => {
+    if (!songListPaths.has(pathname) || !meta.title) return
+    const previous = document.title
+    document.title = `${meta.title} · Anders Hyatt Music`
+    return () => {
+      document.title = previous
+    }
+  }, [pathname, meta.title])
 
   useLayoutEffect(() => {
     const id = decodeURIComponent(hash.replace(/^#/, ''))

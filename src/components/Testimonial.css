@@ -44,6 +44,11 @@
   letter-spacing: normal;
 }
 
+.testimonial__source a {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
 .testimonial--box {
   margin: 0;
   padding: 1.35rem 1.4rem 1.15rem;
