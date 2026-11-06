@@ -1,5 +1,33 @@
 import { PLANNER_API_URL } from '../planner/config'
-import type { PlaylistSubmission, Song } from '../types/song'
+import type { PlaylistContact, PlaylistSubmission, Song } from '../types/song'
+
+/** Practical "looks like an email" check. Not a full RFC parser. */
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export interface PlaylistSendErrors {
+  name?: string
+  email?: string
+  eventDate?: string
+}
+
+export function playlistSendErrors(contact: PlaylistContact): PlaylistSendErrors {
+  const errors: PlaylistSendErrors = {}
+  if (!contact.name.trim()) errors.name = 'Name is required.'
+  const email = contact.email.trim()
+  if (!email) errors.email = 'Email is required.'
+  else if (!EMAIL_PATTERN.test(email)) {
+    errors.email = 'Enter an email address like name@example.com.'
+  }
+  if (!contact.eventDate.trim()) errors.eventDate = 'Event date is required.'
+  return errors
+}
+
+export function playlistSendErrorMessage(errors: PlaylistSendErrors): string | null {
+  const messages = [errors.name, errors.email, errors.eventDate].filter(
+    (message): message is string => Boolean(message),
+  )
+  return messages.length ? messages.join(' ') : null
+}
 
 /** The Apps Script web app emails this address. The page does not open a mail app. */
 export const EMAIL_TO = 'anders@andershyattmusic.com'
@@ -93,16 +121,21 @@ export async function submitPlaylist(
       return { ok: true, message: 'Downloaded anders-playlist.csv' }
     }
     case 'send': {
+      const name = submission.contact.name.trim()
+      const email = submission.contact.email.trim()
+      const eventDate = submission.contact.eventDate.trim()
+      const blocked = playlistSendErrorMessage(playlistSendErrors(submission.contact))
+      if (blocked) return { ok: false, message: blocked }
       try {
         const response = await fetch(PLANNER_API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'publicPlaylist',
-            name: submission.contact.name,
-            email: submission.contact.email,
-            eventDate: submission.contact.eventDate,
-            notes: submission.contact.notes,
+            name,
+            email,
+            eventDate,
+            notes: submission.contact.notes.trim(),
             songs: submission.songs.map((song) => ({
               title: song.title,
               artist: song.artist,

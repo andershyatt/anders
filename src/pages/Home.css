@@ -28,10 +28,13 @@
 }
 
 .home-intro .home-intro__welcome {
-  margin: 0.9rem auto 0;
-  max-width: 40rem;
-  font-size: 16px;
-  line-height: 1.5;
+  margin: 1.15rem auto 0;
+  max-width: 100%;
+  font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 48px;
+  line-height: 1.35;
   color: #000000;
 }
 
@@ -208,6 +211,10 @@
   .home-intro p,
   .home-quote p {
     font-size: 18px;
+  }
+
+  .home-intro .home-intro__welcome {
+    font-size: 32px;
   }
 
   .home-ctas {

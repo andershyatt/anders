@@ -95,8 +95,23 @@ export function parseEventDate(raw: string): Date | null {
   return localDate(parsed.getFullYear(), parsed.getMonth() + 1, parsed.getDate())
 }
 
-function startOfDay(day: Date): Date {
-  return new Date(day.getFullYear(), day.getMonth(), day.getDate())
+const NEW_YORK = 'America/New_York'
+
+/** Calendar date in America/New_York, not the browser's local timezone. */
+export function newYorkCalendarDate(now: Date): { year: number; month: number; day: number } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: NEW_YORK,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now)
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value)
+  return { year: value('year'), month: value('month'), day: value('day') }
+}
+
+function calendarStamp(year: number, month: number, day: number): number {
+  return year * 10000 + month * 100 + day
 }
 
 /** Blank Show is public. YES/yes/true are public. Anything else is hidden. */
@@ -187,14 +202,17 @@ export function eventsFromSheetCsv(text: string): PublicEvent[] {
   return events
 }
 
-/** Public rows on or after today, earliest date first. */
+/** Public rows on or after today's America/New_York calendar date, earliest first. */
 export function visibleEventRows(events: PublicEvent[], today = new Date()): EventRow[] {
-  const start = startOfDay(today)
+  const ny = newYorkCalendarDate(today)
+  const start = calendarStamp(ny.year, ny.month, ny.day)
   const rows: { row: EventRow; time: number; index: number }[] = []
   events.forEach((event, index) => {
     if (!isPublicShow(event.show)) return
     const day = parseEventDate(event.date)
-    if (!day || day < start) return
+    if (!day) return
+    const eventDay = calendarStamp(day.getFullYear(), day.getMonth() + 1, day.getDate())
+    if (eventDay < start) return
     const title = event.title.trim()
     if (!title) return
     const when = formatEventWhen(day, event.start, event.end)

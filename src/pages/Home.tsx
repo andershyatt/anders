@@ -16,8 +16,8 @@ export default function Home() {
           <h2>Live Music &amp; DJ Services</h2>
           <p>Philadelphia PA, worldwide</p>
           <p className="home-intro__welcome">
-            We provide a music experience that feels like yours: customized to the occasion and
-            built to elevate the atmosphere.
+            A music experience that feels like yours: customized to the occasion and built to
+            elevate the atmosphere.
           </p>
         </header>
 
