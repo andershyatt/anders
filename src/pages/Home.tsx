@@ -44,9 +44,14 @@ export default function Home() {
               <p>
                 <em>Solo, duo and trio options</em>
               </p>
-              <Link to="/live-music" className="home-btn">
-                Learn more
-              </Link>
+              <div className="home-split__actions">
+                <Link to="/live-music" className="home-btn">
+                  Learn more
+                </Link>
+                <Link to="/song-list" className="home-btn">
+                  Live song list
+                </Link>
+              </div>
             </div>
           </div>
         </section>
