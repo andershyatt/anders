@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+import { socialLinks } from '../data/social'
 import { usePublicEvents } from '../lib/publicEvents'
 import './Events.css'
 
@@ -9,7 +11,7 @@ export default function Events() {
       <h2>Catch Anders Live!</h2>
       <div className="divider" />
 
-      <p className="lead">
+      <p>
         Anders primarily performs at private events, however he does have the occasional public
         show. If you&apos;d like to catch his public live performances, check out the dates below.
       </p>
@@ -20,6 +22,18 @@ export default function Events() {
         the event. And feel free to send him song requests as well. Not all requests can be
         accommodated but he will do his best.
       </p>
+
+      <div className="cta-row events-actions">
+        <a className="cta-btn" href={socialLinks.instagram} target="_blank" rel="noopener noreferrer">
+          Instagram
+        </a>
+        <a className="cta-btn" href={socialLinks.facebook} target="_blank" rel="noopener noreferrer">
+          Facebook
+        </a>
+        <Link to="/song-list" className="cta-btn">
+          Send Song Requests
+        </Link>
+      </div>
 
       <h3>Events</h3>
 

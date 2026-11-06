@@ -359,6 +359,22 @@
   border-radius: 2px;
 }
 
+.playlist-form input[aria-invalid='true'],
+.playlist-form textarea[aria-invalid='true'] {
+  border-color: #b42318;
+}
+
+.playlist-required {
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.playlist-field-error {
+  color: #7a1b14;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .playlist-submit-actions {
   display: flex;
   flex-direction: column;
@@ -405,19 +421,13 @@
   .playlist-submit-actions__row {
     grid-template-columns: 1fr;
   }
-
-  .playlist-send {
-    width: calc(100% + 2rem);
-    margin-left: -1rem;
-    margin-right: -1rem;
-    border-radius: 0;
-  }
 }
 
 .playlist-preview {
   margin-top: 1.5rem;
-  padding-left: 1.25rem;
+  padding-left: 1.5rem;
   font-size: 14px;
+  list-style: decimal;
 }
 
 @media (max-width: 900px) {

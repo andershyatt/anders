@@ -44,7 +44,7 @@ export default function Dj() {
       <section id="faq" className="page-faq" aria-labelledby="dj-faq-heading">
         <h2 id="dj-faq-heading">Frequently Asked Questions</h2>
         <div className="divider" />
-        <FaqAccordion items={djFaq} />
+        <FaqAccordion items={djFaq} connectAsButton />
       </section>
     </div>
   )

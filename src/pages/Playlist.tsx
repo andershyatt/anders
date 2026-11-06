@@ -1,7 +1,13 @@
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useDeferredValue, useMemo, useRef, useState } from 'react'
 import { usePlaylist } from '../hooks/usePlaylist'
 import { useSongCatalog } from '../lib/songCatalog'
-import { submitPlaylist, type SubmitMethod } from '../lib/submitPlaylist'
+import {
+  playlistSendErrorMessage,
+  playlistSendErrors,
+  submitPlaylist,
+  type PlaylistSendErrors,
+  type SubmitMethod,
+} from '../lib/submitPlaylist'
 import type { PlaylistContact, Song } from '../types/song'
 import { LINEUP_FILTERS, filterSongs, songFilterChoices } from '../planner/filterSongs'
 import './Playlist.css'
@@ -30,7 +36,11 @@ export default function Playlist() {
     notes: '',
   })
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<PlaylistSendErrors>({})
   const [busy, setBusy] = useState(false)
+  const nameRef = useRef<HTMLInputElement>(null)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const eventDateRef = useRef<HTMLInputElement>(null)
 
   const { genres, decades, paces, tags } = useMemo(() => songFilterChoices(songs), [songs])
 
@@ -54,10 +64,36 @@ export default function Playlist() {
     )
   }
 
+  const setContactField = (field: keyof PlaylistContact, value: string) => {
+    setContact((current) => ({ ...current, [field]: value }))
+    if (field === 'notes') return
+    setFieldErrors((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }
+
   const onSubmit = async (method: SubmitMethod) => {
     if (!playlist.count) {
       setStatus({ ok: false, message: 'Add at least one song before sending.' })
       return
+    }
+    if (method === 'send') {
+      const errors = playlistSendErrors(contact)
+      setFieldErrors(errors)
+      const message = playlistSendErrorMessage(errors)
+      if (message) {
+        setStatus({ ok: false, message })
+        const focus = errors.name
+          ? nameRef.current
+          : errors.email
+            ? emailRef.current
+            : eventDateRef.current
+        focus?.focus()
+        return
+      }
     }
     setBusy(true)
     setStatus(null)
@@ -304,49 +340,90 @@ export default function Playlist() {
             download a text or CSV file.
           </p>
 
-          <div className="playlist-form">
+          <form
+            id="playlist-send-form"
+            className="playlist-form"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault()
+              void onSubmit('send')
+            }}
+          >
             <label>
-              Name
+              <span>
+                Name <span className="playlist-required">(required)</span>
+              </span>
               <input
+                ref={nameRef}
                 value={contact.name}
-                onChange={(e) => setContact({ ...contact, name: e.target.value })}
+                onChange={(e) => setContactField('name', e.target.value)}
                 autoComplete="name"
+                required
+                aria-invalid={fieldErrors.name ? true : undefined}
+                aria-describedby={fieldErrors.name ? 'playlist-name-error' : undefined}
               />
+              {fieldErrors.name ? (
+                <span id="playlist-name-error" className="playlist-field-error">
+                  {fieldErrors.name}
+                </span>
+              ) : null}
             </label>
             <label>
-              Email
+              <span>
+                Email <span className="playlist-required">(required)</span>
+              </span>
               <input
+                ref={emailRef}
                 type="email"
                 value={contact.email}
-                onChange={(e) => setContact({ ...contact, email: e.target.value })}
+                onChange={(e) => setContactField('email', e.target.value)}
                 autoComplete="email"
+                required
+                aria-invalid={fieldErrors.email ? true : undefined}
+                aria-describedby={fieldErrors.email ? 'playlist-email-error' : undefined}
               />
+              {fieldErrors.email ? (
+                <span id="playlist-email-error" className="playlist-field-error">
+                  {fieldErrors.email}
+                </span>
+              ) : null}
             </label>
             <label>
-              Event date
+              <span>
+                Event date <span className="playlist-required">(required)</span>
+              </span>
               <input
+                ref={eventDateRef}
                 type="date"
                 value={contact.eventDate}
-                onChange={(e) => setContact({ ...contact, eventDate: e.target.value })}
+                onChange={(e) => setContactField('eventDate', e.target.value)}
+                required
+                aria-invalid={fieldErrors.eventDate ? true : undefined}
+                aria-describedby={fieldErrors.eventDate ? 'playlist-date-error' : undefined}
               />
+              {fieldErrors.eventDate ? (
+                <span id="playlist-date-error" className="playlist-field-error">
+                  {fieldErrors.eventDate}
+                </span>
+              ) : null}
             </label>
             <label>
               Notes
               <textarea
                 rows={4}
                 value={contact.notes}
-                onChange={(e) => setContact({ ...contact, notes: e.target.value })}
+                onChange={(e) => setContactField('notes', e.target.value)}
                 placeholder="Ceremony, cocktail hour, must-plays, do-not-plays…"
               />
             </label>
-          </div>
+          </form>
 
           <div className="playlist-submit-actions">
             <button
-              type="button"
+              type="submit"
+              form="playlist-send-form"
               className="btn playlist-send"
               disabled={busy}
-              onClick={() => onSubmit('send')}
             >
               Send to Anders
             </button>
@@ -388,9 +465,9 @@ export default function Playlist() {
           )}
 
           <ol className="playlist-preview">
-            {playlist.selectedSongs.map((s, i) => (
+            {playlist.selectedSongs.map((s) => (
               <li key={s.id}>
-                {i + 1}. {s.title} — {s.artist}
+                {s.title} — {s.artist}
               </li>
             ))}
           </ol>

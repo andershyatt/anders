@@ -44,11 +44,7 @@ function isDropdownActive(pathname: string, to: string | undefined, items: NavLi
   return items.some((item) => isActive(pathname, item.to))
 }
 
-interface NavProps {
-  variant?: 'bar' | 'overlay'
-}
-
-export default function Nav({ variant = 'bar' }: NavProps) {
+export default function Nav() {
   const { pathname } = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
@@ -63,10 +59,7 @@ export default function Nav({ variant = 'bar' }: NavProps) {
   }
 
   return (
-    <nav
-      className={`site-nav${variant === 'overlay' ? ' site-nav--overlay' : ''}`}
-      aria-label="Main navigation"
-    >
+    <nav className="site-nav" aria-label="Main navigation">
       <div className="site-nav__inner">
         <button
           type="button"

@@ -28,11 +28,15 @@
 }
 
 .home-intro .home-intro__welcome {
-  margin: 0.9rem auto 0;
-  max-width: 40rem;
-  font-size: 16px;
-  line-height: 1.5;
-  color: #000000;
+  margin: 1.15rem auto 0;
+  max-width: 100%;
+  font-family: Outfit, 'Avenir Next', 'Century Gothic', Futura, sans-serif;
+  font-style: normal;
+  font-weight: 300;
+  font-size: 36px;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  color: #3a3a3a;
 }
 
 .home-video {
@@ -100,6 +104,12 @@
 .home-split__card strong {
   font-weight: 700;
   letter-spacing: 0.01em;
+}
+
+.home-split__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
 
 .home-btn {
@@ -208,6 +218,10 @@
   .home-intro p,
   .home-quote p {
     font-size: 18px;
+  }
+
+  .home-intro .home-intro__welcome {
+    font-size: 24px;
   }
 
   .home-ctas {

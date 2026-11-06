@@ -16,8 +16,8 @@ export default function Home() {
           <h2>Live Music &amp; DJ Services</h2>
           <p>Philadelphia PA, worldwide</p>
           <p className="home-intro__welcome">
-            We provide a music experience that feels like yours: customized to the occasion and
-            built to elevate the atmosphere.
+            A music experience that feels like yours: customized to the occasion and built to
+            elevate the atmosphere
           </p>
         </header>
 
@@ -44,9 +44,14 @@ export default function Home() {
               <p>
                 <em>Solo, duo and trio options</em>
               </p>
-              <Link to="/live-music" className="home-btn">
-                Learn more
-              </Link>
+              <div className="home-split__actions">
+                <Link to="/live-music" className="home-btn">
+                  Learn more
+                </Link>
+                <Link to="/song-list" className="home-btn">
+                  Live song list
+                </Link>
+              </div>
             </div>
           </div>
         </section>

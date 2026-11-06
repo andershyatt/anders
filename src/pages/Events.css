@@ -1,3 +1,10 @@
+.page-content .events-actions {
+  justify-content: flex-start;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .events-table-wrap {
   overflow-x: auto;
   margin: 2rem 0;

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Nav from './Nav'
 import HeroBanner, { type HeroVariant } from './HeroBanner'
@@ -37,18 +37,26 @@ export default function SiteLayout() {
   const { pathname, hash } = useLocation()
   const meta = routeMeta[pathname] ?? defaultMeta
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const id = decodeURIComponent(hash.replace(/^#/, ''))
-    if (!id) return
-    const scroll = () => {
+    const scrollToAnchor = () => {
+      if (!id) return false
       const target = document.getElementById(id)
       if (!target) return false
       target.scrollIntoView({ block: 'start' })
       return true
     }
-    if (scroll()) return
+    if (scrollToAnchor()) return
+
+    const root = document.documentElement
+    const previous = root.style.scrollBehavior
+    root.style.scrollBehavior = 'auto'
+    window.scrollTo(0, 0)
+    root.style.scrollBehavior = previous
+
+    if (!id) return
     const frame = window.requestAnimationFrame(() => {
-      scroll()
+      if (!scrollToAnchor()) window.scrollTo(0, 0)
     })
     return () => window.cancelAnimationFrame(frame)
   }, [pathname, hash])
@@ -57,6 +65,7 @@ export default function SiteLayout() {
 
   return (
     <div className={`site-layout${isHome ? ' site-layout--home' : ''}`}>
+      <Nav />
       {isHome ? (
         <header className="home-hero">
           <img
@@ -64,16 +73,12 @@ export default function SiteLayout() {
             src={images.heroHome}
             alt="Anders Hyatt playing guitar with a band on stage"
           />
-          <Nav variant="overlay" />
           <div className="home-hero__social">
             <SocialBar variant="hero" />
           </div>
         </header>
       ) : (
-        <>
-          <Nav />
-          <HeroBanner variant={meta.hero} title={meta.title} subtitle={meta.subtitle} />
-        </>
+        <HeroBanner variant={meta.hero} title={meta.title} subtitle={meta.subtitle} />
       )}
       <main className="site-main">
         <Outlet />
