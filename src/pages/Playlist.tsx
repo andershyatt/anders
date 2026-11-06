@@ -1,15 +1,18 @@
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import songsData from '../data/songs.json'
 import { usePlaylist } from '../hooks/usePlaylist'
+import { fetchSheetSongs } from '../lib/sheetSongs'
 import { submitPlaylist, type SubmitMethod } from '../lib/submitPlaylist'
 import type { PlaylistContact, Song } from '../types/song'
 import { filterSongs, songFilterChoices } from '../planner/filterSongs'
 import './Playlist.css'
 
-const songs = songsData as Song[]
+const bundledSongs = songsData as Song[]
 
 export default function Playlist() {
+  const [songs, setSongs] = useState<Song[]>([])
+  const [songSource, setSongSource] = useState<'loading' | 'sheet' | 'saved'>('loading')
   const playlist = usePlaylist(songs)
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
@@ -28,24 +31,30 @@ export default function Playlist() {
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const { genres, decades, paces, tags } = useMemo(() => songFilterChoices(songs), [])
+  useEffect(() => {
+    let cancelled = false
+    fetchSheetSongs()
+      .then((loaded) => {
+        if (cancelled) return
+        setSongs(loaded)
+        setSongSource('sheet')
+      })
+      .catch(() => {
+        if (cancelled) return
+        setSongs(bundledSongs)
+        setSongSource('saved')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const { genres, decades, paces, tags } = useMemo(() => songFilterChoices(songs), [songs])
 
   const filtered = useMemo(
     () => filterSongs(songs, { query: deferredQuery, genre, decade, pace, tag, sortBy }),
-    [deferredQuery, genre, decade, pace, tag, sortBy],
+    [songs, deferredQuery, genre, decade, pace, tag, sortBy],
   )
-
-  const grouped = useMemo(() => {
-    if (sortBy !== 'artist') return null
-    const map = new Map<string, Song[]>()
-    for (const s of filtered) {
-      const key = s.artist
-      const arr = map.get(key)
-      if (arr) arr.push(s)
-      else map.set(key, [s])
-    }
-    return map
-  }, [filtered, sortBy])
 
   const clearFilters = () => {
     setQuery('')
@@ -173,42 +182,30 @@ export default function Playlist() {
             </div>
 
             <p className="playlist-count">
-              Showing {filtered.length} of {songs.length} songs
+              {songSource === 'loading'
+                ? 'Loading songs…'
+                : `Showing ${filtered.length} of ${songs.length} songs`}
+              {songSource === 'saved' && ' (saved copy — the live sheet did not load)'}
             </p>
           </div>
 
           <div className="playlist-layout">
             <div className="playlist-results" role="list">
-              {grouped
-                ? [...grouped.entries()].map(([artist, artistSongs]) => (
-                    <section key={artist} className="playlist-artist-group">
-                      <h3 className="playlist-artist-heading">{artist}</h3>
-                      <ul>
-                        {artistSongs.map((song) => (
-                          <SongRow
-                            key={song.id}
-                            song={song}
-                            selected={playlist.isSelected(song.id)}
-                            onToggle={() => playlist.toggle(song.id)}
-                          />
-                        ))}
-                      </ul>
-                    </section>
-                  ))
-                : (
-                  <ul>
-                    {filtered.map((song) => (
-                      <SongRow
-                        key={song.id}
-                        song={song}
-                        selected={playlist.isSelected(song.id)}
-                        onToggle={() => playlist.toggle(song.id)}
-                        showArtist
-                      />
-                    ))}
-                  </ul>
-                )}
-              {filtered.length === 0 && (
+              {songSource === 'loading' ? (
+                <p className="playlist-empty">Loading songs…</p>
+              ) : (
+                <ul>
+                  {filtered.map((song) => (
+                    <SongRow
+                      key={song.id}
+                      song={song}
+                      selected={playlist.isSelected(song.id)}
+                      onToggle={() => playlist.toggle(song.id)}
+                    />
+                  ))}
+                </ul>
+              )}
+              {songSource !== 'loading' && filtered.length === 0 && (
                 <p className="playlist-empty">No songs match those filters.</p>
               )}
             </div>
@@ -380,17 +377,11 @@ function SongRow({
   song,
   selected,
   onToggle,
-  showArtist = false,
 }: {
   song: Song
   selected: boolean
   onToggle: () => void
-  showArtist?: boolean
 }) {
-  const meta = [song.pace, song.decade, ...(song.genres ?? []).slice(0, 2)]
-    .filter(Boolean)
-    .join(' · ')
-
   return (
     <li role="listitem">
       <button
@@ -400,12 +391,10 @@ function SongRow({
         aria-pressed={selected}
       >
         <span className="playlist-song__check" aria-hidden="true">
-          {selected ? '✓' : '+'}
+          {selected ? '✓' : ''}
         </span>
-        <span className="playlist-song__body">
-          <strong>{song.title}</strong>
-          {showArtist && <span className="playlist-song__artist">{song.artist}</span>}
-          {meta && <span className="playlist-song__meta">{meta}</span>}
+        <span className="playlist-song__line">
+          {song.artist} - {song.title}
         </span>
       </button>
     </li>
