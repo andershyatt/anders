@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Slideshow from '../components/Slideshow'
+import YouTubeEmbed from '../components/YouTubeEmbed'
 import { homeGallery, images } from '../data/media'
 
 const placeholderPhotos = [images.duoAngella, images.duoBen, ...homeGallery.slice(0, 4)]
@@ -7,19 +8,22 @@ const placeholderPhotos = [images.duoAngella, images.duoBen, ...homeGallery.slic
 export default function Trio() {
   return (
     <div className="page-content">
-      <h1 className="page-title">Anders, Angella &amp; Ben Acoustic Trio</h1>
-      <div className="lead copy-lg">
-        <p>
-          Anders, Angella, and Ben are available together as an acoustic trio. Anders offers solo,
-          duo, and trio options for live music.
-        </p>
-        <p>
-          Anders plays guitar and sings. His repertoire spans songs old and new, across many genres.
-          Angella sings with him, and the two harmonize through decades of popular music. Ben Rogers
-          plays violin and sings, and has been playing with Anders for years. As a duo, Ben and
-          Anders can provide both beautiful instrumental music and upbeat party music.
-        </p>
-        <p>Custom set lists and special song requests are also available.</p>
+      <h1 className="page-title">The Trio &mdash; Anders, Angella &amp; Ben</h1>
+      <div className="lead">
+        <YouTubeEmbed videoId="qZhppNcsXlc" title="The Trio — Anders, Angella & Ben" />
+        <div className="copy-lg">
+          <p>
+            Anders, Angella, and Ben are available together as an acoustic trio. Anders offers solo,
+            duo, and trio options for live music.
+          </p>
+          <p>
+            Anders sings and plays guitar. Angella sings and plays percussion. Ben sings and plays
+            violin. Anders&apos;s repertoire spans songs old and new, across many genres. Angella and
+            Anders harmonize through decades of popular music. Ben has been playing with Anders for
+            years.
+          </p>
+          <p>Custom set lists and special song requests are also available.</p>
+        </div>
       </div>
 
       <div className="cta-row cta-row--wide">
