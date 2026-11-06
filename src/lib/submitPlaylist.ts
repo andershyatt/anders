@@ -1,4 +1,5 @@
 import { PLANNER_API_URL } from '../planner/config'
+import { formatCoupleDate } from '../planner/format'
 import type { PlaylistSubmission, Song } from '../types/song'
 
 /** The Apps Script web app emails this address. The page does not open a mail app. */
@@ -68,6 +69,8 @@ const SEND_ERROR =
  * Copy, download, or send the playlist.
  * Send posts { action: 'publicPlaylist' } to the planner Apps Script.
  * That action does not use a couple token. It emails EMAIL_TO from the script.
+ * eventDate is already formatted, for example "Tuesday, June 1st, 2027".
+ * The script should print each song as `${i + 1}. ${artist} - ${title}`.
  */
 export async function submitPlaylist(
   submission: PlaylistSubmission,
@@ -101,7 +104,7 @@ export async function submitPlaylist(
             action: 'publicPlaylist',
             name: submission.contact.name,
             email: submission.contact.email,
-            eventDate: submission.contact.eventDate,
+            eventDate: formatCoupleDate(submission.contact.eventDate),
             notes: submission.contact.notes,
             songs: submission.songs.map((song) => ({
               title: song.title,

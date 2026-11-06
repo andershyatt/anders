@@ -80,7 +80,7 @@ export default function Playlist() {
   return (
     <div className="page-content playlist-page left">
       <div className="playlist-intro">
-        <h2>Song List</h2>
+        <h2>Live Song List</h2>
         <div className="divider" />
         <p>
           Search and filter Anders&apos;s song list, add the ones you love, then send the

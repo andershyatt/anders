@@ -189,6 +189,16 @@
   align-items: center;
 }
 
+.home-badges a {
+  display: block;
+  text-decoration: none;
+}
+
+.home-badges a:hover,
+.home-badges a:focus-visible {
+  text-decoration: none;
+}
+
 .home-badges img {
   width: 100%;
   max-width: 280px;

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import Slideshow from '../components/Slideshow'
 import YouTubeEmbed from '../components/YouTubeEmbed'
 import { homeGallery, images } from '../data/media'
+import { reviewListings } from '../data/reviews'
 import './Home.css'
 
 const ericaQuote =
@@ -99,11 +100,7 @@ export default function Home() {
           </blockquote>
           <figcaption>
             —{' '}
-            <a
-              href="https://g.page/r/CT8HZra3a_GKEB0"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href={reviewListings.google} target="_blank" rel="noopener noreferrer">
               Google
             </a>
           </figcaption>
@@ -121,13 +118,34 @@ export default function Home() {
 
         <ul className="home-badges">
           <li>
-            <img src={images.badgeZola} alt="As seen on Zola" />
+            <a
+              href={reviewListings.zola}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Anders Hyatt Music reviews on Zola"
+            >
+              <img src={images.badgeZola} alt="As seen on Zola" />
+            </a>
           </li>
           <li>
-            <img src={images.badgeTk} alt="The Knot Hall of Fame 2026" />
+            <a
+              href={reviewListings.theKnot}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Anders Hyatt Music reviews on The Knot"
+            >
+              <img src={images.badgeTk} alt="The Knot Hall of Fame 2026" />
+            </a>
           </li>
           <li>
-            <img src={images.badgeBow} alt="WeddingWire Couples' Choice Award 2026" />
+            <a
+              href={reviewListings.weddingWire}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Anders Hyatt Music reviews on WeddingWire"
+            >
+              <img src={images.badgeBow} alt="WeddingWire Couples' Choice Award 2026" />
+            </a>
           </li>
         </ul>
       </div>
