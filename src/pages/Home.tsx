@@ -17,7 +17,7 @@ export default function Home() {
           <p>Philadelphia PA, worldwide</p>
           <p className="home-intro__welcome">
             A music experience that feels like yours: customized to the occasion and built to
-            elevate the atmosphere.
+            elevate the atmosphere
           </p>
         </header>
 
