@@ -1,5 +1,4 @@
 import { useDeferredValue, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { usePlaylist } from '../hooks/usePlaylist'
 import { useSongCatalog } from '../lib/songCatalog'
 import { submitPlaylist, type SubmitMethod } from '../lib/submitPlaylist'
@@ -65,16 +64,12 @@ export default function Playlist() {
   return (
     <div className="page-content playlist-page left">
       <div className="playlist-intro">
-        <h2>Build a Playlist</h2>
+        <h2>Song List</h2>
         <div className="divider" />
         <p>
           Search and filter Anders&apos;s song list, add the ones you love, then send the
           playlist for your event. Your selections are saved in this browser until you clear
           them.
-        </p>
-        <p>
-          Prefer a simple table?{' '}
-          <Link to="/songlist">View the full song list</Link>.
         </p>
       </div>
 

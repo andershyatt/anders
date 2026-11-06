@@ -84,7 +84,7 @@ export default function Home() {
           <Link to="/connect" className="home-btn home-btn--block">
             GET A QUOTE
           </Link>
-          <Link to="/songlist" className="home-btn home-btn--block">
+          <Link to="/song-list" className="home-btn home-btn--block">
             LIVE SONG LIST
           </Link>
         </div>
