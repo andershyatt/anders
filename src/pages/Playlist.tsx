@@ -1,18 +1,13 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import songsData from '../data/songs.json'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { usePlaylist } from '../hooks/usePlaylist'
-import { fetchSheetSongs } from '../lib/sheetSongs'
+import { useSongCatalog } from '../lib/songCatalog'
 import { submitPlaylist, type SubmitMethod } from '../lib/submitPlaylist'
 import type { PlaylistContact, Song } from '../types/song'
 import { filterSongs, songFilterChoices } from '../planner/filterSongs'
 import './Playlist.css'
 
-const bundledSongs = songsData as Song[]
-
 export default function Playlist() {
-  const [songs, setSongs] = useState<Song[]>([])
-  const [songSource, setSongSource] = useState<'loading' | 'sheet' | 'saved'>('loading')
+  const { songs, status: songSource } = useSongCatalog()
   const playlist = usePlaylist(songs)
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
@@ -30,24 +25,6 @@ export default function Playlist() {
   })
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    fetchSheetSongs()
-      .then((loaded) => {
-        if (cancelled) return
-        setSongs(loaded)
-        setSongSource('sheet')
-      })
-      .catch(() => {
-        if (cancelled) return
-        setSongs(bundledSongs)
-        setSongSource('saved')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const { genres, decades, paces, tags } = useMemo(() => songFilterChoices(songs), [songs])
 
@@ -87,16 +64,12 @@ export default function Playlist() {
   return (
     <div className="page-content playlist-page left">
       <div className="playlist-intro">
-        <h2>Build a Playlist</h2>
+        <h2>Song List</h2>
         <div className="divider" />
         <p>
           Search and filter Anders&apos;s song list, add the ones you love, then send the
           playlist for your event. Your selections are saved in this browser until you clear
           them.
-        </p>
-        <p>
-          Prefer a simple table?{' '}
-          <Link to="/songlist">View the full song list</Link>.
         </p>
       </div>
 

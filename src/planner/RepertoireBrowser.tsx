@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
+import { useSongCatalog } from '../lib/songCatalog'
 import { EMPTY_SONG_FILTERS, filterSongs, songFilterChoices, type SongFilters } from './filterSongs'
-import { repertoireCatalog } from './repertoire'
 
 interface RepertoireBrowserProps {
   onAdd: (song: { title: string; artist: string }) => void
@@ -9,7 +9,7 @@ interface RepertoireBrowserProps {
 
 /** Live repertoire browser. Filters match the Build Playlist page. */
 export default function RepertoireBrowser({ onAdd, isAdded }: RepertoireBrowserProps) {
-  const songs = useMemo(() => repertoireCatalog(), [])
+  const { songs, status } = useSongCatalog()
   const choices = useMemo(() => songFilterChoices(songs), [songs])
   const [filters, setFilters] = useState<SongFilters>(EMPTY_SONG_FILTERS)
   const filtered = useMemo(() => filterSongs(songs, filters), [songs, filters])
@@ -84,7 +84,7 @@ export default function RepertoireBrowser({ onAdd, isAdded }: RepertoireBrowserP
         </button>
       </div>
       <p className="planner-songlist__count">
-        Showing {filtered.length} of {songs.length} songs
+        {status === 'loading' ? 'Loading songs…' : `Showing ${filtered.length} of ${songs.length} songs`}
       </p>
       <ul className="planner-suggest planner-repertoire__list">
         {filtered.map((song) => (

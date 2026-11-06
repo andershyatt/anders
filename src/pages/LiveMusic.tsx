@@ -48,7 +48,7 @@ export default function LiveMusic() {
         <Link to="/trio" className="cta-btn">
           The Trio
         </Link>
-        <Link to="/songlist" className="cta-btn">
+        <Link to="/song-list" className="cta-btn">
           Song List
         </Link>
         <Link to="/connect" className="cta-btn">

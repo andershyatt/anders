@@ -18,8 +18,7 @@ const liveMusicDropdown: NavLink[] = [
   { label: 'Duo - Ben', to: '/duo-ben' },
   { label: 'Trio — Anders, Angella & Ben', to: '/trio' },
   { label: 'FAQ', to: '/faq' },
-  { label: 'SongList', to: '/songlist' },
-  { label: 'Build Playlist', to: '/playlist' },
+  { label: 'Song List', to: '/song-list' },
 ]
 
 const djDropdown: NavLink[] = [{ label: 'DJ FAQ', to: '/dj-faq' }]
