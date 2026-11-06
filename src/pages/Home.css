@@ -27,6 +27,14 @@
   color: #95a5a6;
 }
 
+.home-intro .home-intro__welcome {
+  margin: 0.9rem auto 0;
+  max-width: 40rem;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #000000;
+}
+
 .home-video {
   margin: 0 0 1.6rem;
 }
@@ -238,15 +246,27 @@
     padding: 16px;
   }
 
-  .home-ctas,
-  .home-badges {
+  .home-ctas {
     grid-template-columns: 1fr;
   }
 
   .home-badges {
-    max-width: 260px;
-    margin-left: auto;
-    margin-right: auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    max-width: none;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-inline: 0.3rem;
+  }
+
+  .home-badges li {
+    min-width: 0;
+  }
+
+  .home-badges img {
+    width: 100%;
+    max-width: none;
+    margin: 0;
   }
 
   .home-btn--block {

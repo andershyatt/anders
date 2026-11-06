@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Nav from './Nav'
 import HeroBanner, { type HeroVariant } from './HeroBanner'
@@ -33,8 +34,24 @@ const routeMeta: Record<string, RouteMeta> = {
 const defaultMeta: RouteMeta = { hero: 'guitar' }
 
 export default function SiteLayout() {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   const meta = routeMeta[pathname] ?? defaultMeta
+
+  useEffect(() => {
+    const id = decodeURIComponent(hash.replace(/^#/, ''))
+    if (!id) return
+    const scroll = () => {
+      const target = document.getElementById(id)
+      if (!target) return false
+      target.scrollIntoView({ block: 'start' })
+      return true
+    }
+    if (scroll()) return
+    const frame = window.requestAnimationFrame(() => {
+      scroll()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [pathname, hash])
 
   const isHome = pathname === '/'
 

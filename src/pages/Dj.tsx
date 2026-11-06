@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
+import FaqAccordion from '../components/FaqAccordion'
 import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import YouTubeEmbed from '../components/YouTubeEmbed'
+import { djFaq } from '../data/faq'
 import { djGallery } from '../data/media'
 import './Dj.css'
 
@@ -21,7 +23,7 @@ export default function Dj() {
       </div>
 
       <div className="cta-row">
-        <Link to="/dj-faq" className="cta-btn">
+        <Link to="/dj#faq" className="cta-btn">
           DJ FAQ
         </Link>
         <Link to="/connect" className="cta-btn">
@@ -38,6 +40,12 @@ export default function Dj() {
       <YouTubeEmbed videoId="lyWz78KfERk" title="Anders Hyatt DJ Reel" />
 
       <Slideshow images={djGallery} altPrefix="DJ services" />
+
+      <section id="faq" className="page-faq" aria-labelledby="dj-faq-heading">
+        <h2 id="dj-faq-heading">Frequently Asked Questions</h2>
+        <div className="divider" />
+        <FaqAccordion items={djFaq} />
+      </section>
     </div>
   )
 }

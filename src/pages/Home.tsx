@@ -15,15 +15,11 @@ export default function Home() {
         <header className="home-intro">
           <h2>Live Music &amp; DJ Services</h2>
           <p>Philadelphia PA, worldwide</p>
+          <p className="home-intro__welcome">
+            We provide a music experience that feels like yours: customized to the occasion and
+            built to elevate the atmosphere.
+          </p>
         </header>
-
-        <div className="home-video">
-          <YouTubeEmbed
-            videoId="9IO4wOveS2U"
-            title="Anders Hyatt Music promo video"
-            showCaption={false}
-          />
-        </div>
 
         <section className="home-split" aria-labelledby="live-music-heading">
           <div className="home-split__media">
@@ -114,6 +110,14 @@ export default function Home() {
         </figure>
 
         <Slideshow images={homeGallery} altPrefix="Anders Hyatt Music" />
+
+        <div className="home-video">
+          <YouTubeEmbed
+            videoId="9IO4wOveS2U"
+            title="Anders Hyatt Music promo video"
+            showCaption={false}
+          />
+        </div>
 
         <ul className="home-badges">
           <li>
