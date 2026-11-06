@@ -6,8 +6,17 @@ export interface SongFilters {
   decade: string
   pace: string
   tag: string
+  /**
+   * Tag labels that must all be present.
+   * Song List buttons: Favorites, Duo - Ben, Duo - Angella, Trio
+   * (sheet columns Favorites, Ben, Angella, Trio).
+   */
+  lineups: string[]
   sortBy: 'artist' | 'title'
 }
+
+/** Sheet tag labels for the Song List lineup buttons, in display order. */
+export const LINEUP_FILTERS = ['Favorites', 'Duo - Ben', 'Duo - Angella', 'Trio'] as const
 
 export const EMPTY_SONG_FILTERS: SongFilters = {
   query: '',
@@ -15,6 +24,7 @@ export const EMPTY_SONG_FILTERS: SongFilters = {
   decade: '',
   pace: '',
   tag: '',
+  lineups: [],
   sortBy: 'artist',
 }
 
@@ -31,6 +41,10 @@ export function filterSongs(songs: Song[], filters: SongFilters): Song[] {
     if (filters.decade && song.decade !== filters.decade) return false
     if (filters.pace && song.pace !== filters.pace) return false
     if (filters.tag && !(song.tags ?? []).includes(filters.tag)) return false
+    if (filters.lineups.length > 0) {
+      const tags = song.tags ?? []
+      if (!filters.lineups.every((lineup) => tags.includes(lineup))) return false
+    }
     return true
   })
   return [...list].sort((a, b) => {

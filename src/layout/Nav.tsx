@@ -14,21 +14,19 @@ interface NavDropdown {
 }
 
 const liveMusicDropdown: NavLink[] = [
+  { label: 'About', to: '/live-music' },
+  { label: 'Song List', to: '/song-list' },
   { label: 'Duo - Angella', to: '/duo-angella' },
   { label: 'Duo - Ben', to: '/duo-ben' },
   { label: 'Trio — Anders, Angella & Ben', to: '/trio' },
-  { label: 'FAQ', to: '/faq' },
-  { label: 'Song List', to: '/song-list' },
 ]
-
-const djDropdown: NavLink[] = [{ label: 'DJ FAQ', to: '/dj-faq' }]
 
 const topLinks: (NavLink | NavDropdown)[] = [
   { label: 'Home', to: '/' },
-  { label: 'Live Music', to: '/live-music', items: liveMusicDropdown },
-  { label: 'DJ', to: '/dj', items: djDropdown },
-  { label: 'Events', to: '/events' },
+  { label: 'Live Music', items: liveMusicDropdown },
+  { label: 'DJ', to: '/dj' },
   { label: 'Photo Booth', to: '/photo-booth' },
+  { label: 'Events', to: '/events' },
   { label: 'Connect', to: '/connect' },
 ]
 

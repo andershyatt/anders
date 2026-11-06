@@ -133,6 +133,11 @@ button {
   margin: 0.75rem auto 1.5rem;
 }
 
+.page-faq {
+  margin-top: 2.5rem;
+  scroll-margin-top: calc(var(--nav-height) + 12px);
+}
+
 .btn {
   display: inline-block;
   padding: 0.65rem 1.4rem;

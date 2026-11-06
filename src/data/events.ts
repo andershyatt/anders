@@ -1,27 +1,45 @@
-export interface EventItem {
+/** One row from the public Events sheet, or the bundled fallback. */
+export interface PublicEvent {
+  /** Calendar date, preferably YYYY-MM-DD. */
   date: string
-  dateShort: string
+  start: string
+  end: string
   title: string
   location: string
+  /** Blank, YES, or true means the row is listed. */
+  show?: string
+  details?: string
+  link?: string
 }
 
-export const upcomingEvents: EventItem[] = [
+/**
+ * Used when the Events sheet cannot be reached.
+ * Sheet: Anders Hyatt Music — Website Events
+ * https://docs.google.com/spreadsheets/d/1k0aKkSn3u1jkdLXKxCrp58_tOta4Gwybo_MD8kS8Wxg
+ */
+export const fallbackEvents: PublicEvent[] = [
   {
-    date: 'Friday, July 31 @ 7:00PM — 10:00PM',
-    dateShort: 'Fri, Jul 31 @ 7:00PM — 10:00PM',
-    title: 'Live Acoustic Temperance House, Newtown, PA',
+    date: '2026-11-20',
+    start: '7:00 PM',
+    end: '10:00 PM',
+    title: 'Live acoustic',
     location: 'Temperance House, Newtown, PA',
+    show: 'YES',
   },
   {
-    date: 'Friday, August 21 @ 7:00PM — 10:00PM',
-    dateShort: 'Fri, Aug 21 @ 7:00PM — 10:00PM',
-    title: 'Live Acoustic Temperance House, Newtown, PA',
+    date: '2026-12-04',
+    start: '7:00 PM',
+    end: '10:00 PM',
+    title: 'Live acoustic',
     location: 'Temperance House, Newtown, PA',
+    show: 'YES',
   },
   {
-    date: 'Friday, September 11 @ 7:00PM — 10:00PM',
-    dateShort: 'Fri, Sep 11 @ 7:00PM — 10:00PM',
-    title: 'Live Acoustic Temperance House, Newtown, PA',
+    date: '2026-12-11',
+    start: '7:00 PM',
+    end: '10:00 PM',
+    title: 'Live acoustic',
     location: 'Temperance House, Newtown, PA',
+    show: 'YES',
   },
 ]

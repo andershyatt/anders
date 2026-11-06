@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import FaqAccordion from '../components/FaqAccordion'
 import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
+import { liveMusicFaq } from '../data/faq'
 import { homeGallery } from '../data/media'
 
 export default function LiveMusic() {
@@ -57,6 +59,12 @@ export default function LiveMusic() {
       </div>
 
       <Slideshow images={homeGallery} altPrefix="Live music" />
+
+      <section id="faq" className="page-faq" aria-labelledby="live-music-faq-heading">
+        <h2 id="live-music-faq-heading">Frequently Asked Questions</h2>
+        <div className="divider" />
+        <FaqAccordion items={liveMusicFaq} connectAsButton />
+      </section>
     </div>
   )
 }

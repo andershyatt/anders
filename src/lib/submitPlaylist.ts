@@ -1,6 +1,8 @@
+import { PLANNER_API_URL } from '../planner/config'
 import type { PlaylistSubmission, Song } from '../types/song'
 
-const EMAIL_TO = 'anders@andershyattmusic.com'
+/** The Apps Script web app emails this address. The page does not open a mail app. */
+export const EMAIL_TO = 'anders@andershyattmusic.com'
 
 export function formatPlaylistText(submission: PlaylistSubmission): string {
   const { contact, songs } = submission
@@ -45,13 +47,27 @@ function downloadBlob(filename: string, content: string, mime: string) {
   URL.revokeObjectURL(url)
 }
 
-export type SubmitMethod = 'copy' | 'download-txt' | 'download-csv' | 'mailto'
+export type SubmitMethod = 'copy' | 'download-txt' | 'download-csv' | 'send'
+
+async function readJson(response: Response): Promise<Record<string, unknown> | null> {
+  const text = (await response.text()).trim()
+  if (!text.startsWith('{')) return null
+  try {
+    const value = JSON.parse(text) as unknown
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+    return value as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+const SEND_ERROR =
+  'Could not send the playlist. Please try again, or copy or download it instead.'
 
 /**
- * Delivery adapter for client playlists.
- * Today: copy / download / mailto.
- * Later: replace the body of this function (or add a 'formspree' branch)
- * without changing the playlist UI.
+ * Copy, download, or send the playlist.
+ * Send posts { action: 'publicPlaylist' } to the planner Apps Script.
+ * That action does not use a couple token. It emails EMAIL_TO from the script.
  */
 export async function submitPlaylist(
   submission: PlaylistSubmission,
@@ -76,15 +92,28 @@ export async function submitPlaylist(
       )
       return { ok: true, message: 'Downloaded anders-playlist.csv' }
     }
-    case 'mailto': {
-      const subject = encodeURIComponent(
-        `Playlist request${submission.contact.name ? ` from ${submission.contact.name}` : ''}`,
-      )
-      const body = encodeURIComponent(text)
-      window.location.href = `mailto:${EMAIL_TO}?subject=${subject}&body=${body}`
-      return {
-        ok: true,
-        message: 'Opening your email app with the playlist drafted.',
+    case 'send': {
+      try {
+        const response = await fetch(PLANNER_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'publicPlaylist',
+            name: submission.contact.name,
+            email: submission.contact.email,
+            eventDate: submission.contact.eventDate,
+            notes: submission.contact.notes,
+            songs: submission.songs.map((song) => ({
+              title: song.title,
+              artist: song.artist,
+            })),
+          }),
+        })
+        const payload = await readJson(response)
+        if (!payload || payload.ok !== true) return { ok: false, message: SEND_ERROR }
+        return { ok: true, message: 'Sent to Anders. He has your songs and contact details.' }
+      } catch {
+        return { ok: false, message: SEND_ERROR }
       }
     }
     default:

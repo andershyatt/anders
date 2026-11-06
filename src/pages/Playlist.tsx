@@ -3,8 +3,12 @@ import { usePlaylist } from '../hooks/usePlaylist'
 import { useSongCatalog } from '../lib/songCatalog'
 import { submitPlaylist, type SubmitMethod } from '../lib/submitPlaylist'
 import type { PlaylistContact, Song } from '../types/song'
-import { filterSongs, songFilterChoices } from '../planner/filterSongs'
+import { LINEUP_FILTERS, filterSongs, songFilterChoices } from '../planner/filterSongs'
 import './Playlist.css'
+
+function trayStartsCollapsed(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
+}
 
 export default function Playlist() {
   const { songs, status: songSource } = useSongCatalog()
@@ -15,22 +19,24 @@ export default function Playlist() {
   const [decade, setDecade] = useState('')
   const [pace, setPace] = useState('')
   const [tag, setTag] = useState('')
+  const [lineups, setLineups] = useState<string[]>([])
   const [sortBy, setSortBy] = useState<'artist' | 'title'>('artist')
   const [step, setStep] = useState<'browse' | 'submit'>('browse')
+  const [trayCollapsed, setTrayCollapsed] = useState(trayStartsCollapsed)
   const [contact, setContact] = useState<PlaylistContact>({
     name: '',
     email: '',
     eventDate: '',
     notes: '',
   })
-  const [status, setStatus] = useState<string | null>(null)
+  const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null)
   const [busy, setBusy] = useState(false)
 
   const { genres, decades, paces, tags } = useMemo(() => songFilterChoices(songs), [songs])
 
   const filtered = useMemo(
-    () => filterSongs(songs, { query: deferredQuery, genre, decade, pace, tag, sortBy }),
-    [songs, deferredQuery, genre, decade, pace, tag, sortBy],
+    () => filterSongs(songs, { query: deferredQuery, genre, decade, pace, tag, lineups, sortBy }),
+    [songs, deferredQuery, genre, decade, pace, tag, lineups, sortBy],
   )
 
   const clearFilters = () => {
@@ -39,11 +45,18 @@ export default function Playlist() {
     setDecade('')
     setPace('')
     setTag('')
+    setLineups([])
+  }
+
+  const toggleLineup = (label: string) => {
+    setLineups((current) =>
+      current.includes(label) ? current.filter((item) => item !== label) : [...current, label],
+    )
   }
 
   const onSubmit = async (method: SubmitMethod) => {
     if (!playlist.count) {
-      setStatus('Add at least one song before sending.')
+      setStatus({ ok: false, message: 'Add at least one song before sending.' })
       return
     }
     setBusy(true)
@@ -53,9 +66,12 @@ export default function Playlist() {
         { songs: playlist.selectedSongs, contact },
         method,
       )
-      setStatus(result.message)
+      setStatus(result)
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Something went wrong.')
+      setStatus({
+        ok: false,
+        message: err instanceof Error ? err.message : 'Something went wrong.',
+      })
     } finally {
       setBusy(false)
     }
@@ -85,6 +101,23 @@ export default function Playlist() {
                 onChange={(e) => setQuery(e.target.value)}
               />
             </label>
+
+            <div className="playlist-lineups" role="group" aria-label="Lineup filters">
+              {LINEUP_FILTERS.map((label) => {
+                const selected = lineups.includes(label)
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    className={`playlist-lineup${selected ? ' playlist-lineup--on' : ''}`}
+                    aria-pressed={selected}
+                    onClick={() => toggleLineup(label)}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
 
             <div className="playlist-filters">
               {genres.length > 0 && (
@@ -186,64 +219,76 @@ export default function Playlist() {
             <aside className="playlist-tray" aria-live="polite">
               <div className="playlist-tray__header">
                 <h3>Your playlist</h3>
-                <span>{playlist.count}</span>
+                <div className="playlist-tray__header-side">
+                  <span>{playlist.count}</span>
+                  <button
+                    type="button"
+                    className="playlist-tray__toggle"
+                    aria-expanded={!trayCollapsed}
+                    aria-controls="your-playlist-body"
+                    onClick={() => setTrayCollapsed((collapsed) => !collapsed)}
+                  >
+                    {trayCollapsed ? 'Expand ▾' : 'Collapse ▴'}
+                  </button>
+                </div>
               </div>
-              {playlist.count === 0 ? (
-                <p className="playlist-tray__empty">Click songs to add them here.</p>
-              ) : (
-                <ul className="playlist-tray__list">
-                  {playlist.selectedSongs.map((song, index) => (
-                    <li key={song.id}>
-                      <div>
-                        <strong>{song.title}</strong>
-                        <span>{song.artist}</span>
-                      </div>
-                      <div className="playlist-tray__actions">
-                        <button
-                          type="button"
-                          aria-label="Move up"
-                          disabled={index === 0}
-                          onClick={() => playlist.move(song.id, -1)}
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Move down"
-                          disabled={index === playlist.count - 1}
-                          onClick={() => playlist.move(song.id, 1)}
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`Remove ${song.title}`}
-                          onClick={() => playlist.remove(song.id)}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div className="playlist-tray__footer">
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  disabled={!playlist.count}
-                  onClick={playlist.clear}
-                >
-                  Clear
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={!playlist.count}
-                  onClick={() => setStep('submit')}
-                >
-                  Continue
-                </button>
+              <div id="your-playlist-body" className="playlist-tray__body" hidden={trayCollapsed}>
+                {playlist.count === 0 ? (
+                  <p className="playlist-tray__empty">Click songs to add them here.</p>
+                ) : (
+                  <ul className="playlist-tray__list">
+                    {playlist.selectedSongs.map((song, index) => (
+                      <li key={song.id}>
+                        <span className="playlist-tray__line" title={`${song.artist} - ${song.title}`}>
+                          {song.artist} - {song.title}
+                        </span>
+                        <div className="playlist-tray__actions">
+                          <button
+                            type="button"
+                            aria-label="Move up"
+                            disabled={index === 0}
+                            onClick={() => playlist.move(song.id, -1)}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Move down"
+                            disabled={index === playlist.count - 1}
+                            onClick={() => playlist.move(song.id, 1)}
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Remove ${song.title}`}
+                            onClick={() => playlist.remove(song.id)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="playlist-tray__footer">
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    disabled={!playlist.count}
+                    onClick={playlist.clear}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={!playlist.count}
+                    onClick={() => setStep('submit')}
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
             </aside>
           </div>
@@ -255,8 +300,8 @@ export default function Playlist() {
           </button>
           <h3>Send your playlist ({playlist.count} songs)</h3>
           <p>
-            Add your contact details, then copy, download, or open an email draft. A direct
-            email form can be wired in later without changing this page.
+            Add your contact details, then send the playlist to Anders. You can also copy it or
+            download a text or CSV file.
           </p>
 
           <div className="playlist-form">
@@ -296,42 +341,51 @@ export default function Playlist() {
             </label>
           </div>
 
-          <div className="btn-row playlist-submit-actions">
+          <div className="playlist-submit-actions">
             <button
               type="button"
-              className="btn"
+              className="btn playlist-send"
               disabled={busy}
-              onClick={() => onSubmit('copy')}
+              onClick={() => onSubmit('send')}
             >
-              Copy playlist
+              Send to Anders
             </button>
-            <button
-              type="button"
-              className="btn btn-outline"
-              disabled={busy}
-              onClick={() => onSubmit('download-txt')}
-            >
-              Download .txt
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline"
-              disabled={busy}
-              onClick={() => onSubmit('download-csv')}
-            >
-              Download .csv
-            </button>
-            <button
-              type="button"
-              className="btn btn-dark"
-              disabled={busy}
-              onClick={() => onSubmit('mailto')}
-            >
-              Open email draft
-            </button>
+            <div className="playlist-submit-actions__row">
+              <button
+                type="button"
+                className="btn"
+                disabled={busy}
+                onClick={() => onSubmit('copy')}
+              >
+                Copy playlist
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={busy}
+                onClick={() => onSubmit('download-txt')}
+              >
+                Download .txt
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={busy}
+                onClick={() => onSubmit('download-csv')}
+              >
+                Download .csv
+              </button>
+            </div>
           </div>
 
-          {status && <p className="playlist-status">{status}</p>}
+          {status && (
+            <p
+              className={`playlist-status${status.ok ? '' : ' playlist-status--error'}`}
+              role={status.ok ? 'status' : 'alert'}
+            >
+              {status.message}
+            </p>
+          )}
 
           <ol className="playlist-preview">
             {playlist.selectedSongs.map((s, i) => (
