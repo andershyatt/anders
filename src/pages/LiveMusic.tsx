@@ -46,7 +46,7 @@ export default function LiveMusic() {
           Duo &mdash; Anders &amp; Ben
         </Link>
         <Link to="/trio" className="cta-btn">
-          Trio &mdash; Anders, Angella &amp; Ben
+          The Trio
         </Link>
         <Link to="/songlist" className="cta-btn">
           Song List

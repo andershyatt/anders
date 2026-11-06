@@ -38,7 +38,7 @@ export default function DuoBen() {
           Duo &mdash; Anders &amp; Angella
         </Link>
         <Link to="/trio" className="cta-btn">
-          Trio &mdash; Anders, Angella &amp; Ben
+          The Trio
         </Link>
       </div>
 

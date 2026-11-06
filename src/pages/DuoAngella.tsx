@@ -44,7 +44,7 @@ export default function DuoAngella() {
           Duo &mdash; Anders &amp; Ben
         </Link>
         <Link to="/trio" className="cta-btn">
-          Trio &mdash; Anders, Angella &amp; Ben
+          The Trio
         </Link>
       </div>
 
