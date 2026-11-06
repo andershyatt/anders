@@ -1,18 +1,20 @@
 import { Link } from 'react-router-dom'
-import songsData from '../data/songs.json'
-import type { Song } from '../types/song'
+import { useSongCatalog } from '../lib/songCatalog'
 import './SongList.css'
 
-const songs = songsData as Song[]
-
 export default function SongList() {
+  const { songs, status } = useSongCatalog()
+  const countLabel =
+    status === 'loading' ? 'Loading songs…' : `Browse Anders's repertoire of ${songs.length} songs.`
+
   return (
     <div className="page-content songlist-page">
       <h2>Song List</h2>
       <div className="divider" />
       <p className="lead">
-        Browse Anders&apos;s repertoire of {songs.length} songs. Want to pick favorites for
-        your event? Use the playlist builder to search, filter, and send a list.
+        {countLabel} Want to pick favorites for your event? Use the playlist builder to search,
+        filter, and send a list.
+        {status === 'saved' && ' Showing the saved copy — the live sheet did not load.'}
       </p>
       <div className="cta-row">
         <Link to="/playlist" className="cta-btn">
@@ -29,12 +31,18 @@ export default function SongList() {
             </tr>
           </thead>
           <tbody>
-            {songs.map((song) => (
-              <tr key={song.id}>
-                <td>{song.title}</td>
-                <td>{song.artist}</td>
+            {status === 'loading' ? (
+              <tr>
+                <td colSpan={2}>Loading songs…</td>
               </tr>
-            ))}
+            ) : (
+              songs.map((song) => (
+                <tr key={song.id}>
+                  <td>{song.title}</td>
+                  <td>{song.artist}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

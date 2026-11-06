@@ -62,6 +62,7 @@ import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
 import PhotoBoothPanel from './PhotoBoothPanel'
+import { useSongCatalog } from '../lib/songCatalog'
 import { isLivePerformance, LIVE_SONG_CONTROLS, REMOVED_LIVE_SONG, SONG_LIVE_CONTROL, songInRepertoire } from './repertoire'
 import SongField from './SongField'
 import WelcomeInfo from './WelcomeInfo'
@@ -584,6 +585,7 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
 }
 
 export default function PlannerApp() {
+  useSongCatalog()
   const token = useMemo(() => tokenFromLocation(), [])
   const previewServices = useMemo(() => servicesFromPreview(window.location.search), [])
   const cachedLoad = useMemo(() => (token ? readPlannerCache(token) : null), [token])

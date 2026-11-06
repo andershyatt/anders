@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type SyntheticEvent } from 'react'
 import { replaceSongSegment, searchSongs, songSegment, type SongMatch } from './songSearch'
+import { useSongCatalog } from '../lib/songCatalog'
 import { repertoireChoices, repertoireMatch } from './repertoire'
 import SuggestionBrowser from './SuggestionBrowser'
 import type { SuggestedSong } from './suggestions'
@@ -54,6 +55,7 @@ export default function SongField({
   const ignoreSelect = useRef(false)
   const retainFocus = useRef(false)
   const requestSeq = useRef(0)
+  const { songs } = useSongCatalog()
 
   useEffect(() => {
     valueRef.current = value
@@ -151,7 +153,7 @@ export default function SongField({
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [open, query, repertoireOnly, results.length, resultsQuery])
+  }, [open, query, repertoireOnly, results.length, resultsQuery, songs])
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {

@@ -1,18 +1,19 @@
-import songsData from '../data/songs.json'
-import type { Song } from '../types/song'
+import { getSongCatalog } from '../lib/songCatalog'
 import type { SongMatch } from './songSearch'
 
-const songs = songsData as Song[]
+function songs() {
+  return getSongCatalog().songs
+}
 
-export function repertoireCatalog(): Song[] {
-  return songs
+export function repertoireCatalog() {
+  return songs()
 }
 
 export function repertoireMatch(query: string, limit = 8): SongMatch[] {
   const needle = query.trim().toLowerCase()
   if (needle.length < 2) return []
   const matches: SongMatch[] = []
-  for (const song of songs) {
+  for (const song of songs()) {
     if (!`${song.title} ${song.artist}`.toLowerCase().includes(needle)) continue
     const label = song.artist ? `${song.title} – ${song.artist}` : song.title
     matches.push({
@@ -28,17 +29,19 @@ export function repertoireMatch(query: string, limit = 8): SongMatch[] {
 }
 
 export function repertoireChoices(): Array<{ title: string; artist: string }> {
-  return songs.map((song) => ({ title: song.title, artist: song.artist }))
+  return songs().map((song) => ({ title: song.title, artist: song.artist }))
 }
 
 /** A saved "Title – Artist" value is in the repertoire when both parts match. */
 export function songInRepertoire(value: string): boolean {
   const trimmed = value.trim()
   if (!trimmed) return true
+  // Don't clear a saved song while the live sheet is still loading.
+  if (getSongCatalog().status === 'loading') return true
   const parts = trimmed.split(/\s+[–-]\s+/)
   const title = (parts[0] ?? '').trim().toLowerCase()
   const artist = parts.slice(1).join(' - ').trim().toLowerCase()
-  return songs.some((song) => {
+  return songs().some((song) => {
     if (song.title.trim().toLowerCase() !== title) return false
     if (!artist) return true
     return song.artist.trim().toLowerCase() === artist

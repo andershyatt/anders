@@ -9,6 +9,7 @@ import {
 } from './cocktailSongs'
 import { importPlaylist } from './api'
 import RepertoireBrowser from './RepertoireBrowser'
+import { useSongCatalog } from '../lib/songCatalog'
 import { repertoireMatch } from './repertoire'
 import { searchSongs, type SongMatch } from './songSearch'
 import SuggestionPlaylists from './SuggestionPlaylists'
@@ -70,6 +71,7 @@ export default function CocktailSongs({
   sectionNote = '',
 }: CocktailSongsProps) {
   const listId = useId()
+  const { songs } = useSongCatalog()
   const [rows, setRows] = useState<CocktailRow[]>(() => rowsFromValue(value, maxSongs))
   const [source, setSource] = useState(value)
   if (value !== source) {
@@ -154,7 +156,7 @@ export default function CocktailSongs({
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [open, query, repertoireOnly])
+  }, [open, query, repertoireOnly, songs])
 
   useLayoutEffect(() => {
     if (!retainFocus.current) return

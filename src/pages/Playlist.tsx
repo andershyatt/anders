@@ -1,18 +1,14 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import songsData from '../data/songs.json'
 import { usePlaylist } from '../hooks/usePlaylist'
-import { fetchSheetSongs } from '../lib/sheetSongs'
+import { useSongCatalog } from '../lib/songCatalog'
 import { submitPlaylist, type SubmitMethod } from '../lib/submitPlaylist'
 import type { PlaylistContact, Song } from '../types/song'
 import { filterSongs, songFilterChoices } from '../planner/filterSongs'
 import './Playlist.css'
 
-const bundledSongs = songsData as Song[]
-
 export default function Playlist() {
-  const [songs, setSongs] = useState<Song[]>([])
-  const [songSource, setSongSource] = useState<'loading' | 'sheet' | 'saved'>('loading')
+  const { songs, status: songSource } = useSongCatalog()
   const playlist = usePlaylist(songs)
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
@@ -30,24 +26,6 @@ export default function Playlist() {
   })
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    fetchSheetSongs()
-      .then((loaded) => {
-        if (cancelled) return
-        setSongs(loaded)
-        setSongSource('sheet')
-      })
-      .catch(() => {
-        if (cancelled) return
-        setSongs(bundledSongs)
-        setSongSource('saved')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const { genres, decades, paces, tags } = useMemo(() => songFilterChoices(songs), [songs])
 
