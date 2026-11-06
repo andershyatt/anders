@@ -5,4 +5,4 @@ export const socialLinks = {
 } as const
 
 export const honeyBookUrl =
-  'https://public.honeybook.com/public_contact_form_app/7e9b8f2/index.html'
+  'https://www.honeybook.com/widget/anders_hyatt_music_144046/cf_id/66edb49d0167ca002bb0149d'

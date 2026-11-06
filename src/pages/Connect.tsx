@@ -11,6 +11,13 @@ export default function Connect() {
           src={honeyBookUrl}
           title="Contact Anders Hyatt Music"
         />
+        <p className="connect-form__fallback">
+          If the form does not load,{' '}
+          <a href={honeyBookUrl} target="_blank" rel="noopener noreferrer">
+            open the HoneyBook contact form
+          </a>
+          .
+        </p>
       </div>
 
       <div className="connect-social">

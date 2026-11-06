@@ -5,9 +5,23 @@
 
 .connect-form__iframe {
   width: 100%;
-  min-height: 680px;
+  min-height: 860px;
+  height: 75vh;
   border: none;
   background: var(--color-white);
+}
+
+.connect-form__fallback {
+  margin: 0.85rem 0 0;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+@media (max-width: 600px) {
+  .connect-form__iframe {
+    min-height: 980px;
+    height: 85vh;
+  }
 }
 
 .connect-social {

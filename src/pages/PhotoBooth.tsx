@@ -3,16 +3,13 @@ import { photoBoothGallery } from '../data/media'
 import './PhotoBooth.css'
 
 const packageItems = [
-  'High quality DSLR camera',
-  '13-inch iPad Pro front screen',
-  '15.9-inch touch back screen sharing station',
-  'Photo booth attendant',
-  'Prints for each guest per session 2x6" strips or 4x6"',
-  'A handcrafted wooden printer box/stand to elevate the appearance',
-  'Professional lighting',
-  'Your choice of backdrop',
-  'Multiple convenient sharing options',
-  'Set up and break down',
+  'Handcrafted wooden photo booth enclosure & matching printer stand',
+  'Professional DSLR camera with studio-grade lighting',
+  '13-inch iPad Pro front display & 15.9-inch touch rear sharing station',
+  'Selection of fun props & choice of custom backdrop',
+  'On-site prints for each guest per session (2x6 strips or 4x6)',
+  'Multiple convenient digital sharing options',
+  'Full setup, on-site technician, and teardown included',
 ]
 
 export default function PhotoBooth() {
@@ -30,8 +27,7 @@ export default function PhotoBooth() {
           Our state-of-the-art Glamour Booth offers your guests a fun and stylish way to capture
           memories that last a lifetime. Whether it&apos;s a wedding, corporate event, or special
           celebration, our photo booth adds an interactive element that keeps the energy high and
-          the smiles bright. With customizable backdrops, high-quality prints, and instant sharing,
-          you&apos;re guaranteed to make your event unforgettable.
+          the smiles bright.
         </p>
       </div>
 
