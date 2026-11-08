@@ -60,7 +60,7 @@ export default function Nav() {
 
   return (
     <nav className="site-nav" aria-label="Main navigation">
-      <div className="site-nav__inner">
+      <div className="site-nav__bar">
         <button
           type="button"
           className={`site-nav__toggle${mobileOpen ? ' site-nav__toggle--open' : ''}`}
@@ -72,7 +72,11 @@ export default function Nav() {
           <span className="site-nav__toggle-bar" />
           <span className="site-nav__toggle-bar" />
         </button>
-
+        <Link to="/" className="site-nav__brand" onClick={closeMobile}>
+          Anders Hyatt Music
+        </Link>
+      </div>
+      <div className="site-nav__inner">
         <ul className={`site-nav__list${mobileOpen ? ' site-nav__list--open' : ''}`}>
           {topLinks.map((item) => {
             if (isDropdown(item)) {

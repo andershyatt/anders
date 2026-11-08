@@ -189,7 +189,7 @@
 
 .playlist-tray {
   position: sticky;
-  top: 1rem;
+  top: 5.75rem;
   border: 1px solid #222;
   background: #fff;
   display: flex;
@@ -228,9 +228,28 @@
   padding: 0.25rem 0.65rem;
 }
 
-.playlist-tray__toggle:hover {
+.playlist-tray__send {
+  border: 2px solid #000;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-nav);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  min-height: 2rem;
+  padding: 0.25rem 0.65rem;
+}
+
+.playlist-tray__toggle:hover,
+.playlist-tray__send:hover:not(:disabled) {
   background: #000;
   color: #fff;
+}
+
+.playlist-tray__send:disabled {
+  opacity: 0.45;
 }
 
 .playlist-tray__header h3 {
@@ -445,4 +464,42 @@
   .playlist-results {
     max-height: 60vh;
   }
+}
+
+.playlist-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.playlist-modal__card {
+  width: min(100%, 28rem);
+  background: #fff;
+  color: #111;
+  padding: 1.5rem 1.35rem 1.35rem;
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  text-align: left;
+}
+
+.playlist-modal__card:focus {
+  outline: none;
+}
+
+.playlist-modal__card h3 {
+  margin: 0 0 0.45rem;
+  color: #111;
+}
+
+.playlist-modal__card p {
+  margin: 0 0 1rem;
+}
+
+.playlist-modal__card .btn {
+  min-width: 7rem;
 }

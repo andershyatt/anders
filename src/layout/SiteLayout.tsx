@@ -88,7 +88,7 @@ export default function SiteLayout() {
             <SocialBar variant="hero" />
           </div>
         </header>
-      ) : (
+      ) : pathname === '/photo-booth' ? null : (
         <HeroBanner variant={meta.hero} title={meta.title} subtitle={meta.subtitle} />
       )}
       <main className="site-main">

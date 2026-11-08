@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { usePlaylist } from '../hooks/usePlaylist'
 import { useSongCatalog } from '../lib/songCatalog'
 import {
@@ -25,7 +25,7 @@ export default function Playlist() {
   const [decade, setDecade] = useState('')
   const [pace, setPace] = useState('')
   const [tag, setTag] = useState('')
-  const [lineups, setLineups] = useState<string[]>([])
+  const [lineups, setLineups] = useState<string[]>(['Favorites'])
   const [sortBy, setSortBy] = useState<'artist' | 'title'>('artist')
   const [step, setStep] = useState<'browse' | 'submit'>('browse')
   const [trayCollapsed, setTrayCollapsed] = useState(trayStartsCollapsed)
@@ -38,6 +38,9 @@ export default function Playlist() {
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null)
   const [fieldErrors, setFieldErrors] = useState<PlaylistSendErrors>({})
   const [busy, setBusy] = useState(false)
+  const [sendPhase, setSendPhase] = useState<'sending' | 'success' | 'error' | null>(null)
+  const [sendError, setSendError] = useState('')
+  const dialogRef = useRef<HTMLDivElement>(null)
   const nameRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const eventDateRef = useRef<HTMLInputElement>(null)
@@ -75,6 +78,22 @@ export default function Playlist() {
     })
   }
 
+  useEffect(() => {
+    if (!sendPhase) return
+    dialogRef.current?.focus()
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && sendPhase !== 'sending') setSendPhase(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [sendPhase])
+
+  const goToSend = () => {
+    if (!playlist.count) return
+    setStatus(null)
+    setStep('submit')
+  }
+
   const onSubmit = async (method: SubmitMethod) => {
     if (!playlist.count) {
       setStatus({ ok: false, message: 'Add at least one song before sending.' })
@@ -97,17 +116,32 @@ export default function Playlist() {
     }
     setBusy(true)
     setStatus(null)
+    if (method === 'send') {
+      setSendError('')
+      setSendPhase('sending')
+    }
     try {
       const result = await submitPlaylist(
         { songs: playlist.selectedSongs, contact },
         method,
       )
-      setStatus(result)
+      if (method === 'send') {
+        if (result.ok) setSendPhase('success')
+        else {
+          setSendError(result.message)
+          setSendPhase('error')
+        }
+      } else {
+        setStatus(result)
+      }
     } catch (err) {
-      setStatus({
-        ok: false,
-        message: err instanceof Error ? err.message : 'Something went wrong.',
-      })
+      const message = err instanceof Error ? err.message : 'Something went wrong.'
+      if (method === 'send') {
+        setSendError(message)
+        setSendPhase('error')
+      } else {
+        setStatus({ ok: false, message })
+      }
     } finally {
       setBusy(false)
     }
@@ -118,11 +152,13 @@ export default function Playlist() {
       <div className="playlist-intro">
         <h2>Live Song List</h2>
         <div className="divider" />
-        <p>
-          Search and filter Anders&apos;s song list, add the ones you love, then send the
-          playlist for your event. Your selections are saved in this browser until you clear
-          them.
-        </p>
+        {step === 'browse' && (
+          <p>
+            Search and filter Anders&apos;s song list, add the ones you love, then send the
+            playlist for your event. Your selections are saved in this browser until you clear
+            them.
+          </p>
+        )}
       </div>
 
       {step === 'browse' ? (
@@ -257,6 +293,16 @@ export default function Playlist() {
                 <h3>Your playlist</h3>
                 <div className="playlist-tray__header-side">
                   <span>{playlist.count}</span>
+                  {trayCollapsed && (
+                    <button
+                      type="button"
+                      className="playlist-tray__send"
+                      disabled={!playlist.count}
+                      onClick={goToSend}
+                    >
+                      SEND
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="playlist-tray__toggle"
@@ -320,9 +366,9 @@ export default function Playlist() {
                     type="button"
                     className="btn"
                     disabled={!playlist.count}
-                    onClick={() => setStep('submit')}
+                    onClick={goToSend}
                   >
-                    Continue
+                    Send to Anders
                   </button>
                 </div>
               </div>
@@ -471,6 +517,41 @@ export default function Playlist() {
               </li>
             ))}
           </ol>
+        </div>
+      )}
+      {sendPhase && (
+        <div className="playlist-modal">
+          <div
+            ref={dialogRef}
+            className="playlist-modal__card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="playlist-send-title"
+            tabIndex={-1}
+          >
+            {sendPhase === 'sending' ? (
+              <>
+                <h3 id="playlist-send-title">Sending</h3>
+                <p>Sending your playlist to Anders.</p>
+              </>
+            ) : sendPhase === 'success' ? (
+              <>
+                <h3 id="playlist-send-title">Sent</h3>
+                <p>Sent to Anders. He has your songs and contact details.</p>
+                <button type="button" className="btn" onClick={() => setSendPhase(null)}>
+                  Close
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 id="playlist-send-title">Could not send</h3>
+                <p>{sendError}</p>
+                <button type="button" className="btn" onClick={() => setSendPhase(null)}>
+                  Close
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

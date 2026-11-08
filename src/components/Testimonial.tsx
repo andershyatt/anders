@@ -17,10 +17,15 @@ export default function Testimonial({ quote, author, source, tone }: Testimonial
     .filter(Boolean)
     .join(' ')
   const listingUrl = source ? reviewListingUrl(source) : undefined
+  const paragraphs = quote.split(/\n\n+/)
 
   return (
     <blockquote className={className}>
-      <p className="testimonial__quote">{quote}</p>
+      {paragraphs.map((paragraph, index) => (
+        <p key={index} className="testimonial__quote">
+          {paragraph}
+        </p>
+      ))}
       <footer className="testimonial__author">
         &mdash; {author}
         {source && (

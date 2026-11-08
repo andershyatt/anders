@@ -13,7 +13,7 @@ export default function LiveMusic() {
         <p>
           As an experienced performer, Anders brings a friendly and inviting energy to every event,
           and is capable of captivating his audience while making them feel immediately at home.
-          Whether it be a a special ceremony, a corporate event, a rousing sing-along, or the
+          Whether it be a special ceremony, a corporate event, a rousing sing-along, or the
           background ambiance for a party, Anders knows how to adapt to the situation. His strong
           guitar playing offers the perfect backdrop for rich, warm vocals that always tell an
           intriguing story. His musical repertoire is delightfully vast and varied, offering a
