@@ -139,6 +139,35 @@ export default function Home() {
           />
         </div>
 
+        <section className="home-planner" aria-label="Wedding planning, made easy">
+          <DisplayTitle as="h2">Wedding planning, made easy</DisplayTitle>
+          <p className="home-planner__copy">
+            When you book Anders, you get your own private wedding planner — a simple place to
+            build your timeline, pick songs for the ceremony, cocktail hour, dinner, and dancing,
+            and keep all the music details in one spot.
+          </p>
+          <ul className="home-planner__shots">
+            <li>
+              <img
+                src={images.plannerOverview}
+                alt="The wedding planner home, ready for the day’s music and details"
+              />
+            </li>
+            <li>
+              <img
+                src={images.plannerCeremony}
+                alt="Ceremony song choices in the wedding planner, with processional styles selected"
+              />
+            </li>
+            <li>
+              <img
+                src={images.plannerSongs}
+                alt="A numbered cocktail-hour song list in the wedding planner, with must-plays marked"
+              />
+            </li>
+          </ul>
+        </section>
+
         <h2 className="home-reviews-heading">From the people who’ve hired us</h2>
         <div className="home-ratings">
           <p>
