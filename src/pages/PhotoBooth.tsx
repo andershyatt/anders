@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import Slideshow from '../components/Slideshow'
-import { photoBoothGallery } from '../data/media'
+import { images, photoBoothGallery } from '../data/media'
 import { boothBackdrops } from '../planner/photoBoothImages'
 import './PhotoBooth.css'
 
@@ -20,24 +20,12 @@ const boothBody =
 export default function PhotoBooth() {
   return (
     <div className="booth-page">
-      <div className="booth-header">
-        <Slideshow images={photoBoothGallery} altPrefix="Photo booth" />
-      </div>
+      <img
+        className="booth-hero"
+        src={images.photoBoothBanner}
+        alt="The Glamour Booth, a handcrafted wooden photo booth on a tripod"
+      />
       <div className="page-content">
-        <section id="backdrops" className="booth-backdrop-section" aria-labelledby="backdrops-heading">
-          <h2 id="backdrops-heading">Backdrops</h2>
-          <ul className="booth-backdrop-grid">
-            {boothBackdrops.map((backdrop) => (
-              <li key={backdrop.name}>
-                <figure>
-                  <img src={backdrop.src} alt="" />
-                  <figcaption>{backdrop.name}</figcaption>
-                </figure>
-              </li>
-            ))}
-          </ul>
-        </section>
-
         <h1 className="page-title">The Glamour Booth</h1>
         <p className="booth-subtitle">An open-air photo booth experience</p>
         <div className="divider" />
@@ -65,6 +53,22 @@ export default function PhotoBooth() {
         <p className="photo-booth-backdrops">
           <Link to="/photo-booth#backdrops">View our backdrop options</Link>
         </p>
+
+        <Slideshow images={photoBoothGallery} altPrefix="Photo booth" />
+
+        <section id="backdrops" className="booth-backdrop-section" aria-labelledby="backdrops-heading">
+          <h2 id="backdrops-heading">Backdrops</h2>
+          <ul className="booth-backdrop-grid">
+            {boothBackdrops.map((backdrop) => (
+              <li key={backdrop.name}>
+                <figure>
+                  <img src={backdrop.src} alt="" />
+                  <figcaption>{backdrop.name}</figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </div>
   )
