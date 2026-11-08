@@ -138,45 +138,53 @@ export default function Home() {
           />
         </div>
 
-        <p className="home-ratings">
-          5.0 from{' '}
-          <a
-            href={reviewListings.google}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="79 Google reviews"
-          >
-            79
-          </a>{' '}
-          Google reviews,{' '}
-          <a
-            href={reviewListings.theKnot}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="121 reviews on The Knot"
-          >
-            121
-          </a>{' '}
-          on The Knot,{' '}
-          <a
-            href={reviewListings.weddingWire}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="62 reviews on WeddingWire"
-          >
-            62
-          </a>{' '}
-          on WeddingWire, and{' '}
-          <a
-            href={reviewListings.zola}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="43 reviews on Zola"
-          >
-            43
-          </a>{' '}
-          on Zola.
-        </p>
+        <div className="home-ratings">
+          <p>
+            5.0 from{' '}
+            <a
+              href={reviewListings.google}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="79 Google reviews"
+            >
+              79
+            </a>{' '}
+            Google reviews
+          </p>
+          <p>
+            <a
+              href={reviewListings.theKnot}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="121 reviews on The Knot"
+            >
+              121
+            </a>{' '}
+            on The Knot
+          </p>
+          <p>
+            <a
+              href={reviewListings.weddingWire}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="62 reviews on WeddingWire"
+            >
+              62
+            </a>{' '}
+            on WeddingWire
+          </p>
+          <p>
+            <a
+              href={reviewListings.zola}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="43 reviews on Zola"
+            >
+              43
+            </a>{' '}
+            on Zola
+          </p>
+        </div>
         <ul className="home-badges">
           <li>
             <a

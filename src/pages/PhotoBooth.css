@@ -1,10 +1,13 @@
-.booth-hero {
-  display: block;
-  width: 100%;
+.booth-header .slideshow {
+  margin: 0;
+}
+
+.booth-page > .page-content {
+  padding-top: 1.35rem;
+}
+
+.booth-header .slideshow__frame {
   max-height: 70vh;
-  object-fit: cover;
-  object-position: center;
-  background: #f3f1ec;
 }
 
 .booth-page .page-title {
@@ -59,7 +62,7 @@
 }
 
 .booth-backdrop-section {
-  margin: 2.25rem auto 2rem;
+  margin: 0 auto 2.25rem;
   scroll-margin-top: 6.5rem;
 }
 
@@ -95,7 +98,7 @@
 }
 
 @media (max-width: 800px) {
-  .booth-hero {
+  .booth-header .slideshow__frame {
     max-height: 52vh;
   }
 

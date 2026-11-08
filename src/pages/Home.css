@@ -220,13 +220,17 @@
 }
 
 .home-ratings {
-  margin: 0.75rem auto 1.75rem;
+  margin: 0.5rem auto 1.75rem;
   max-width: 44rem;
   text-align: center;
   font-family: var(--font-body);
-  font-size: 51px;
-  line-height: 1.25;
+  font-size: 26px;
+  line-height: 1.35;
   color: #222222;
+}
+
+.home-ratings p {
+  margin: 0.28em 0;
 }
 
 .home-ratings a {
@@ -291,7 +295,7 @@
   }
 
   .home-ratings {
-    font-size: 45px;
+    font-size: 23px;
     padding: 0 0.15rem;
   }
 
