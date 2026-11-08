@@ -1,3 +1,9 @@
+.live-events {
+  margin-top: 2.5rem;
+  text-align: left;
+  scroll-margin-top: 6.5rem;
+}
+
 .page-content .events-actions {
   justify-content: flex-start;
   max-width: none;

@@ -516,7 +516,7 @@ export default function Playlist() {
           <ol className="playlist-preview">
             {playlist.selectedSongs.map((s) => (
               <li key={s.id}>
-                {s.title} — {s.artist}
+                {s.artist} - {s.title}
               </li>
             ))}
           </ol>

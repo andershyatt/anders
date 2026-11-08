@@ -3,12 +3,12 @@ import { socialLinks } from '../data/social'
 import { usePublicEvents } from '../lib/publicEvents'
 import './Events.css'
 
-export default function Events() {
+export default function EventsSection() {
   const events = usePublicEvents()
 
   return (
-    <div className="page-content left">
-      <h2>Catch Anders Live!</h2>
+    <section id="events" className="live-events" aria-labelledby="events-heading">
+      <h2 id="events-heading">Catch Anders Live!</h2>
       <div className="divider" />
 
       <p>
@@ -73,6 +73,6 @@ export default function Events() {
           </table>
         </div>
       )}
-    </div>
+    </section>
   )
 }

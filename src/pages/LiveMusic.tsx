@@ -4,24 +4,30 @@ import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import { liveMusicFaq } from '../data/faq'
 import { homeGallery } from '../data/media'
+import EventsSection from './Events'
+import './LiveMusic.css'
 
 export default function LiveMusic() {
   return (
     <div className="page-content">
-      <h1 className="page-title">Live Music</h1>
+      <div className="live-music-title">
+        <h1>Live Music</h1>
+        <div className="divider" />
+      </div>
       <div className="lead copy-lg">
         <p>
-          As an experienced performer, Anders brings a friendly and inviting energy to every event,
-          and is capable of captivating his audience while making them feel immediately at home.
-          Whether it be a special ceremony, a corporate event, a rousing sing-along, or the
-          background ambiance for a party, Anders knows how to adapt to the situation. His strong
-          guitar playing offers the perfect backdrop for rich, warm vocals that always tell an
-          intriguing story. His musical repertoire is delightfully vast and varied, offering a
-          wonderful balance of songs old and new, fast and slow, and spanning many genres.
+          Whether setting the mood for an elegant ceremony, providing background music for a
+          gathering, or bringing a crowd together for a sing-along, Anders knows how to make live
+          music fit the moment. Available as a solo performer, duo, or trio, each lineup offers its
+          own unique sound and musical character. With a wide-ranging repertoire and personalized
+          song selections, every performance is tailored to the event.
         </p>
-        <p>
-          Custom set lists, special song requests, and additional musicians are also available.
-        </p>
+      </div>
+
+      <div className="cta-row">
+        <Link to="/live-music#events" className="cta-btn">
+          See Anders Live
+        </Link>
       </div>
 
       <div className="testimonial-list">
@@ -59,6 +65,8 @@ export default function LiveMusic() {
       </div>
 
       <Slideshow images={homeGallery} altPrefix="Live music" />
+
+      <EventsSection />
 
       <section id="faq" className="page-faq" aria-labelledby="live-music-faq-heading">
         <h2 id="live-music-faq-heading">Frequently Asked Questions</h2>

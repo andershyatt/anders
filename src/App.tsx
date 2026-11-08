@@ -6,7 +6,6 @@ import DuoAngella from './pages/DuoAngella'
 import DuoBen from './pages/DuoBen'
 import Trio from './pages/Trio'
 import Dj from './pages/Dj'
-import Events from './pages/Events'
 import PhotoBooth from './pages/PhotoBooth'
 import Connect from './pages/Connect'
 import Playlist from './pages/Playlist'
@@ -27,7 +26,7 @@ export default function App() {
           <Route path="songlist" element={<Navigate to="/song-list" replace />} />
           <Route path="dj" element={<Dj />} />
           <Route path="dj-faq" element={<Navigate to="/dj#faq" replace />} />
-          <Route path="events" element={<Events />} />
+          <Route path="events" element={<Navigate to="/live-music#events" replace />} />
           <Route path="photo-booth" element={<PhotoBooth />} />
           <Route path="connect" element={<Connect />} />
         </Route>
