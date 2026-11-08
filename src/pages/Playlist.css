@@ -3,8 +3,26 @@
 }
 
 .playlist-intro {
+  container-type: inline-size;
   text-align: center;
   margin-bottom: 1.5rem;
+}
+
+.playlist-intro h2 {
+  margin: 0 auto 0.2rem;
+  max-width: 100%;
+  font-family: 'Josefin Sans', 'Avenir Next', 'Century Gothic', sans-serif;
+  font-weight: 300;
+  font-style: normal;
+  font-size: clamp(1.35rem, 7.15cqi, 5.25rem);
+  line-height: 1.15;
+  letter-spacing: 0.42em;
+  /* Half the tracking, so the gap after the last letter does not shove the title off center or clip it. */
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  color: #1a1a1a;
 }
 
 .playlist-intro .divider {
@@ -40,7 +58,7 @@
   font-family: var(--font-nav);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-muted);
+  color: #3a6e0a;
 }
 
 .playlist-filters select {
@@ -89,7 +107,7 @@
 .playlist-count {
   margin: 0.75rem 0 0;
   font-size: 13px;
-  color: var(--color-muted);
+  color: #3a6e0a;
 }
 
 .playlist-layout {
@@ -184,7 +202,7 @@
 .playlist-empty {
   padding: 1.5rem;
   text-align: center;
-  color: var(--color-muted);
+  color: #3a6e0a;
 }
 
 .playlist-tray {
@@ -267,7 +285,7 @@
   padding: 1rem;
   margin: 0;
   font-size: 13px;
-  color: var(--color-muted);
+  color: #3a6e0a;
 }
 
 .playlist-tray__body {
@@ -385,7 +403,7 @@
 
 .playlist-required {
   font-weight: 600;
-  color: var(--color-muted);
+  color: #3a6e0a;
 }
 
 .playlist-field-error {

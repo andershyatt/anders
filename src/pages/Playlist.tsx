@@ -46,6 +46,10 @@ export default function Playlist() {
   const eventDateRef = useRef<HTMLInputElement>(null)
 
   const { genres, decades, paces, tags } = useMemo(() => songFilterChoices(songs), [songs])
+  const tagOptions = useMemo(() => {
+    const lineupTags = new Set<string>(LINEUP_FILTERS)
+    return tags.filter((item) => !lineupTags.has(item))
+  }, [tags])
 
   const filtered = useMemo(
     () => filterSongs(songs, { query: deferredQuery, genre, decade, pace, tag, lineups, sortBy }),
@@ -154,9 +158,8 @@ export default function Playlist() {
         <div className="divider" />
         {step === 'browse' && (
           <p>
-            Search and filter Anders&apos;s song list, add the ones you love, then send the
-            playlist for your event. Your selections are saved in this browser until you clear
-            them.
+            Search and filter Anders&apos;s song list, add the ones you want, then send your
+            playlist. Your selections are saved in this browser until you clear them.
           </p>
         )}
       </div>
@@ -231,12 +234,12 @@ export default function Playlist() {
                   </select>
                 </label>
               )}
-              {tags.length > 0 && (
+              {tagOptions.length > 0 && (
                 <label>
                   Tag
                   <select value={tag} onChange={(e) => setTag(e.target.value)}>
                     <option value="">All</option>
-                    {tags.map((t) => (
+                    {tagOptions.map((t) => (
                       <option key={t} value={t}>
                         {t}
                       </option>
