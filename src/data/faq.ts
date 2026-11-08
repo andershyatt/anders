@@ -7,7 +7,7 @@ export const liveMusicFaq: FaqItem[] = [
   {
     question: 'What kind of music does Anders play?',
     answer:
-      'Anders mostly plays popular songs from 60s to today. He is well versed at adapting to tastes of the crowd and can entertain all ages. There are currently over 800 songs in his repertoire. Visit his interactive songlist to see what he can do. You can filter songs by genre, release date, pace, and more.',
+      'Anders mostly plays popular songs from 60s to today. He is well versed at adapting to tastes of the crowd and can entertain all ages. There are currently over 1,000 songs in his repertoire. Visit his interactive songlist to see what he can do. You can filter songs by genre, release date, pace, and more.',
   },
   {
     question: 'How does Anders build his setlist?',

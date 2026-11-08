@@ -9,7 +9,15 @@ import {
   type SubmitMethod,
 } from '../lib/submitPlaylist'
 import type { PlaylistContact, Song } from '../types/song'
+import DisplayTitle from '../components/DisplayTitle'
 import { LINEUP_FILTERS, filterSongs, songFilterChoices } from '../planner/filterSongs'
+
+const LINEUP_BUTTONS: { label: string; tag: (typeof LINEUP_FILTERS)[number] }[] = [
+  { label: 'Favorites', tag: 'Favorites' },
+  { label: 'Duo - Ben', tag: 'Duo - Ben' },
+  { label: 'Duo - Angella', tag: 'Duo - Angella' },
+  { label: 'The Trio', tag: 'Trio' },
+]
 import './Playlist.css'
 
 function trayStartsCollapsed(): boolean {
@@ -154,11 +162,10 @@ export default function Playlist() {
   return (
     <div className="page-content playlist-page left">
       <div className="playlist-intro">
-        <h2>Live Song List</h2>
-        <div className="divider" />
+        <DisplayTitle as="h2">Live Song List</DisplayTitle>
         {step === 'browse' && (
           <p>
-            Search and filter Anders&apos;s song list, add the ones you want, then send your
+            Search and filter Anders&apos;s live repertoire, add the ones you want, then send your
             playlist. Your selections are saved in this browser until you clear them.
           </p>
         )}
@@ -178,15 +185,15 @@ export default function Playlist() {
             </label>
 
             <div className="playlist-lineups" role="group" aria-label="Lineup filters">
-              {LINEUP_FILTERS.map((label) => {
-                const selected = lineups.includes(label)
+              {LINEUP_BUTTONS.map(({ label, tag }) => {
+                const selected = lineups.includes(tag)
                 return (
                   <button
-                    key={label}
+                    key={tag}
                     type="button"
                     className={`playlist-lineup${selected ? ' playlist-lineup--on' : ''}`}
                     aria-pressed={selected}
-                    onClick={() => toggleLineup(label)}
+                    onClick={() => toggleLineup(tag)}
                   >
                     {label}
                   </button>

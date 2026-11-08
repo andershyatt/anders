@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import DisplayTitle from '../components/DisplayTitle'
 import { socialLinks } from '../data/social'
 import { usePublicEvents } from '../lib/publicEvents'
 import './Events.css'
@@ -8,8 +9,9 @@ export default function EventsSection() {
 
   return (
     <section id="events" className="live-events" aria-labelledby="events-heading">
-      <h2 id="events-heading">Catch Anders Live!</h2>
-      <div className="divider" />
+      <div id="events-heading">
+        <DisplayTitle as="h2">Catch Anders Live!</DisplayTitle>
+      </div>
 
       <p>
         Anders primarily performs at private events, however he does have the occasional public
@@ -35,7 +37,7 @@ export default function EventsSection() {
         </Link>
       </div>
 
-      <h3>Events</h3>
+      <DisplayTitle as="h3">Live Public Events</DisplayTitle>
 
       {events.length === 0 ? (
         <p>No upcoming public shows are listed right now.</p>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import DisplayTitle from '../components/DisplayTitle'
 import Slideshow from '../components/Slideshow'
 import { images, photoBoothGallery } from '../data/media'
 import { boothBackdrops } from '../planner/photoBoothImages'
@@ -15,7 +16,7 @@ const packageItems = [
 ]
 
 const boothBody =
-  'Our state-of-the-art photo booth offers your guests a fun and stylish way to capture memories that last a lifetime. Whether it’s a wedding, corporate event, or special celebration, our photo booth adds an interactive element that keeps the energy high and the smiles bright. With customizable backdrops, high-quality prints, and instant sharing, you’re guaranteed to make your event unforgettable.'
+  'Our state-of-the-art photo booth offers your guests a fun and stylish way to capture memories that last a lifetime. Whether it’s a wedding, corporate event, or special celebration, our photo booth adds an interactive element that keeps the energy high and the smiles bright. With customizable backdrops, high-quality prints, and instant sharing, it’s guaranteed to make your event unforgettable.'
 
 export default function PhotoBooth() {
   return (
@@ -26,9 +27,8 @@ export default function PhotoBooth() {
         alt="The Glamour Booth, a handcrafted wooden photo booth on a tripod"
       />
       <div className="page-content">
-        <h1 className="page-title">The Glamour Booth</h1>
+        <DisplayTitle>The Glamour Booth</DisplayTitle>
         <p className="booth-subtitle">An open-air photo booth experience</p>
-        <div className="divider" />
         <h2>Capture the Fun, Create Memories</h2>
         <p className="booth-subhead">Elevate your event with our elegant, handcrafted photo booth</p>
         <div className="lead">
@@ -49,10 +49,6 @@ export default function PhotoBooth() {
             Get a Quote
           </Link>
         </div>
-
-        <p className="photo-booth-backdrops">
-          <Link to="/photo-booth#backdrops">View our backdrop options</Link>
-        </p>
 
         <Slideshow images={photoBoothGallery} altPrefix="Photo booth" />
 

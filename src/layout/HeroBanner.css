@@ -32,6 +32,37 @@
   object-position: center 38%;
 }
 
+/* The supplied crop is 16:9 with the logo in the middle. Match that frame
+   and keep the image centered so the logo is not shifted. */
+.hero-banner--dj {
+  aspect-ratio: 16 / 9;
+  min-height: 240px;
+  max-height: 720px;
+}
+
+.hero-banner--dj .hero-banner__image {
+  object-position: center center;
+}
+
+.hero-banner--dj::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.1) 45%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  z-index: 1;
+}
+
+.hero-banner--dj .hero-banner__inner {
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+}
+
 .hero-banner--home::before {
   content: '';
   position: absolute;
@@ -113,6 +144,16 @@
   }
 
   .hero-banner--guitar .hero-banner__image {
+    object-position: center center;
+  }
+
+  .hero-banner--dj {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .hero-banner--dj .hero-banner__image {
     object-position: center center;
   }
 
