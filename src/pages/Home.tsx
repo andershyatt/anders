@@ -27,8 +27,8 @@ export default function Home() {
         <header className="home-intro">
           <DisplayTitle as="h2">Live Music & DJ Services</DisplayTitle>
           <p className="home-intro__welcome">
-            A music experience that feels like you: customized to the occasion and built to
-            elevate the atmosphere
+            A music experience that feels like you: customized to the occasion, built to elevate
+            the atmosphere
           </p>
           <p className="home-intro__about">{homeAbout}</p>
         </header>
