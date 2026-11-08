@@ -6,6 +6,7 @@ export const images = {
   logo: asset('logo.png'),
   heroHome: asset('hero-home.jpg'),
   heroGuitar: asset('hero-guitar.jpg'),
+  heroDj: asset('dj-hero.jpg'),
   liveMusicFeature: asset('live-music-feature.jpeg'),
   photoBoothBanner: asset('photo-booth-banner.jpg'),
   duoAngella: asset('duo-angella-01.jpg'),

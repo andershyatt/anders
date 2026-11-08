@@ -24,7 +24,7 @@ const routeMeta: Record<string, RouteMeta> = {
   '/song-list': { hero: 'songlist', title: 'Live Song List' },
   '/songlist': { hero: 'songlist', title: 'Live Song List' },
   '/playlist': { hero: 'songlist', title: 'Live Song List' },
-  '/dj': { hero: 'guitar', title: 'Wedding DJ Services' },
+  '/dj': { hero: 'dj', title: 'Wedding DJ Services' },
   '/dj-faq': { hero: 'guitar', title: 'DJ FAQ' },
   '/photo-booth': { hero: 'guitar', title: 'The Glamour Booth' },
   '/connect': { hero: 'guitar', title: 'Connect' },

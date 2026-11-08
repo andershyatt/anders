@@ -14,11 +14,11 @@ interface NavDropdown {
 }
 
 const liveMusicDropdown: NavLink[] = [
-  { label: 'About', to: '/live-music' },
+  { label: 'General', to: '/live-music' },
   { label: 'Live Song List', to: '/song-list' },
   { label: 'Duo - Angella', to: '/duo-angella' },
   { label: 'Duo - Ben', to: '/duo-ben' },
-  { label: 'Trio — Anders, Angella & Ben', to: '/trio' },
+  { label: 'The Trio', to: '/trio' },
 ]
 
 const topLinks: (NavLink | NavDropdown)[] = [

@@ -1,0 +1,30 @@
+.display-title {
+  container-type: inline-size;
+  text-align: center;
+  margin: 0 auto 1.15rem;
+}
+
+.display-title .display-title__box {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.08em 0.14em 0.1em;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  box-sizing: border-box;
+  font-family: 'Josefin Sans', 'Avenir Next', 'Century Gothic', sans-serif;
+  font-weight: 300;
+  font-style: normal;
+  font-size: calc(96cqi / (var(--chars) * 0.64 + (var(--chars) - 1) * 0.32 + 0.42));
+  line-height: 1.05;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.display-title .display-title__text {
+  letter-spacing: 0.32em;
+  margin-right: -0.32em;
+}

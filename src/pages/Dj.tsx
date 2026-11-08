@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import DisplayTitle from '../components/DisplayTitle'
 import FaqAccordion from '../components/FaqAccordion'
 import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
@@ -10,8 +11,7 @@ import './Dj.css'
 export default function Dj() {
   return (
     <div className="page-content">
-      <h2>Wedding DJ Services</h2>
-      <div className="divider" />
+      <DisplayTitle as="h2">Wedding DJ Services</DisplayTitle>
 
       <div className="lead">
         <p>

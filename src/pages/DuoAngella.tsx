@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import DisplayTitle from '../components/DisplayTitle'
 import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import YouTubeEmbed from '../components/YouTubeEmbed'
@@ -7,7 +8,7 @@ import { homeGallery, images } from '../data/media'
 export default function DuoAngella() {
   return (
     <div className="page-content">
-      <h1 className="page-title">Anders &amp; Angella Acoustic Duo</h1>
+      <DisplayTitle>Anders & Angella Acoustic Duo</DisplayTitle>
       <div className="lead">
         <YouTubeEmbed videoId="-SXiczxgHu8" title="Anders & Angella Cover Reel" />
         <div className="copy-lg">

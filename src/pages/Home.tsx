@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Slideshow from '../components/Slideshow'
 import YouTubeEmbed from '../components/YouTubeEmbed'
+import DisplayTitle from '../components/DisplayTitle'
 import { homeGallery, images } from '../data/media'
 import { reviewListings } from '../data/reviews'
 import './Home.css'
@@ -24,10 +25,10 @@ export default function Home() {
       <h1 className="sr-only">Anders Hyatt Music</h1>
       <div className="home-wrap">
         <header className="home-intro">
-          <h2>Live Music &amp; DJ Services</h2>
+          <DisplayTitle as="h2">Live Music & DJ Services</DisplayTitle>
           <p className="home-intro__welcome">
-            A music experience that feels like yours: customized to the occasion and built to
-            elevate the atmosphere
+            A music experience that feels like you: customized to the occasion, built to elevate
+            the atmosphere
           </p>
           <p className="home-intro__about">{homeAbout}</p>
         </header>
@@ -120,7 +121,7 @@ export default function Home() {
             {quoteOpen ? 'Read less' : 'Read more'}
           </button>
           <figcaption>
-            — Catherine Appel
+            — Catherine A
             {' / '}
             <a href={reviewListings.google} target="_blank" rel="noopener noreferrer">
               Google

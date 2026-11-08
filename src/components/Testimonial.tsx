@@ -1,6 +1,15 @@
 import { reviewListingUrl } from '../data/reviews'
 import './Testimonial.css'
 
+/** First name plus last initial, as in “Catherine A”. */
+function reviewerName(name: string): string {
+  const parts = name.trim().replace(/\.$/, '').split(/\s+/).filter(Boolean)
+  if (parts.length < 2) return parts[0] ?? name.trim()
+  const last = parts[parts.length - 1]
+  const initial = last.length === 1 ? last : last[0]
+  return `${parts.slice(0, -1).join(' ')} ${initial}`
+}
+
 interface TestimonialProps {
   quote: string
   author: string
@@ -17,6 +26,7 @@ export default function Testimonial({ quote, author, source, tone }: Testimonial
     .filter(Boolean)
     .join(' ')
   const listingUrl = source ? reviewListingUrl(source) : undefined
+  const shownAuthor = reviewerName(author)
   const paragraphs = quote.split(/\n\n+/)
 
   return (
@@ -27,7 +37,7 @@ export default function Testimonial({ quote, author, source, tone }: Testimonial
         </p>
       ))}
       <footer className="testimonial__author">
-        &mdash; {author}
+        &mdash; {shownAuthor}
         {source && (
           <span className="testimonial__source">
             {' / '}

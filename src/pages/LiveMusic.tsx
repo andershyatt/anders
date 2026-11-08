@@ -4,16 +4,13 @@ import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import { liveMusicFaq } from '../data/faq'
 import { homeGallery } from '../data/media'
+import DisplayTitle from '../components/DisplayTitle'
 import EventsSection from './Events'
-import './LiveMusic.css'
 
 export default function LiveMusic() {
   return (
     <div className="page-content">
-      <div className="live-music-title">
-        <h1>Live Music</h1>
-        <div className="divider" />
-      </div>
+      <DisplayTitle>Live Music</DisplayTitle>
       <div className="lead copy-lg">
         <p>
           Whether setting the mood for an elegant ceremony, providing background music for a
@@ -24,9 +21,24 @@ export default function LiveMusic() {
         </p>
       </div>
 
-      <div className="cta-row">
+      <div className="cta-row cta-row--wide">
         <Link to="/live-music#events" className="cta-btn">
           See Anders Live
+        </Link>
+        <Link to="/duo-angella" className="cta-btn">
+          Duo - Angella
+        </Link>
+        <Link to="/duo-ben" className="cta-btn">
+          Duo - Ben
+        </Link>
+        <Link to="/trio" className="cta-btn">
+          The Trio
+        </Link>
+        <Link to="/song-list" className="cta-btn">
+          Song List
+        </Link>
+        <Link to="/connect" className="cta-btn">
+          Book Anders
         </Link>
       </div>
 
@@ -44,24 +56,6 @@ export default function LiveMusic() {
           author="Sophia W."
           source="Bash"
         />
-      </div>
-
-      <div className="cta-row cta-row--wide">
-        <Link to="/duo-angella" className="cta-btn">
-          Duo &mdash; Anders &amp; Angella
-        </Link>
-        <Link to="/duo-ben" className="cta-btn">
-          Duo &mdash; Anders &amp; Ben
-        </Link>
-        <Link to="/trio" className="cta-btn">
-          The Trio
-        </Link>
-        <Link to="/song-list" className="cta-btn">
-          Song List
-        </Link>
-        <Link to="/connect" className="cta-btn">
-          Book Anders
-        </Link>
       </div>
 
       <Slideshow images={homeGallery} altPrefix="Live music" />

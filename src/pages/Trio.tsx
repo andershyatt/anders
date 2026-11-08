@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import DisplayTitle from '../components/DisplayTitle'
 import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import YouTubeEmbed from '../components/YouTubeEmbed'
@@ -9,7 +10,7 @@ const placeholderPhotos = [images.duoAngella, images.duoBen, ...homeGallery.slic
 export default function Trio() {
   return (
     <div className="page-content">
-      <h1 className="page-title">The Trio &mdash; Anders, Angella &amp; Ben</h1>
+      <DisplayTitle>The Trio — Anders, Angella & Ben</DisplayTitle>
       <div className="lead">
         <YouTubeEmbed videoId="qZhppNcsXlc" title="The Trio — Anders, Angella & Ben" />
         <div className="copy-lg">

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import DisplayTitle from '../components/DisplayTitle'
 import SocialBar from '../layout/SocialBar'
 import { honeyBookUrl } from '../data/social'
 import './Connect.css'
@@ -53,7 +54,8 @@ export default function Connect() {
 
   return (
     <div className="page-content">
-      <p className="connect-intro">Ready to start planning? Share a few details below and we’ll be in touch.</p>
+      <DisplayTitle>Ready to start planning?</DisplayTitle>
+      <p className="connect-intro">Share a few details below and we’ll be in touch.</p>
       <div className="connect-form">
         <div className={`connect-form__embed ${FORM_CLASS}`} />
         <div className="cta-row connect-form__fallback">

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import DisplayTitle from '../components/DisplayTitle'
 import Slideshow from '../components/Slideshow'
 import Testimonial from '../components/Testimonial'
 import { homeGallery, images } from '../data/media'
@@ -6,13 +7,13 @@ import { homeGallery, images } from '../data/media'
 export default function DuoBen() {
   return (
     <div className="page-content">
-      <h1 className="page-title">Anders &amp; Ben Acoustic Duo</h1>
+      <DisplayTitle>Anders & Ben Acoustic Duo</DisplayTitle>
       <div className="lead copy-lg">
         <p>
-          Anders and Ben have been playing together for years. Ben Rogers is an extremely talented
-          violinist and vocalist. As a duo, these two can provide both beautiful instrumental music
-          as well as upbeat party music. No matter the occasion, Ben and Anders will be sure to leave
-          you and your guests musically satisfied.
+          Anders and Ben Rogers have been playing together since 2017, blending guitar, violin, and
+          vocal harmonies into a warm, lively sound. From beautiful instrumentals to upbeat
+          favorites, they bring an easy chemistry and a versatile song list to weddings, parties,
+          and events.
         </p>
       </div>
 
