@@ -6,7 +6,7 @@ interface DisplayTitleProps {
   children: string
 }
 
-/** Josefin title sized to the content width, with a border that hugs the letters. */
+/** Josefin title sized to the content width. */
 export default function DisplayTitle({ as: Tag = 'h1', children }: DisplayTitleProps) {
   const chars = children.trim().length
   return (
