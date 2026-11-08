@@ -26,7 +26,6 @@ const topLinks: (NavLink | NavDropdown)[] = [
   { label: 'Live Music', items: liveMusicDropdown },
   { label: 'DJ', to: '/dj' },
   { label: 'Photo Booth', to: '/photo-booth' },
-  { label: 'Events', to: '/events' },
   { label: 'Connect', to: '/connect' },
 ]
 
