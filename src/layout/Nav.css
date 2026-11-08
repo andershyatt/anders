@@ -165,15 +165,20 @@
 
 @media (max-width: 900px) {
   .site-nav__bar {
-    justify-content: flex-start;
-    gap: 0.15rem;
+    position: relative;
+    justify-content: center;
     min-height: var(--nav-height);
     padding: 0 0.55rem;
   }
 
   .site-nav__brand {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding-inline: 2.75rem;
     font-size: 13px;
     letter-spacing: 0.08em;
+    text-align: center;
   }
 
   .site-nav__inner {
@@ -185,8 +190,12 @@
 
   .site-nav__toggle {
     display: block;
+    position: absolute;
+    left: 0.35rem;
+    top: 50%;
+    z-index: 1;
     margin: 0;
-    flex: none;
+    transform: translateY(-50%);
   }
 
   .site-nav__list {
