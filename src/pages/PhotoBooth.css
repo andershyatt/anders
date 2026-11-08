@@ -1,13 +1,14 @@
-.booth-header .slideshow {
-  margin: 0;
+.booth-hero {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  object-fit: cover;
+  object-position: center;
+  background: #f3f1ec;
 }
 
 .booth-page > .page-content {
   padding-top: 1.35rem;
-}
-
-.booth-header .slideshow__frame {
-  max-height: 70vh;
 }
 
 .booth-page .page-title {
@@ -62,7 +63,7 @@
 }
 
 .booth-backdrop-section {
-  margin: 0 auto 2.25rem;
+  margin: 0.25rem auto 0;
   scroll-margin-top: 6.5rem;
 }
 
@@ -98,7 +99,7 @@
 }
 
 @media (max-width: 800px) {
-  .booth-header .slideshow__frame {
+  .booth-hero {
     max-height: 52vh;
   }
 
