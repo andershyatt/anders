@@ -14,14 +14,14 @@
   margin: 0 0 0.75rem;
 }
 
-.testimonial__quote::before {
+.testimonial__quote:first-of-type::before {
   content: '\201C';
   font-size: 1.4em;
   color: var(--color-accent);
   margin-right: 0.1em;
 }
 
-.testimonial__quote::after {
+.testimonial__quote:last-of-type::after {
   content: '\201D';
   font-size: 1.4em;
   color: var(--color-accent);
@@ -42,6 +42,11 @@
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
+}
+
+.testimonial__source a {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
 }
 
 .testimonial--box {

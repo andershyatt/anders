@@ -1,7 +1,7 @@
 export const socialLinks = {
-  facebook: 'http://www.facebook.com/andershyattmusic',
+  facebook: 'https://www.facebook.com/andershyattmusic',
   youtube: 'https://www.youtube.com/@andershyattmusic',
-  instagram: 'http://instagram.com/andershyattmusic',
+  instagram: 'https://instagram.com/andershyattmusic',
 } as const
 
 export const honeyBookUrl =

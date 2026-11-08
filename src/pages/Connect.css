@@ -1,3 +1,10 @@
+.connect-intro {
+  max-width: 720px;
+  margin: 0 auto 1.25rem;
+  font-size: 1.2em;
+  line-height: 1.55;
+}
+
 .connect-form {
   max-width: 720px;
   margin: 0 auto 2rem;

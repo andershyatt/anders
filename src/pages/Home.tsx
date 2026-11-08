@@ -1,24 +1,35 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Slideshow from '../components/Slideshow'
 import YouTubeEmbed from '../components/YouTubeEmbed'
 import { homeGallery, images } from '../data/media'
+import { reviewListings } from '../data/reviews'
 import './Home.css'
 
-const ericaQuote =
-  "Would highly recommend. Anders and his co-musicians were so nice and wanted to make our wedding music fit whatever our vision was! We had Anders and two of his co-musicians (violin and singer) for the ceremony and cocktail hour and dinner and then Anders DJ'd for the rest of the night. We got so many compliments about how great they sounded! At one point they were playing a song and it sounded like the exact radio version, they also add a nice harmony to their music! Anders was always responsive to emails and willing to chat whenever."
+const homeAbout =
+  'Great live music makes a gathering feel special. Anders Hyatt Music brings acoustic performances to weddings and events in Philadelphia and worldwide, with songs you love and personal requests that make the day your own. When it’s time to dance, we switch seamlessly to DJ services, giving you one familiar team throughout the celebration. Add a photo booth for a little extra fun.'
+
+const catherineLead =
+  "Anders was the perfect choice for our wedding musician. We had a 70 guest wedding at an indoor-outdoor venue. Our venue had recommended Anders when we explained what we were looking for. Throughout the process, Anders was communicative and helpful. He saw and fully understood our vision for the pre-ceremony, ceremony, cocktail hour and dancing flow. Having instrumental acoustic guitar and violin during the pre-ceremony and ceremony, then acoustic with vocals during the cocktail hour was toward the top of our priority list. Nearly all of our guests were amazed and commented on Anders' performance--they were a huge hit!"
+
+const catherineRest =
+  "We had a semi-complicated song sequence for our ceremony and Anders executed it perfectly. And the fact that Anders switches over to DJ-ing for the reception within the same price point is big. He incorporated our requests and read the room to adjust the songs to play to the crowd. Anders was also incredibly helpful in organizing the flow of our reception, speeches, etc. If you want a professional, talented musician who can do it all, Anders is your guy! We can't thank him enough for being such an integral part to our special day!"
 
 export default function Home() {
+  const [quoteOpen, setQuoteOpen] = useState(false)
+  const catherineQuote = quoteOpen ? `${catherineLead} ${catherineRest}` : catherineLead
+
   return (
     <div className="home">
       <h1 className="sr-only">Anders Hyatt Music</h1>
       <div className="home-wrap">
         <header className="home-intro">
           <h2>Live Music &amp; DJ Services</h2>
-          <p>Philadelphia PA, worldwide</p>
           <p className="home-intro__welcome">
             A music experience that feels like yours: customized to the occasion and built to
             elevate the atmosphere
           </p>
+          <p className="home-intro__about">{homeAbout}</p>
         </header>
 
         <section className="home-split" aria-labelledby="live-music-heading">
@@ -75,7 +86,7 @@ export default function Home() {
                 <em>Emcee services included</em>
               </p>
               <Link to="/dj" className="home-btn">
-                learn more
+                Learn more
               </Link>
             </div>
           </div>
@@ -98,17 +109,20 @@ export default function Home() {
 
         <figure className="home-quote">
           <blockquote>
-            <p>
-              “{ericaQuote}” - Erica B.
-            </p>
+            <p>“{catherineQuote}”</p>
           </blockquote>
+          <button
+            type="button"
+            className="home-quote__more"
+            aria-expanded={quoteOpen}
+            onClick={() => setQuoteOpen((open) => !open)}
+          >
+            {quoteOpen ? 'Read less' : 'Read more'}
+          </button>
           <figcaption>
-            —{' '}
-            <a
-              href="https://g.page/r/CT8HZra3a_GKEB0"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            — Catherine Appel
+            {' / '}
+            <a href={reviewListings.google} target="_blank" rel="noopener noreferrer">
               Google
             </a>
           </figcaption>
@@ -124,15 +138,75 @@ export default function Home() {
           />
         </div>
 
+        <p className="home-ratings">
+          5.0 from{' '}
+          <a
+            href={reviewListings.google}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="79 Google reviews"
+          >
+            79
+          </a>{' '}
+          Google reviews,{' '}
+          <a
+            href={reviewListings.theKnot}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="121 reviews on The Knot"
+          >
+            121
+          </a>{' '}
+          on The Knot,{' '}
+          <a
+            href={reviewListings.weddingWire}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="62 reviews on WeddingWire"
+          >
+            62
+          </a>{' '}
+          on WeddingWire, and{' '}
+          <a
+            href={reviewListings.zola}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="43 reviews on Zola"
+          >
+            43
+          </a>{' '}
+          on Zola.
+        </p>
         <ul className="home-badges">
           <li>
-            <img src={images.badgeZola} alt="As seen on Zola" />
+            <a
+              href={reviewListings.zola}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Anders Hyatt Music reviews on Zola"
+            >
+              <img src={images.badgeZola} alt="As seen on Zola" />
+            </a>
           </li>
           <li>
-            <img src={images.badgeTk} alt="The Knot Hall of Fame 2026" />
+            <a
+              href={reviewListings.theKnot}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Anders Hyatt Music reviews on The Knot"
+            >
+              <img src={images.badgeTk} alt="The Knot Hall of Fame 2026" />
+            </a>
           </li>
           <li>
-            <img src={images.badgeBow} alt="WeddingWire Couples' Choice Award 2026" />
+            <a
+              href={reviewListings.weddingWire}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Anders Hyatt Music reviews on WeddingWire"
+            >
+              <img src={images.badgeBow} alt="WeddingWire Couples' Choice Award 2026" />
+            </a>
           </li>
         </ul>
       </div>

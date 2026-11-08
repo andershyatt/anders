@@ -19,12 +19,21 @@ export default function DuoBen() {
       <div className="testimonial-list">
         <Testimonial
           tone={0}
+          quote={
+            "I highly recommend Anders (and Ben!) for your event. He was easy to work with during all stages of the wedding planning, and they both were incredibly talented!! I had guests raving about the music, and some even shared that their favorite part of the night was just relaxing by the fire and enjoying the live music. My husband requested a Dio song for his entrance walk, and Ben and Anders killed it on violin/guitar.\n\nTransitions between live music and DJing were seamless, and he knew exactly what songs to play to keep everyone on the dance floor (I'm serious- I had to be dragged off to cut my cake). It was truly an honor to have had them play at our wedding."
+          }
+          author="Katy Randall"
+          source="Google"
+        />
+
+        <Testimonial
+          tone={1}
           quote="We hired Anders and Ben to perform at our small wedding in PA. They did such a fantastic job, and Anders was great at communicating with us. We changed a few things the day of, and he was flexible and willing to accommodate our changes. I also liked how they could provide a violin for our ceremony, live performances when we wanted that, and then turn full DJ by the end of the night. I recommend Anders+Ben for any wedding and am so happy we went with them!"
           author="Kelly C"
         />
 
         <Testimonial
-          tone={1}
+          tone={2}
           quote="My wife and I found Anders Hyatt music and we could not be more impressed with his professionalism, candor, responsiveness to all our questions. He, along with Ben, performed our wedding on September 9th at Stella and I must say that from the ceremony music, to the camaraderie, to the DJ services the team made our guests feel welcomed and they all stated that Anders and Ben were one of the best ceremony/DJ combo services they ever seen (and heard). I would definitely recommend Anders...you will not be disappointed."
           author="James C"
         />

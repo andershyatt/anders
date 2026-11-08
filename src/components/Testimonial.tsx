@@ -1,3 +1,4 @@
+import { reviewListingUrl } from '../data/reviews'
 import './Testimonial.css'
 
 interface TestimonialProps {
@@ -15,13 +16,30 @@ export default function Testimonial({ quote, author, source, tone }: Testimonial
   ]
     .filter(Boolean)
     .join(' ')
+  const listingUrl = source ? reviewListingUrl(source) : undefined
+  const paragraphs = quote.split(/\n\n+/)
 
   return (
     <blockquote className={className}>
-      <p className="testimonial__quote">{quote}</p>
+      {paragraphs.map((paragraph, index) => (
+        <p key={index} className="testimonial__quote">
+          {paragraph}
+        </p>
+      ))}
       <footer className="testimonial__author">
         &mdash; {author}
-        {source && <span className="testimonial__source"> / {source}</span>}
+        {source && (
+          <span className="testimonial__source">
+            {' / '}
+            {listingUrl ? (
+              <a href={listingUrl} target="_blank" rel="noopener noreferrer">
+                {source}
+              </a>
+            ) : (
+              source
+            )}
+          </span>
+        )}
       </footer>
     </blockquote>
   )

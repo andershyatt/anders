@@ -46,3 +46,15 @@ const PHOTO_BOOTH_IMAGES: Readonly<Record<string, string>> = {
 export function boothImage(option: string): string | undefined {
   return PHOTO_BOOTH_IMAGES[option]
 }
+
+/** Backdrop names and photos for the public photo booth page. */
+export const boothBackdrops = [
+  { name: 'Brilliant White', src: backdropWhite },
+  { name: 'Drops of Gold', src: backdropDrops },
+  { name: 'Dark Barnwood', src: backdropBarnwood },
+  { name: 'Hedge', src: backdropHedge },
+  { name: 'Gold Sparkle', src: backdropSparkle },
+  { name: 'Brushed Black & White', src: backdropBrushed },
+  { name: 'Floral Pattern', src: backdropFloral },
+  { name: 'Romantic Country Lights', src: backdropLights },
+] as const

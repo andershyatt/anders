@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom'
 import Slideshow from '../components/Slideshow'
-import { photoBoothGallery } from '../data/media'
+import { images, photoBoothGallery } from '../data/media'
+import { boothBackdrops } from '../planner/photoBoothImages'
 import './PhotoBooth.css'
 
 const packageItems = [
@@ -12,47 +14,62 @@ const packageItems = [
   'Full setup, on-site technician, and teardown included',
 ]
 
+const boothBody =
+  'Our state-of-the-art Glamour Booth offers your guests a fun and stylish way to capture memories that last a lifetime. Whether it’s a wedding, corporate event, or special celebration, our photo booth adds an interactive element that keeps the energy high and the smiles bright. With customizable backdrops, high-quality prints, and instant sharing, you’re guaranteed to make your event unforgettable.'
+
 export default function PhotoBooth() {
   return (
-    <div className="page-content">
-      <h2>The Glamour Booth</h2>
-      <div className="divider" />
-      <h3>An open-air photo booth experience</h3>
+    <div className="booth-page">
+      <img
+        className="booth-hero"
+        src={images.photoBoothBanner}
+        alt="The Glamour Booth, a handcrafted wooden photo booth on a tripod"
+      />
+      <div className="page-content">
+        <h1 className="page-title">The Glamour Booth</h1>
+        <p className="booth-subtitle">An open-air photo booth experience</p>
+        <div className="divider" />
+        <h2>Capture the Fun, Create Memories</h2>
+        <p className="booth-subhead">Elevate your event with our elegant, handcrafted photo booth</p>
+        <div className="lead">
+          <p>{boothBody}</p>
+        </div>
 
-      <h4>Capture the Fun, Create Memories</h4>
-      <h4>Elevate Your Event with Our elegant, Handcrafted photo Booth</h4>
-
-      <div className="lead">
         <p>
-          Our state-of-the-art Glamour Booth offers your guests a fun and stylish way to capture
-          memories that last a lifetime. Whether it&apos;s a wedding, corporate event, or special
-          celebration, our photo booth adds an interactive element that keeps the energy high and
-          the smiles bright.
+          <strong>Our photo booth package includes:</strong>
         </p>
+        <ul className="photo-booth-packages">
+          {packageItems.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+
+        <div className="cta-row">
+          <Link to="/connect" className="cta-btn">
+            Get a Quote
+          </Link>
+        </div>
+
+        <p className="photo-booth-backdrops">
+          <Link to="/photo-booth#backdrops">View our backdrop options</Link>
+        </p>
+
+        <section id="backdrops" className="booth-backdrop-section" aria-labelledby="backdrops-heading">
+          <h2 id="backdrops-heading">Backdrops</h2>
+          <ul className="booth-backdrop-grid">
+            {boothBackdrops.map((backdrop) => (
+              <li key={backdrop.name}>
+                <figure>
+                  <img src={backdrop.src} alt="" />
+                  <figcaption>{backdrop.name}</figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <Slideshow images={photoBoothGallery} altPrefix="Photo booth" />
       </div>
-
-      <p>
-        <strong>Our photo booth package includes:</strong>
-      </p>
-      <ul className="photo-booth-packages">
-        {packageItems.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-
-      <p className="photo-booth-backdrops">
-        <strong>BACKDROPS:</strong>{' '}
-        <a
-          href="https://www.andershyattmusic.com/photo-booth-backdrops"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Click HERE
-        </a>{' '}
-        to view our back drop options
-      </p>
-
-      <Slideshow images={photoBoothGallery} altPrefix="Photo booth" />
     </div>
   )
 }

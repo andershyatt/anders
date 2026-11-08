@@ -53,6 +53,7 @@ export default function Connect() {
 
   return (
     <div className="page-content">
+      <p className="connect-intro">Ready to start planning? Share a few details below and I’ll be in touch.</p>
       <div className="connect-form">
         <div className={`connect-form__embed ${FORM_CLASS}`} />
         <div className="cta-row connect-form__fallback">
