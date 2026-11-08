@@ -15,7 +15,7 @@ const packageItems = [
 ]
 
 const boothBody =
-  'Our state-of-the-art Glamour Booth offers your guests a fun and stylish way to capture memories that last a lifetime. Whether it’s a wedding, corporate event, or special celebration, our photo booth adds an interactive element that keeps the energy high and the smiles bright. With customizable backdrops, high-quality prints, and instant sharing, you’re guaranteed to make your event unforgettable.'
+  'Our state-of-the-art photo booth offers your guests a fun and stylish way to capture memories that last a lifetime. Whether it’s a wedding, corporate event, or special celebration, our photo booth adds an interactive element that keeps the energy high and the smiles bright. With customizable backdrops, high-quality prints, and instant sharing, you’re guaranteed to make your event unforgettable.'
 
 export default function PhotoBooth() {
   return (
@@ -57,7 +57,7 @@ export default function PhotoBooth() {
         <Slideshow images={photoBoothGallery} altPrefix="Photo booth" />
 
         <section id="backdrops" className="booth-backdrop-section" aria-labelledby="backdrops-heading">
-          <h2 id="backdrops-heading">Backdrops</h2>
+          <h2 id="backdrops-heading">Backdrop Options</h2>
           <ul className="booth-backdrop-grid">
             {boothBackdrops.map((backdrop) => (
               <li key={backdrop.name}>
