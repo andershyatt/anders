@@ -219,6 +219,57 @@
   color: #9a9ea7;
 }
 
+.home-planner {
+  margin: 0.35rem 0 0.15rem;
+}
+
+.home-planner__copy {
+  margin: 0 auto;
+  max-width: 44rem;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #222222;
+}
+
+.home-planner__shots {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  align-items: start;
+}
+
+.home-planner__shots img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(28, 25, 22, 0.12);
+}
+
+.home-reviews-title {
+  margin-top: 1.75rem;
+}
+
+.home-reviews-title .display-title {
+  margin-bottom: 0.15rem;
+}
+
+/* “Reviews” is short, so the shared title scale would blow it up.
+   Lock it to the same size as “Wedding planning, made easy” (27 characters). */
+.home-reviews-title .display-title .display-title__box {
+  font-size: calc(96cqi / (27 * 0.64 + 26 * 0.32 + 0.42));
+}
+
+.home-reviews-title + .home-reviews-heading {
+  margin-top: 0.2rem;
+}
+
 .home-reviews-heading {
   margin: 1.75rem auto 0.55rem;
   max-width: 18em;
@@ -306,8 +357,19 @@
     font-size: 16px;
   }
 
-  .home-reviews-heading {
+  .home-planner__shots {
+    grid-template-columns: 1fr;
+    max-width: 26rem;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .home-reviews-title {
     margin-top: 1.35rem;
+  }
+
+  .home-reviews-title + .home-reviews-heading {
+    margin-top: 0.15rem;
     font-size: 24px;
   }
 

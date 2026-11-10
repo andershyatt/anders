@@ -8,7 +8,7 @@ import { reviewListings } from '../data/reviews'
 import './Home.css'
 
 const homeAbout =
-  'Great live music makes a gathering feel special. Anders Hyatt Music brings acoustic performances to weddings and events in the Philadelphia area and worldwide, with songs you love and personal requests that make the day your own. When it’s time to dance, we switch seamlessly to DJ services, giving you one familiar team throughout the celebration. Add a photo booth for a little extra fun.'
+  'Great live music makes a gathering feel special. Anders Hyatt Music brings acoustic performances to weddings and events in the Philadelphia area and worldwide, with songs you love and personal requests that make the day your own. When it’s time to dance, we switch seamlessly to DJ services, giving you one familiar team throughout the celebration. Add the photo booth for a little extra fun.'
 
 const catherineLead =
   "Anders was the perfect choice for our wedding musician. We had a 70 guest wedding at an indoor-outdoor venue. Our venue had recommended Anders when we explained what we were looking for. Throughout the process, Anders was communicative and helpful. He saw and fully understood our vision for the pre-ceremony, ceremony, cocktail hour and dancing flow. Having instrumental acoustic guitar and violin during the pre-ceremony and ceremony, then acoustic with vocals during the cocktail hour was toward the top of our priority list. Nearly all of our guests were amazed and commented on Anders' performance--they were a huge hit!"
@@ -139,6 +139,38 @@ export default function Home() {
           />
         </div>
 
+        <section className="home-planner" aria-label="Wedding planning, made easy">
+          <DisplayTitle as="h2">Wedding planning, made easy</DisplayTitle>
+          <p className="home-planner__copy">
+            When you book Anders, you get your own private wedding planner — a simple place to
+            build your timeline, pick songs for the ceremony, cocktail hour, dinner, and dancing,
+            and keep all the music details in one spot.
+          </p>
+          <ul className="home-planner__shots">
+            <li>
+              <img
+                src={images.plannerOverview}
+                alt="The wedding planner home, ready for the day’s music and details"
+              />
+            </li>
+            <li>
+              <img
+                src={images.plannerCeremony}
+                alt="Ceremony song choices in the wedding planner, with processional styles selected"
+              />
+            </li>
+            <li>
+              <img
+                src={images.plannerSongs}
+                alt="A numbered cocktail-hour song list in the wedding planner, with must-plays marked"
+              />
+            </li>
+          </ul>
+        </section>
+
+        <div className="home-reviews-title">
+          <DisplayTitle as="h2">Reviews</DisplayTitle>
+        </div>
         <h2 className="home-reviews-heading">From the people who’ve hired us</h2>
         <div className="home-ratings">
           <p>
