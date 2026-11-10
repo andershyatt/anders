@@ -252,6 +252,18 @@
   box-shadow: 0 8px 22px rgba(28, 25, 22, 0.12);
 }
 
+.home-reviews-title {
+  margin-top: 1.75rem;
+}
+
+.home-reviews-title .display-title {
+  margin-bottom: 0.15rem;
+}
+
+.home-reviews-title + .home-reviews-heading {
+  margin-top: 0.2rem;
+}
+
 .home-reviews-heading {
   margin: 1.75rem auto 0.55rem;
   max-width: 18em;
@@ -346,8 +358,12 @@
     margin-left: auto;
   }
 
-  .home-reviews-heading {
+  .home-reviews-title {
     margin-top: 1.35rem;
+  }
+
+  .home-reviews-title + .home-reviews-heading {
+    margin-top: 0.15rem;
     font-size: 24px;
   }
 
