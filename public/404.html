@@ -6,24 +6,28 @@
     <title>Anders Hyatt Music</title>
     <script>
       (function () {
-        var known = {
+        var pages = {
           '/': true,
           '/live-music': true,
           '/duo-angella': true,
           '/duo-ben': true,
           '/trio': true,
-          '/faq': true,
           '/song-list': true,
-          '/songlist': true,
-          '/playlist': true,
           '/dj': true,
-          '/dj-faq': true,
-          '/events': true,
           '/photo-booth': true,
           '/connect': true,
         }
+        var aliases = {
+          '/songlist': '/song-list',
+          '/playlist': '/song-list',
+          '/faq': '/live-music#faq',
+          '/dj-faq': '/dj#faq',
+          '/events': '/live-music#events',
+        }
         var path = location.pathname.replace(/\/index\.html$/, '').replace(/\/+$/, '') || '/'
-        var target = known[path] ? '/#' + path : '/'
+        if (path === '/planner' || path.indexOf('/planner/') === 0) return
+        if (path === '/pipeline' || path.indexOf('/pipeline/') === 0) return
+        var target = aliases[path] || (pages[path] ? path : '/')
         var meta = document.createElement('meta')
         meta.httpEquiv = 'refresh'
         meta.content = '0; url=' + target
