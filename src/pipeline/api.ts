@@ -1,6 +1,8 @@
-import { PLANNER_API_URL } from '../planner/config'
+import { PLANNER_API_URL, plannerLink } from '../planner/config'
 import { thumbnailDataUrl } from './thumbs'
 import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } from './types'
+
+export { plannerLink }
 
 const KEY_STORAGE = 'anders-pipeline-admin-key'
 
@@ -55,17 +57,6 @@ export function clearAdminKey() {
     // Ignore a blocked storage API and still clear the cookie.
   }
   clearCookie()
-}
-
-export function plannerLink(token: string, fromPipeline = false): string {
-  const url = new URL(window.location.href)
-  url.hash = ''
-  url.pathname = url.pathname.replace(/pipeline\/?(index\.html)?$/, 'planner/')
-  const params = new URLSearchParams()
-  params.set('c', token)
-  if (fromPipeline) params.set('from', 'pipeline')
-  url.search = `?${params.toString()}`
-  return url.toString()
 }
 
 async function postAdmin(body: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -183,7 +174,8 @@ export interface NewCoupleInput {
 export async function adminAddCouple(key: string, couple: NewCoupleInput): Promise<{ token: string; link: string }> {
   const data = await postAdmin({ action: 'adminAddCouple', key, couple })
   const token = text(data.token)
-  const link = text(data.link) || (token ? plannerLink(token) : '')
+  // The script may still return a github.io link. Couples get the apex URL.
+  const link = token ? plannerLink(token) : text(data.link)
   if (!token) throw new Error('missing_token')
   return { token, link }
 }

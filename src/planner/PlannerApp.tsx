@@ -1212,7 +1212,7 @@ export default function PlannerApp() {
                       {showField && field.image === 'chauvet' && (
                         <img
                           className="planner-lighting"
-                          src={`${import.meta.env.BASE_URL}../chauvet-freedom-par.jpg`}
+                          src={`${import.meta.env.BASE_URL}chauvet-freedom-par.jpg`}
                           alt="Chauvet DJ uplights placed around a dance floor"
                         />
                       )}

@@ -1,10 +1,11 @@
+import { SITE_ORIGIN } from '../planner/config'
 import type { ListedSong } from './songs'
 
 /** Public Spotify app client ID (PKCE, no secret). Redirect URI is SPOTIFY_REDIRECT_URI. */
 export const SPOTIFY_CLIENT_ID = 'c3486538573a4e229a3f43589fb2f793'
 
 /** Registered on the Spotify app. Do not add a query string or drop the trailing slash. */
-export const SPOTIFY_REDIRECT_URI = 'https://andershyatt.github.io/anders/pipeline/'
+export const SPOTIFY_REDIRECT_URI = `${SITE_ORIGIN}/pipeline/`
 
 /** Private playlists need the private scope. Spotify also expects the public scope on the current create call. */
 const REQUIRED_SCOPES = ['playlist-modify-private', 'playlist-modify-public']
@@ -162,7 +163,7 @@ async function readError(response: Response, path: string): Promise<SpotifyApiEr
   const raw = detail || response.statusText || 'no details'
   if (/invalid_client/i.test(raw)) {
     return new SpotifyApiError(
-      `Spotify said “${raw}” (HTTP ${response.status}). The redirect URI on the app must be exactly https://andershyatt.github.io/anders/pipeline/.`,
+      `Spotify said “${raw}” (HTTP ${response.status}). The redirect URI on the app must be exactly ${SPOTIFY_REDIRECT_URI}.`,
       response.status,
     )
   }

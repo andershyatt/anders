@@ -1,10 +1,6 @@
 User-agent: *
-Disallow: /anders/planner/
-Disallow: /anders/pipeline/
+Disallow: /planner/
+Disallow: /pipeline/
 
-# GitHub Pages publishes this file with the project site at
-# https://andershyatt.github.io/anders/robots.txt
-# Crawlers only honor robots.txt at the domain root
-# (https://andershyatt.github.io/robots.txt). This Disallow does not
-# take effect until the same rule is present in that root file.
+# Served at https://andershyattmusic.com/robots.txt once the custom domain is live.
 # The planner page also sends a noindex, nofollow meta tag.

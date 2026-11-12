@@ -38,7 +38,7 @@ To deploy:
 npm run deploy
 ```
 
-`vite.config.ts` uses `base: './'` so the built app remains portable for GitHub Pages project hosting.
+`vite.config.ts` uses `base: '/'` so the built site is served from the root of andershyattmusic.com.
 
 For automatic deploys, this template also includes `.github/workflows/deploy-pages.yml`, which publishes on pushes to `main`.
 
