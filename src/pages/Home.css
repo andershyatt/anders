@@ -260,10 +260,9 @@
   margin-bottom: 0.15rem;
 }
 
-/* “Reviews” is short, so the shared title scale would blow it up.
-   Lock it to the same size as “Wedding planning, made easy” (27 characters). */
+/* 15% smaller than the full-width title scale, at every viewport. */
 .home-reviews-title .display-title .display-title__box {
-  font-size: calc(96cqi / (27 * 0.64 + 26 * 0.32 + 0.42));
+  font-size: calc(0.85 * (96cqi / (var(--chars) * 0.64 + (var(--chars) - 1) * 0.32 + 0.42)));
 }
 
 .home-reviews-title + .home-reviews-heading {
