@@ -8,7 +8,7 @@ import { reviewListings } from '../data/reviews'
 import './Home.css'
 
 const homeAbout =
-  'Great live music makes a gathering feel special. Anders Hyatt Music brings acoustic performances to weddings and events in the Philadelphia area and worldwide, with songs you love and personal requests that make the day your own. When it’s time to dance, we switch seamlessly to DJ services, giving you one familiar team throughout the celebration. Add the photo booth for a little extra fun.'
+  'Great music makes a gathering feel special. Anders Hyatt Music brings live acoustic performances to weddings and events in the Philadelphia area and beyond, with songs you love and personal requests that make the day your own. And if you want to dance, we switch seamlessly to DJ services, giving you one familiar team throughout the celebration. Add the photo booth for a little extra fun.'
 
 const catherineLead =
   "Anders was the perfect choice for our wedding musician. We had a 70 guest wedding at an indoor-outdoor venue. Our venue had recommended Anders when we explained what we were looking for. Throughout the process, Anders was communicative and helpful. He saw and fully understood our vision for the pre-ceremony, ceremony, cocktail hour and dancing flow. Having instrumental acoustic guitar and violin during the pre-ceremony and ceremony, then acoustic with vocals during the cocktail hour was toward the top of our priority list. Nearly all of our guests were amazed and commented on Anders' performance--they were a huge hit!"
@@ -141,7 +141,8 @@ export default function Home() {
           <p className="home-planner__copy">
             When you book Anders, you get your own private wedding planner — a simple place to
             build your timeline, pick songs for the ceremony, cocktail hour, dinner, and dancing,
-            and keep all the music details in one spot.
+            and keep all the music details in one spot. Thinking of booking us for your wedding?
+            Request a free trial of the planner first.
           </p>
           <ul className="home-planner__shots">
             <li>
