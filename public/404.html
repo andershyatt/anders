@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Anders Hyatt Music</title>
+    <script>
+      (function () {
+        var known = {
+          '/': true,
+          '/live-music': true,
+          '/duo-angella': true,
+          '/duo-ben': true,
+          '/trio': true,
+          '/faq': true,
+          '/song-list': true,
+          '/songlist': true,
+          '/playlist': true,
+          '/dj': true,
+          '/dj-faq': true,
+          '/events': true,
+          '/photo-booth': true,
+          '/connect': true,
+        }
+        var path = location.pathname.replace(/\/index\.html$/, '').replace(/\/+$/, '') || '/'
+        var target = known[path] ? '/#' + path : '/'
+        var meta = document.createElement('meta')
+        meta.httpEquiv = 'refresh'
+        meta.content = '0; url=' + target
+        document.head.appendChild(meta)
+        location.replace(target)
+      })()
+    </script>
+  </head>
+  <body>
+    <p><a href="/">Anders Hyatt Music</a></p>
+  </body>
+</html>
