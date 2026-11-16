@@ -21,20 +21,11 @@
 
 .home-intro p {
   margin: 0;
-  font-family: 'Lucida Grande', Tahoma, Verdana, sans-serif;
-  font-size: 22px;
-  line-height: 1.35;
-  color: #95a5a6;
 }
 
 .home-intro .home-intro__about {
   margin: 0 auto 0;
   max-width: 44rem;
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.6;
-  color: #222222;
 }
 
 .home-video {
@@ -331,13 +322,8 @@
     font-size: 22px;
   }
 
-  .home-intro p,
   .home-quote p {
     font-size: 18px;
-  }
-
-  .home-intro .home-intro__about {
-    font-size: 16px;
   }
 
   .home-planner__shots {
