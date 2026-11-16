@@ -67,6 +67,12 @@ export default function Home() {
         <section className="home-split home-split--image-right" aria-labelledby="dj-heading">
           <div className="home-split__media">
             <img src={images.homeDj} alt="Anders DJing on a Rane FOUR controller" />
+            <p className="home-split__credit">
+              Photo:{' '}
+              <a href="https://dearlybeloved-weddings.com" target="_blank" rel="noopener">
+                Rachel Baldwin, Dearly Beloved
+              </a>
+            </p>
           </div>
           <div className="home-split__copy">
             <div className="home-split__card">
