@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent
 import { searchSongs, type SongMatch } from './songSearch'
 import SuggestionBrowser from './SuggestionBrowser'
 import type { SuggestedSong } from './suggestions'
+import { useSuggestionTap } from './useSuggestionTap'
 
 const MIN_QUERY = 2
 const DEBOUNCE_MS = 300
@@ -87,6 +88,8 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
   const [justAdded, setJustAdded] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+  const pickResult = useRef<(index: number) => void>(() => {})
+  const suggestionTap = useSuggestionTap((index) => pickResult.current(index))
   const retainFocus = useRef(false)
   const requestSeq = useRef(0)
   const full = rows.length >= MAX_SONGS
@@ -183,6 +186,13 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
   }
 
   const showList = open && query.trim().length >= MIN_QUERY && !full && (loading || results.length > 0)
+  useEffect(() => {
+    pickResult.current = (index) => {
+      const song = results[index]
+      if (!song) return
+      addSong({ title: song.title, artist: song.artist, artwork: song.artwork, who: '' })
+    }
+  })
   const typed = typedSong(query)
 
   const onSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -270,30 +280,17 @@ export default function IntroSongs({ label, value, onChange, suggestions = [] }:
           onKeyDown={onSearchKeyDown}
         />
         {showList && (
-          <ul className="planner-venue__list" id={`${listId}-results`} role="listbox">
+          <ul className="planner-venue__list" id={`${listId}-results`} role="listbox" {...suggestionTap}>
             {loading && results.length === 0 && <li className="planner-venue__status">Searching songs…</li>}
             {results.map((song, index) => (
               <li key={song.id} role="presentation">
                 <button
                   type="button"
                   role="option"
+                  data-option-index={index}
                   aria-selected={index === activeIndex}
                   className={`planner-venue__option planner-song__option${index === activeIndex ? ' is-active' : ''}`}
                   onMouseEnter={() => setActiveIndex(index)}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onPointerDown={(event) => {
-                    if (event.pointerType === 'mouse') return
-                    event.preventDefault()
-                    event.currentTarget.dataset.touched = '1'
-                    addSong({ title: song.title, artist: song.artist, artwork: song.artwork, who: '' })
-                  }}
-                  onClick={(event) => {
-                    if (event.currentTarget.dataset.touched === '1') {
-                      delete event.currentTarget.dataset.touched
-                      return
-                    }
-                    addSong({ title: song.title, artist: song.artist, artwork: song.artwork, who: '' })
-                  }}
                 >
                   {song.artwork ? <img className="planner-song__art" src={song.artwork} alt="" loading="lazy" decoding="async" /> : <span className="planner-song__art" />}
                   <span className="planner-song__text">

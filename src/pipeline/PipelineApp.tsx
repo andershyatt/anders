@@ -30,7 +30,26 @@ import { stageOf, type BookingStage, type PipelineCouple, type PipelineDetail } 
 import PullToRefresh from '../PullToRefresh'
 import { usePullToRefresh, useStandalone } from '../standalone'
 
-const STAGES: BookingStage[] = ['Booked', 'Not yet booked', 'Completed']
+const STAGES: BookingStage[] = ['Booked', 'Not booked', 'Completed']
+const STAGE_FILTER_KEY = 'anders-pipeline-booking-stages'
+
+function readStoredStages(): Set<BookingStage> {
+  const fallback = new Set<BookingStage>(['Booked', 'Not booked'])
+  try {
+    const raw = localStorage.getItem(STAGE_FILTER_KEY)
+    if (!raw) return fallback
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return fallback
+    const next = new Set<BookingStage>()
+    for (const item of parsed) {
+      if (item === 'Booked' || item === 'Completed' || item === 'Not booked') next.add(item)
+      else if (item === 'Not yet booked') next.add('Not booked')
+    }
+    return next
+  } catch {
+    return fallback
+  }
+}
 const UPDATED_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** `yyyy-MM-dd HH:mm` from Apps Script, already in America/New_York, as “Nov 4, 2:31 PM”. */
@@ -123,7 +142,7 @@ export default function PipelineApp() {
   const cachedCouples = useMemo(() => readPipelineCache(), [])
   const serverList = useRef<PipelineCouple[]>(cachedCouples ?? [])
   const [couples, setCouples] = useState<PipelineCouple[]>(cachedCouples ?? [])
-  const [stages, setStages] = useState<Set<BookingStage>>(() => new Set(['Booked', 'Not yet booked']))
+  const [stages, setStages] = useState<Set<BookingStage>>(readStoredStages)
   const [status, setStatus] = useState<'gate' | 'loading' | 'ready' | 'error'>(() => {
     if (!storedAdminKey()) return 'gate'
     return cachedCouples ? 'ready' : 'loading'
@@ -259,6 +278,14 @@ export default function PipelineApp() {
       controller.abort()
     }
   }, [venueQuery])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STAGE_FILTER_KEY, JSON.stringify([...stages]))
+    } catch {
+      // Private browsing can reject storage. The in-memory filter still works.
+    }
+  }, [stages])
 
   function toggleStage(stage: BookingStage) {
     setStages((current) => {

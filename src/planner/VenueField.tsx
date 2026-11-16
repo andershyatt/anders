@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { googlePlacesConfigured } from './googlePlacesKey'
 import { loadGooglePlace, searchVenues, type VenueMatch, type VenueProvider } from './venueSearch'
+import { useSuggestionTap } from './useSuggestionTap'
 
 const MIN_QUERY = 3
 const DEBOUNCE_MS = 250
@@ -27,6 +28,8 @@ export default function VenueField({ id, value, onChange, onPick }: VenueFieldPr
   const sessionRef = useRef(newSessionToken())
   const pickGeneration = useRef(0)
   const detailsAbort = useRef<AbortController | null>(null)
+  const pickResult = useRef<(index: number) => void>(() => {})
+  const suggestionTap = useSuggestionTap((index) => pickResult.current(index))
 
   useEffect(() => {
     if (!open) return
@@ -93,6 +96,12 @@ export default function VenueField({ id, value, onChange, onPick }: VenueFieldPr
   }
 
   const showList = open && value.trim().length >= MIN_QUERY && status !== 'idle'
+  useEffect(() => {
+    pickResult.current = (index) => {
+      const place = results[index]
+      if (place) choose(place)
+    }
+  })
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') {
@@ -150,7 +159,7 @@ export default function VenueField({ id, value, onChange, onPick }: VenueFieldPr
         onKeyDown={onKeyDown}
       />
       {showList && (
-        <ul className="planner-venue__list" id={listId} role="listbox">
+        <ul className="planner-venue__list" id={listId} role="listbox" {...suggestionTap}>
           {status === 'loading' && <li className="planner-venue__status">Searching places…</li>}
           {status === 'error' && (
             <li className="planner-venue__status">Place search is unavailable. You can still type the venue.</li>
@@ -164,11 +173,10 @@ export default function VenueField({ id, value, onChange, onPick }: VenueFieldPr
                 type="button"
                 id={`${listId}-${index}`}
                 role="option"
+                data-option-index={index}
                 aria-selected={index === activeIndex}
                 className={`planner-venue__option${index === activeIndex ? ' is-active' : ''}`}
                 onMouseEnter={() => setActiveIndex(index)}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => choose(place)}
               >
                 <span className="planner-venue__name">{place.name}</span>
                 {place.address && <span className="planner-venue__address">{place.address}</span>}
