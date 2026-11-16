@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import defaultCouplePhoto from '../assets/default-couple-photo.png'
 import { shortPlannerUrl } from '../planner/config'
 import '../planner/planner.css'
 import VenueField from '../planner/VenueField'
@@ -692,6 +691,9 @@ function CoupleCard({
   const toneClass = tone === 'Booked' ? 'booked' : tone === 'Completed' ? 'done' : 'pending'
   const progress = coupleProgress(couple)
   const booked = SERVICE_TOGGLES.filter(([key]) => couple.services[key]).map(([, label]) => label)
+  const bookedCollapsed = SERVICE_TOGGLES.filter(([key]) => couple.services[key]).map(([key, label]) =>
+    key === 'photobooth' ? 'PB' : label,
+  )
 
   async function save(patch: {
     bookingStatus?: BookingStage
@@ -729,7 +731,7 @@ function CoupleCard({
 
   return (
     <article
-      className={`pipeline-card${collapsed ? ' is-collapsed' : ''}`}
+      className={`pipeline-card${collapsed ? ' is-collapsed' : ''}${couple.photo ? ' has-photo' : ''}`}
       role="button"
       tabIndex={0}
       aria-expanded={!collapsed}
@@ -762,7 +764,7 @@ function CoupleCard({
             <p className="pipeline-card__line">
               <span className="pipeline-card__names">{couple.names || 'Untitled couple'}</span>
               <span>{formatCardDate(couple.date)}</span>
-              <span>{booked.join(' + ') || 'None'}</span>
+              <span>{bookedCollapsed.join(' + ') || 'None'}</span>
             </p>
             {updatedLine && <p className="pipeline-updated">{updatedLineFor({ ...couple, lastSections: '' })}</p>}
             <div className="pipeline-card__actions">
@@ -847,12 +849,8 @@ function CoupleCard({
       </div>
       {!collapsed && (
       <>
-      {couple.photo ? (
-        <img src={couple.photo} alt="" loading="lazy" decoding="async" />
-      ) : (
-        <img className="is-default" src={defaultCouplePhoto} alt="" loading="lazy" decoding="async" />
-      )}
-      <div>
+      {couple.photo ? <img src={couple.photo} alt="" loading="lazy" decoding="async" /> : null}
+      <div className="pipeline-card__body">
         {updatedLine && <p className="pipeline-updated">{updatedLine}</p>}
         <div className="pipeline-pair">
           <div>
