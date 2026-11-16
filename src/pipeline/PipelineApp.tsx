@@ -765,53 +765,85 @@ function CoupleCard({
               <span>{booked.join(' + ') || 'None'}</span>
             </p>
             {updatedLine && <p className="pipeline-updated">{updatedLineFor({ ...couple, lastSections: '' })}</p>}
+            <div className="pipeline-card__actions">
+              <div className="pipeline-status">
+                <button
+                  type="button"
+                  className={`pipeline-pill ${toneClass}`}
+                  aria-expanded={statusOpen}
+                  aria-haspopup="menu"
+                  onClick={() => setStatusOpen((current) => !current)}
+                >
+                  {tone}
+                </button>
+                {statusOpen && (
+                  <div className="pipeline-pill-menu" role="menu">
+                    {STAGES.map((stage) => (
+                      <button
+                        key={stage}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setStatusOpen(false)
+                          if (stage === tone) return
+                          onChange({ ...couple, bookingStatus: stage })
+                          void save({ bookingStatus: stage }).catch((reason: unknown) => onError(messageFor(reason)))
+                        }}
+                      >
+                        {stage}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <a
+                className="pipeline-open"
+                href={plannerLink(couple.token, standalone)}
+                {...(standalone ? {} : { target: '_blank', rel: 'noopener' })}
+              >
+                Open
+              </a>
+              {progress !== null && <span className="pipeline-progress-num">{progress}%</span>}
+            </div>
           </>
         ) : (
-          <div className="pipeline-name">
-            <h2>{couple.names || 'Untitled couple'}</h2>
-          </div>
+          <>
+            <div className="pipeline-name">
+              <h2>{couple.names || 'Untitled couple'}</h2>
+            </div>
+            <div className="pipeline-status">
+              <button
+                type="button"
+                className={`pipeline-pill ${toneClass}`}
+                aria-expanded={statusOpen}
+                aria-haspopup="menu"
+                onClick={() => setStatusOpen((current) => !current)}
+              >
+                {tone}
+              </button>
+              {statusOpen && (
+                <div className="pipeline-pill-menu" role="menu">
+                  {STAGES.map((stage) => (
+                    <button
+                      key={stage}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setStatusOpen(false)
+                        if (stage === tone) return
+                        onChange({ ...couple, bookingStatus: stage })
+                        void save({ bookingStatus: stage }).catch((reason: unknown) => onError(messageFor(reason)))
+                      }}
+                    >
+                      {stage}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <ShortLinkRow slug={couple.slug} />
+          </>
         )}
-        <div className="pipeline-status">
-            <button
-              type="button"
-              className={`pipeline-pill ${toneClass}`}
-              aria-expanded={statusOpen}
-              aria-haspopup="menu"
-              onClick={() => setStatusOpen((current) => !current)}
-            >
-              {tone}
-            </button>
-            {statusOpen && (
-              <div className="pipeline-pill-menu" role="menu">
-                {STAGES.map((stage) => (
-                  <button
-                    key={stage}
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setStatusOpen(false)
-                      if (stage === tone) return
-                      onChange({ ...couple, bookingStatus: stage })
-                      void save({ bookingStatus: stage }).catch((reason: unknown) => onError(messageFor(reason)))
-                    }}
-                  >
-                    {stage}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        <ShortLinkRow slug={couple.slug} />
-        {collapsed && (
-          <a
-            className="pipeline-open"
-            href={plannerLink(couple.token, standalone)}
-            {...(standalone ? {} : { target: '_blank', rel: 'noopener' })}
-          >
-            Open
-          </a>
-        )}
-        {collapsed && progress !== null && <span className="pipeline-progress-num">{progress}%</span>}
       </div>
       {!collapsed && (
       <>
