@@ -27,20 +27,8 @@
   color: #95a5a6;
 }
 
-.home-intro .home-intro__welcome {
-  margin: 1.15rem auto 0;
-  max-width: 100%;
-  font-family: Outfit, 'Avenir Next', 'Century Gothic', Futura, sans-serif;
-  font-style: normal;
-  font-weight: 300;
-  font-size: 36px;
-  line-height: 1.4;
-  letter-spacing: 0.03em;
-  color: #3a3a3a;
-}
-
 .home-intro .home-intro__about {
-  margin: 1.35rem auto 0;
+  margin: 0 auto 0;
   max-width: 44rem;
   font-family: var(--font-body);
   font-size: 16px;
@@ -346,10 +334,6 @@
   .home-intro p,
   .home-quote p {
     font-size: 18px;
-  }
-
-  .home-intro .home-intro__welcome {
-    font-size: 24px;
   }
 
   .home-intro .home-intro__about {
