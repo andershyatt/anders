@@ -115,6 +115,8 @@ function coupleOf(value: unknown): PipelineCouple | null {
     fields: fieldsOf(record.fields),
     lastUpdated: text(record.lastUpdated),
     updatedBy: record.updatedBy === 'Anders' || record.updatedBy === 'couple' ? record.updatedBy : '',
+    slug: text(record.slug),
+    lastSections: text(record.lastSections),
   }
 }
 

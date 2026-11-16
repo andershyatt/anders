@@ -1582,6 +1582,35 @@
   font-size: 13px;
 }
 
+.planner-live-picker {
+  margin: -0.2rem 0 0.9rem;
+  text-align: left;
+}
+
+.planner-live-picker p {
+  margin: 0 0 0.4rem;
+  color: #8a5a00;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.planner-live-picker div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.planner-live-picker button {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+
 .planner-form.is-locked .planner-section :is(input, textarea, select, button):not(.planner-songcompact__open) {
   pointer-events: none;
 }

@@ -188,6 +188,72 @@
   gap: 0.35rem 0.75rem;
 }
 
+.pipeline-card__line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  align-items: baseline;
+  width: 100%;
+  margin: 0;
+}
+
+.pipeline-card__names {
+  font-weight: 800;
+}
+
+.pipeline-card.is-collapsed .pipeline-card__summary {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.pipeline-card.is-collapsed .pipeline-status,
+.pipeline-card.is-collapsed .pipeline-shortlink,
+.pipeline-card.is-collapsed .pipeline-open,
+.pipeline-card.is-collapsed .pipeline-progress-num {
+  margin-top: 0.15rem;
+}
+
+.pipeline-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.pipeline-shortlink {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  width: 100%;
+  margin: 0;
+}
+
+.pipeline-yesno {
+  border: 0;
+  margin: 0.35rem 0 0.8rem;
+  padding: 0;
+}
+
+.pipeline-yesno legend {
+  margin: 0 0 0.35rem;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pipeline-yesno label {
+  margin-right: 0.9rem;
+}
+
+.pipeline-shortlink button {
+  border: 1px solid #c4b4a4;
+  border-radius: 999px;
+  background: #fffdf8;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+}
+
 .pipeline-fold {
   border: 1px solid #c4b4a4;
   border-radius: 999px;

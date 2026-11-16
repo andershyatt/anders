@@ -25,6 +25,10 @@ export interface PipelineCouple {
   /** Couples-sheet stamp. Empty until Apps Script records it. */
   lastUpdated?: string
   updatedBy?: '' | 'Anders' | 'couple'
+  /** Short planner slug, such as 060127MikeSarahPlanner. */
+  slug?: string
+  /** Sections changed on the last save, such as "Ceremony › Processional". */
+  lastSections?: string
 }
 
 export interface PipelineDetail extends PipelineCouple {

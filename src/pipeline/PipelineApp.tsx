@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import defaultCouplePhoto from '../assets/default-couple-photo.png'
-import { formatCoupleDate } from '../planner/format'
+import { shortPlannerUrl } from '../planner/config'
 import '../planner/planner.css'
 import VenueField from '../planner/VenueField'
 import { loadGooglePlace, searchVenues, type VenueMatch } from '../planner/venueSearch'
@@ -76,7 +76,34 @@ function updatedLineFor(couple: PipelineCouple): string {
   if (!couple.lastUpdated?.trim()) return ''
   const when = formatUpdatedStamp(couple.lastUpdated)
   const who = couple.updatedBy === 'Anders' ? 'by Anders' : couple.updatedBy === 'couple' ? 'by couple' : ''
-  return who ? `Last updated ${when} ${who}` : `Last updated ${when}`
+  const sections = couple.lastSections?.trim()
+  const base = who ? `Last updated ${when} ${who}` : `Last updated ${when}`
+  return sections ? `${base} · ${sections}` : base
+}
+
+function cardControl(target: EventTarget | null): boolean {
+  return target instanceof Element && Boolean(target.closest('button, a, input, textarea, select, label'))
+}
+
+function ShortLinkRow({ slug }: { slug?: string }) {
+  const [copied, setCopied] = useState(false)
+  if (!slug) return null
+  return (
+    <p className="pipeline-shortlink">
+      <span>andershyattmusic.com/{slug}</span>
+      <button
+        type="button"
+        onClick={() => {
+          void navigator.clipboard.writeText(shortPlannerUrl(slug)).then(() => {
+            setCopied(true)
+            window.setTimeout(() => setCopied(false), 1500)
+          })
+        }}
+      >
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+    </p>
+  )
 }
 
 function spotifyOauthMessage(code: string): string {
@@ -505,10 +532,28 @@ export default function PipelineApp() {
                   <label>
                     <input type="checkbox" checked={form.knownVenue} onChange={(event) => setForm({ ...form, knownVenue: event.target.checked })} /> Known venue
                   </label>
-                  <label>
-                    <input type="checkbox" checked={form.genderNeutral} onChange={(event) => setForm({ ...form, genderNeutral: event.target.checked })} /> Gender neutral
-                  </label>
                 </div>
+                <fieldset className="pipeline-yesno">
+                  <legend>Gender-neutral</legend>
+                  <label>
+                    <input
+                      type="radio"
+                      name="gender-neutral"
+                      checked={!form.genderNeutral}
+                      onChange={() => setForm({ ...form, genderNeutral: false })}
+                    />{' '}
+                    No
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="gender-neutral"
+                      checked={form.genderNeutral}
+                      onChange={() => setForm({ ...form, genderNeutral: true })}
+                    />{' '}
+                    Yes
+                  </label>
+                </fieldset>
                 <button className="gold" type="submit">
                   Create planner
                 </button>
@@ -675,20 +720,58 @@ function CoupleCard({
   }
 
   const updatedLine = updatedLineFor(couple)
+  const cardPointer = useRef<{ x: number; y: number; id: number } | null>(null)
+  const cardMoved = useRef(false)
 
   useEffect(() => {
     if (!pendingVenue) setVenueDraft(couple.venue)
   }, [couple.venue, pendingVenue])
 
   return (
-    <article className={`pipeline-card${collapsed ? ' is-collapsed' : ''}`}>
+    <article
+      className={`pipeline-card${collapsed ? ' is-collapsed' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-expanded={!collapsed}
+      onPointerDown={(event) => {
+        if (cardControl(event.target)) return
+        cardPointer.current = { x: event.clientX, y: event.clientY, id: event.pointerId }
+        cardMoved.current = false
+      }}
+      onPointerMove={(event) => {
+        const start = cardPointer.current
+        if (!start || event.pointerId !== start.id) return
+        if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) cardMoved.current = true
+      }}
+      onPointerUp={(event) => {
+        const start = cardPointer.current
+        cardPointer.current = null
+        if (!start || event.pointerId !== start.id || cardMoved.current || cardControl(event.target)) return
+        onToggle()
+      }}
+      onKeyDown={(event) => {
+        if (cardControl(event.target)) return
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        onToggle()
+      }}
+    >
       <div className="pipeline-card__summary">
-        <button type="button" className="pipeline-fold" aria-expanded={!collapsed} onClick={onToggle}>
-          {collapsed ? 'Expand' : 'Collapse'}
-        </button>
-        <div className="pipeline-name">
-          <h2>{couple.names || 'Untitled couple'}</h2>
-          <div className="pipeline-status">
+        {collapsed ? (
+          <>
+            <p className="pipeline-card__line">
+              <span className="pipeline-card__names">{couple.names || 'Untitled couple'}</span>
+              <span>{formatCardDate(couple.date)}</span>
+              <span>{booked.join(' + ') || 'None'}</span>
+            </p>
+            {updatedLine && <p className="pipeline-updated">{updatedLineFor({ ...couple, lastSections: '' })}</p>}
+          </>
+        ) : (
+          <div className="pipeline-name">
+            <h2>{couple.names || 'Untitled couple'}</h2>
+          </div>
+        )}
+        <div className="pipeline-status">
             <button
               type="button"
               className={`pipeline-pill ${toneClass}`}
@@ -718,14 +801,7 @@ function CoupleCard({
               </div>
             )}
           </div>
-        </div>
-        {collapsed ? (
-          <p className="pipeline-meta">{formatCardDate(couple.date)}</p>
-        ) : (
-          <p className="pipeline-meta">{formatCoupleDate(couple.date) || couple.date}</p>
-        )}
-        {collapsed && booked.length > 0 && <p className="pipeline-booked">{booked.join(' + ')}</p>}
-        {collapsed && updatedLine && <p className="pipeline-updated">{updatedLine}</p>}
+        <ShortLinkRow slug={couple.slug} />
         {collapsed && (
           <a
             className="pipeline-open"
@@ -746,17 +822,32 @@ function CoupleCard({
       )}
       <div>
         {updatedLine && <p className="pipeline-updated">{updatedLine}</p>}
-        <label htmlFor={`date-${couple.token}`}>Wedding date</label>
-        <input
-          id={`date-${couple.token}`}
-          type="date"
-          value={/^\d{4}-\d{2}-\d{2}$/.test(couple.date) ? couple.date : ''}
-          onChange={(event) => {
-            const date = event.target.value
-            onChange({ ...couple, date })
-            if (date) void save({ date }).catch((reason: unknown) => onError(messageFor(reason)))
-          }}
-        />
+        <div className="pipeline-pair">
+          <div>
+            <label htmlFor={`date-${couple.token}`}>Wedding date</label>
+            <input
+              id={`date-${couple.token}`}
+              type="date"
+              value={/^\d{4}-\d{2}-\d{2}$/.test(couple.date) ? couple.date : ''}
+              onChange={(event) => {
+                const date = event.target.value
+                onChange({ ...couple, date })
+                if (date) void save({ date }).catch((reason: unknown) => onError(messageFor(reason)))
+              }}
+            />
+          </div>
+          <div>
+            <label htmlFor={`guests-${couple.token}`}>Guest count</label>
+            <input
+              id={`guests-${couple.token}`}
+              value={couple.guestCount}
+              onChange={(event) => onChange({ ...couple, guestCount: event.target.value })}
+              onBlur={(event) => {
+                void save({ guestCount: event.target.value }).catch((reason: unknown) => onError(messageFor(reason)))
+              }}
+            />
+          </div>
+        </div>
         <VenueField
           id={`venue-${couple.token}`}
           value={venueDraft}
@@ -764,15 +855,6 @@ function CoupleCard({
           onPick={(place) => {
             setVenueDraft(place.name)
             setPendingVenue((current) => (current && current.id === place.id ? { ...current, ...place } : place))
-          }}
-        />
-        <label htmlFor={`guests-${couple.token}`}>Guest count</label>
-        <input
-          id={`guests-${couple.token}`}
-          value={couple.guestCount}
-          onChange={(event) => onChange({ ...couple, guestCount: event.target.value })}
-          onBlur={(event) => {
-            void save({ guestCount: event.target.value }).catch((reason: unknown) => onError(messageFor(reason)))
           }}
         />
         {progress !== null && (
