@@ -15,6 +15,8 @@ interface SongFieldProps {
   help?: string
   hideLabel?: boolean
   suggestions?: SuggestedSong[]
+  /** Playlist name shown on the browse screen. The field label is used when this is omitted. */
+  suggestionTitle?: string
   repertoireOnly?: boolean
   value: string
   multiline: boolean
@@ -29,6 +31,7 @@ export default function SongField({
   help,
   hideLabel = false,
   suggestions = [],
+  suggestionTitle,
   repertoireOnly = false,
   value,
   multiline,
@@ -292,7 +295,7 @@ export default function SongField({
   if (browsing) {
     return (
       <SuggestionBrowser
-        title={`Suggestions for ${label}`}
+        title={suggestionTitle ?? `Suggestions for ${label}`}
         songs={repertoireOnly ? repertoireChoices() : suggestions}
         onClose={closeBrowse}
         onPick={pickSuggestion}
