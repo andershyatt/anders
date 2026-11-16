@@ -27,6 +27,21 @@
         var path = location.pathname.replace(/\/index\.html$/, '').replace(/\/+$/, '') || '/'
         if (path === '/planner' || path.indexOf('/planner/') === 0) return
         if (path === '/pipeline' || path.indexOf('/pipeline/') === 0) return
+        var slug = path.replace(/^\//, '')
+        if (/^\d{6}[A-Za-z]+Planner\d*$/i.test(slug)) {
+          fetch('https://script.google.com/macros/s/AKfycbweDhJdOC9RAn3TFy2G9ez4W0vyaMWF4MyNoyyE3KZvxLd0M8mZD-58X9ez9PqEf45GDQ/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'resolveSlug', slug: slug }),
+          })
+            .then(function (response) { return response.json() })
+            .then(function (data) {
+              if (data && data.ok && data.token) location.replace('/planner/?c=' + encodeURIComponent(data.token))
+              else location.replace('/')
+            })
+            .catch(function () { location.replace('/') })
+          return
+        }
         var target = aliases[path] || (pages[path] ? path : '/')
         var meta = document.createElement('meta')
         meta.httpEquiv = 'refresh'

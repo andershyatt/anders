@@ -1,5 +1,6 @@
-import { useLayoutEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { PLANNER_API_URL, SHORT_PLANNER_LINK } from './planner/config'
 import SiteLayout from './layout/SiteLayout'
 import Home from './pages/Home'
 import LiveMusic from './pages/LiveMusic'
@@ -44,10 +45,38 @@ function CleanUrls() {
   return null
 }
 
+/** andershyattmusic.com/060127MikeSarahPlanner -> /planner/?c=TOKEN */
+function ShortPlannerLink() {
+  const location = useLocation()
+  const slug = location.pathname.replace(/^\/+|\/+$/g, '')
+
+  useEffect(() => {
+    if (!SHORT_PLANNER_LINK.test(slug)) return
+    const controller = new AbortController()
+    void fetch(PLANNER_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'resolveSlug', slug }),
+      signal: controller.signal,
+    })
+      .then((response) => response.json())
+      .then((data: { ok?: boolean; token?: string }) => {
+        if (data.ok && data.token) {
+          window.location.replace(`/planner/?c=${encodeURIComponent(data.token)}`)
+        }
+      })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [slug])
+
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <CleanUrls />
+      <ShortPlannerLink />
       <Routes>
         <Route element={<SiteLayout />}>
           <Route index element={<Home />} />

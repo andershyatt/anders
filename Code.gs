@@ -38,6 +38,9 @@ var PLANNER_FIELDS = [
   'Photo Booth: Names', 'Photo Booth: Event date', 'Photo Booth: Event location', 'Photo Booth: Load-in time', 'Photo Booth: Load-in instructions', 'Photo Booth: Day-of contact', 'Photo Booth: Space', 'Photo Booth: Ceiling height', 'Photo Booth: Weather plan', 'Photo Booth: Terrain', 'Photo Booth: Power', 'Photo Booth: Connectivity', 'Photo Booth: WiFi details', 'Photo Booth: Attendant food', 'Photo Booth: Other info', 'Photo Booth: Backdrop', 'Photo Booth: Print size', 'Photo Booth: Template', 'Photo Booth: Personalization', 'Photo Booth: Props',
   'Wedding party processional notes',
   'Bridal processional notes',
+  'Additional processional song',
+  'Additional processional style',
+  'Additional processional notes',
   'Recessional notes',
   'Officiant microphone',
   'Other ceremony speakers',
@@ -238,6 +241,7 @@ function doPost(e) {
     var body = {};
     try { body = JSON.parse((e && e.postData && e.postData.contents) || '{}'); }
     catch (x) { return json_({ ok: false, error: 'bad_json' }); }
+    if (body.action === 'resolveSlug') return resolveSlug_(body.slug);
     if (body.action === 'load') return loadResponse_(body.c);
     if (body.action === 'importPlaylist') return importPlaylist_(body);
     if (body.action === 'searchSongs') return searchSongs_(body);
@@ -453,6 +457,7 @@ function logChanges_(token, names, editor, changes) {
     return [now, token, names || token, who, change.field, change.before, change.after];
   });
   sh.getRange(sh.getLastRow() + 1, 1, rows.length, CHANGE_HEADERS.length).setValues(rows);
+  rememberSections_(token, changes);
 }
 
 /**
@@ -528,11 +533,14 @@ function sendDailyDigest_(force) {
       var token = String(values[i][1] || '').trim();
       if (!token) continue;
       if (!groups[token]) {
-        groups[token] = { name: String(values[i][2] || token), lines: [] };
+        groups[token] = { name: String(values[i][2] || token), lines: [], sections: {} };
         order.push(token);
       }
+      var place = placeFor_(String(values[i][4] || ''));
+      var placeLabel = place.section + ' › ' + place.subsection;
+      groups[token].sections[placeLabel] = true;
       var stamp = when instanceof Date ? Utilities.formatDate(when, 'America/New_York', 'yyyy-MM-dd HH:mm') : String(when);
-      groups[token].lines.push('  ' + stamp + ' · ' + values[i][3] + ' · ' + values[i][4] + '\n    was: ' + clipChange_(values[i][5]) + '\n    now: ' + clipChange_(values[i][6]));
+      groups[token].lines.push('  ' + stamp + ' · ' + values[i][3] + ' · ' + placeLabel + '\n    was: ' + clipChange_(values[i][5]) + '\n    now: ' + clipChange_(values[i][6]));
     }
     if (!order.length) {
       if (sh.getLastRow() >= 2) pruneChangeLog_(sh);
@@ -541,7 +549,8 @@ function sendDailyDigest_(force) {
     order.sort(function (a, b) { return groups[a].name.localeCompare(groups[b].name); });
     var body = order.length
       ? order.map(function (token) {
-          return groups[token].name + ' (' + token + ')\n' + groups[token].lines.join('\n');
+          var sections = Object.keys(groups[token].sections).join(', ');
+          return groups[token].name + ' (' + token + ')\nChanged: ' + sections + '\n' + groups[token].lines.join('\n');
         }).join('\n\n')
       : 'No planner changes in the last 24 hours. This is a test of the daily digest.';
     MailApp.sendEmail({
@@ -678,7 +687,9 @@ function addCoupleSubmit(obj) {
   lock.waitLock(20000);
   try {
     var sh = couplesSheet_();
+    ensureHeaders_(sh, [SHORT_LINK_HEADER]);
     var token = uniqueToken_(sh, baseToken_(names, m[2] + m[3]));
+    var slug = uniqueShortLink_(sh, names, dateStr, 0);
     var link = PAGE_URL + '?c=' + token;
     var vals = {
       'Token': token, 'Couple Names': names, 'Event Date': dateStr, 'Venue': clean(obj.venue, 300), 'Planner Link': link,
@@ -688,7 +699,8 @@ function addCoupleSubmit(obj) {
       'Start Time': clean(obj.startTime, 100), 'Length of Service': clean(obj.length, 100),
       'Guest Count': clean(obj.guestCount, 50), 'Who did you book?': clean(obj.booked, 5000),
       'Known venue': yn(obj.knownVenue), 'Gender neutral': yn(obj.genderNeutral),
-      'Booking status': bookingStage_(obj.bookingStatus) || 'Not booked'
+      'Booking status': bookingStage_(obj.bookingStatus) || 'Not booked',
+      'Short link': slug
     };
     var headers = headerRow_(sh);
     var rowNum = sh.getLastRow() + 1;
@@ -699,7 +711,7 @@ function addCoupleSubmit(obj) {
     if (gCol > 0) sh.getRange(rowNum, gCol).setNumberFormat('@');
     sh.getRange(rowNum, 1, 1, headers.length).setValues([headers.map(function (h) { return vals.hasOwnProperty(h) ? vals[h] : ''; })]);
     SpreadsheetApp.flush();
-    return { ok: true, token: token, link: link };
+    return { ok: true, token: token, link: link, slug: slug };
   } finally {
     lock.releaseLock();
   }
@@ -887,6 +899,217 @@ function dayOf_(v, shown) {
   return fmtDate_(v);
 }
 
+var SHORT_LINK_HEADER = 'Short link';
+var LAST_SECTIONS_HEADER = 'Last sections';
+
+/** Sheet column -> [section, subsection] for the daily digest and pipeline cards. */
+var FIELD_PLACE = {
+  'Wedding party processional song': ['Ceremony', 'Wedding Party Processional'],
+  'Wedding party processional style (instrumental/vocals)': ['Ceremony', 'Wedding Party Processional'],
+  'Wedding party processional notes': ['Ceremony', 'Wedding Party Processional'],
+  'Bridal processional song': ['Ceremony', 'Bridal Processional'],
+  'Bridal processional style': ['Ceremony', 'Bridal Processional'],
+  'Bridal processional notes': ['Ceremony', 'Bridal Processional'],
+  'Recessional song': ['Ceremony', 'Recessional'],
+  'Recessional style': ['Ceremony', 'Recessional'],
+  'Recessional notes': ['Ceremony', 'Recessional'],
+  'Recessional cue': ['Ceremony', 'Recessional'],
+  'Pre-ceremony music': ['Ceremony', 'Pre-ceremony music'],
+  'Pre-ceremony music type': ['Ceremony', 'Pre-ceremony music'],
+  'Pre-ceremony performance': ['Ceremony', 'Pre-ceremony music'],
+  'Officiant microphone': ['Ceremony', 'Ceremony details'],
+  'Other ceremony speakers': ['Ceremony', 'Ceremony details'],
+  "Couple's first dance song": ['Reception', 'First Dance'],
+  'First dance format (live/DJ, full/shortened)': ['Reception', 'First Dance'],
+  'First dance section': ['Reception', 'First Dance'],
+  'Having a first dance': ['Reception', 'First Dance'],
+  'First dance choreographed': ['Reception', 'First Dance'],
+  'First dance start cue': ['Reception', 'First Dance'],
+  'First dance stop cue': ['Reception', 'First Dance'],
+  'First dance fade out': ['Reception', 'First Dance'],
+  'Father/daughter dance song': ['Reception', 'Parent Dances'],
+  'Father/daughter format': ['Reception', 'Parent Dances'],
+  'Father-daughter section': ['Reception', 'Parent Dances'],
+  'Having a father-daughter dance': ['Reception', 'Parent Dances'],
+  'Mother/son dance song': ['Reception', 'Parent Dances'],
+  'Mother/son format': ['Reception', 'Parent Dances'],
+  'Mother-son section': ['Reception', 'Parent Dances'],
+  'Having a mother-son dance': ['Reception', 'Parent Dances'],
+  'Introduction songs': ['Reception', 'Introductions'],
+  'Introductions': ['Reception', 'Introductions'],
+  'Introductions happening': ['Reception', 'Introductions'],
+  'Introductions section': ['Reception', 'Introductions'],
+  'Cocktail hour songs': ['Cocktail Hour', 'Cocktail hour music'],
+  'Cocktail hour music type': ['Cocktail Hour', 'Cocktail hour music'],
+  'Cocktail hour vibe': ['Cocktail Hour', 'Cocktail hour music'],
+  'Cocktail hour Anders chooses': ['Cocktail Hour', 'Cocktail hour music'],
+  'Open dancing songs': ['Reception', 'Open Dancing'],
+  'Open dancing Anders chooses': ['Reception', 'Open Dancing'],
+  'Dinner songs': ['Reception', 'Dinner'],
+  'Dinner music type': ['Reception', 'Dinner'],
+  'Dinner Anders chooses': ['Reception', 'Dinner'],
+  'Private last dance': ['Reception', 'Private last dance'],
+  'Private last dance wanted': ['Reception', 'Private last dance'],
+  'Private last dance section': ['Reception', 'Private last dance'],
+  'Do-not-play list': ['Reception', 'Do Not Play'],
+  'Do not play songs': ['Reception', 'Do Not Play']
+};
+
+function placeFor_(field) {
+  var name = String(field || '');
+  var known = FIELD_PLACE[name];
+  if (known) return { section: known[0], subsection: known[1] };
+  if (name.indexOf('Photo Booth') === 0) return { section: 'Photo Booth', subsection: name.replace(/^Photo Booth:?\s*/, '') || name };
+  if (name.indexOf('Cocktail hour') === 0) return { section: 'Cocktail Hour', subsection: name };
+  return { section: 'Planner', subsection: name };
+}
+
+function sectionSummary_(changes) {
+  var seen = {};
+  var parts = [];
+  (changes || []).forEach(function (change) {
+    var place = placeFor_(change.field);
+    var label = place.section + ' › ' + place.subsection;
+    if (seen[label]) return;
+    seen[label] = true;
+    parts.push(label);
+  });
+  return parts.join(', ');
+}
+
+function rememberSections_(token, changes) {
+  var summary = sectionSummary_(changes);
+  if (!summary) return;
+  var sh = couplesSheet_();
+  ensureHeaders_(sh, [LAST_SECTIONS_HEADER]);
+  var hit = findByToken_(sh, token);
+  if (!hit) return;
+  var col = hit.headers.indexOf(LAST_SECTIONS_HEADER);
+  if (col >= 0) sh.getRange(hit.row, col + 1).setValue(summary);
+}
+
+function camelName_(word) {
+  var letters = String(word || '').replace(/[^A-Za-z]/g, '');
+  if (!letters) return '';
+  return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
+}
+
+/** First names, alphabetical, CamelCase, joined. "Sarah & Mike Smith" -> MikeSarah. */
+function firstNamesSlug_(names) {
+  var parts = String(names || '').split(/\s+(?:&|and|\+|\/)\s+|,/i);
+  var firsts = [];
+  for (var i = 0; i < parts.length; i++) {
+    var word = (parts[i].trim().split(/\s+/)[0] || '');
+    var camel = camelName_(word);
+    if (camel) firsts.push(camel);
+  }
+  firsts.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
+  return firsts.join('');
+}
+
+function ymd_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) return Utilities.formatDate(value, sheetTz_(), 'yyyy-MM-dd');
+  return dayOf_(value, String(value || ''));
+}
+
+function mmddyy_(value) {
+  var ymd = ymd_(value);
+  var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+  if (!match) return '';
+  return match[2] + match[3] + match[1].slice(2);
+}
+
+function shortLinkBase_(names, dateValue) {
+  var date = mmddyy_(dateValue);
+  var who = firstNamesSlug_(names);
+  if (!date || !who) return '';
+  return date + who + 'Planner';
+}
+
+function takenSlugs_(sh, exceptRow) {
+  var headers = headerRow_(sh);
+  var col = headers.indexOf(SHORT_LINK_HEADER);
+  var taken = {};
+  if (col < 0 || sh.getLastRow() < 2) return taken;
+  var values = sh.getRange(2, col + 1, sh.getLastRow() - 1, 1).getValues();
+  for (var i = 0; i < values.length; i++) {
+    if (exceptRow && i + 2 === exceptRow) continue;
+    var slug = String(values[i][0] || '').trim().toLowerCase();
+    if (slug) taken[slug] = true;
+  }
+  return taken;
+}
+
+/** MMDDYY + alphabetical CamelCase first names + Planner. Collisions append 2, 3, ... */
+function uniqueShortLink_(sh, names, dateValue, exceptRow) {
+  var base = shortLinkBase_(names, dateValue);
+  if (!base) return '';
+  var taken = takenSlugs_(sh, exceptRow);
+  if (!taken[base.toLowerCase()]) return base;
+  for (var n = 2; n < 1000; n++) {
+    var candidate = base + String(n);
+    if (!taken[candidate.toLowerCase()]) return candidate;
+  }
+  return '';
+}
+
+function backfillShortLinks_() {
+  var sh = couplesSheet_();
+  ensureHeaders_(sh, [SHORT_LINK_HEADER]);
+  var headers = headerRow_(sh);
+  var nameCol = headers.indexOf('Couple Names');
+  var dateCol = headers.indexOf('Event Date');
+  var slugCol = headers.indexOf(SHORT_LINK_HEADER);
+  if (nameCol < 0 || dateCol < 0 || slugCol < 0 || sh.getLastRow() < 2) return 0;
+  var rows = sh.getRange(2, 1, sh.getLastRow() - 1, headers.length).getValues();
+  var taken = {};
+  for (var i = 0; i < rows.length; i++) {
+    var existing = String(rows[i][slugCol] || '').trim().toLowerCase();
+    if (existing) taken[existing] = true;
+  }
+  var count = 0;
+  for (var r = 0; r < rows.length; r++) {
+    if (String(rows[r][slugCol] || '').trim()) continue;
+    var base = shortLinkBase_(rows[r][nameCol], rows[r][dateCol]);
+    if (!base) continue;
+    var slug = base;
+    if (taken[slug.toLowerCase()]) {
+      for (var n = 2; n < 1000; n++) {
+        if (!taken[(base + n).toLowerCase()]) { slug = base + n; break; }
+      }
+    }
+    taken[slug.toLowerCase()] = true;
+    sh.getRange(r + 2, slugCol + 1).setValue(slug);
+    count++;
+  }
+  if (count) SpreadsheetApp.flush();
+  return count;
+}
+
+function resolveSlug_(slug) {
+  var needle = String(slug || '').trim().replace(/^\/+|\/+$/g, '').toLowerCase();
+  if (!/^\d{6}[a-z]+planner\d*$/.test(needle)) return json_({ ok: false, error: 'not_found' });
+  function findToken() {
+    var sh = couplesSheet_();
+    var headers = headerRow_(sh);
+    var col = headers.indexOf(SHORT_LINK_HEADER);
+    var tokenCol = headers.indexOf('Token');
+    if (col < 0 || tokenCol < 0 || sh.getLastRow() < 2) return '';
+    var values = sh.getRange(2, 1, sh.getLastRow() - 1, headers.length).getValues();
+    for (var i = 0; i < values.length; i++) {
+      if (String(values[i][col] || '').trim().toLowerCase() === needle) return String(values[i][tokenCol] || '').trim();
+    }
+    return '';
+  }
+  var token = findToken();
+  if (!token) {
+    backfillShortLinks_();
+    token = findToken();
+  }
+  if (!token) return json_({ ok: false, error: 'not_found' });
+  return json_({ ok: true, token: token });
+}
+
 /* ---------- playlist import ---------- */
 
 function htmlDecode_(value) {
@@ -1043,6 +1266,8 @@ function coupleSummary_(get, txt, date) {
     services: { live: booked_(get('Live music')), dj: booked_(get('DJ')), photobooth: booked_(get('Photo booth')) },
     team: teamText_(get),
     bookingStatus: bookingStage_(get('Booking status')),
+    slug: String(get(SHORT_LINK_HEADER) || '').trim(),
+    lastSections: String(get(LAST_SECTIONS_HEADER) || '').trim(),
     genderNeutral: norm_(get('Gender neutral')) === 'yes',
     knownVenue: !(norm_(get('Known venue')) === 'no' || norm_(get('Known venue')) === 'n' || norm_(get('Known venue')) === 'false'),
     photo: '',
@@ -1100,8 +1325,9 @@ function adminAddCouple_(obj) {
   lock.waitLock(20000);
   try {
     var sh = couplesSheet_();
-    ensureHeaders_(sh, ['Team']);
+    ensureHeaders_(sh, ['Team', SHORT_LINK_HEADER]);
     var token = uniqueToken_(sh, baseToken_(names, m[2] + m[3]));
+    var slug = uniqueShortLink_(sh, names, dateStr, 0);
     var link = PAGE_URL + '?c=' + token;
     var team = clean(obj.team, 5000);
     var vals = {
@@ -1112,7 +1338,8 @@ function adminAddCouple_(obj) {
       'Start Time': clean(obj.startTime, 100), 'Length of Service': clean(obj.length, 100),
       'Guest Count': clean(obj.guestCount, 50), 'Who did you book?': team, 'Team': team,
       'Known venue': yn(obj.knownVenue), 'Gender neutral': yn(obj.genderNeutral),
-      'Booking status': bookingStage_(obj.bookingStatus) || 'Not booked'
+      'Booking status': bookingStage_(obj.bookingStatus) || 'Not booked',
+      'Short link': slug
     };
     var headers = headerRow_(sh);
     var rowNum = sh.getLastRow() + 1;
@@ -1122,7 +1349,7 @@ function adminAddCouple_(obj) {
     if (gCol > 0) sh.getRange(rowNum, gCol).setNumberFormat('@');
     sh.getRange(rowNum, 1, 1, headers.length).setValues([headers.map(function (h) { return vals.hasOwnProperty(h) ? vals[h] : ''; })]);
     SpreadsheetApp.flush();
-    return json_({ ok: true, token: token, link: link });
+    return json_({ ok: true, token: token, link: link, slug: slug });
   } finally {
     lock.releaseLock();
   }
@@ -1255,8 +1482,9 @@ function plannerFieldsByToken_() {
 }
 
 function adminList_() {
+  backfillShortLinks_();
   var sh = couplesSheet_();
-  ensureHeaders_(sh, ['Team']);
+  ensureHeaders_(sh, ['Team', SHORT_LINK_HEADER, LAST_SECTIONS_HEADER]);
   var headers = headerRow_(sh);
   var last = sh.getLastRow();
   var couples = [];

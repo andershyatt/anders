@@ -8,6 +8,13 @@ export const PLANNER_API_URL =
 /** Apex site. Planner links always use this, not whatever host opened the pipeline. */
 export const SITE_ORIGIN = 'https://andershyattmusic.com'
 
+/** Short planner path: 060127MikeSarahPlanner. Matching ignores case. */
+export const SHORT_PLANNER_LINK = /^\d{6}[A-Za-z]+Planner\d*$/i
+
+export function shortPlannerUrl(slug: string): string {
+  return `${SITE_ORIGIN}/${slug}`
+}
+
 /** Couple planner URL: https://andershyattmusic.com/planner/?c=TOKEN */
 export function plannerLink(token: string, fromPipeline = false): string {
   const url = new URL('/planner/', SITE_ORIGIN)
