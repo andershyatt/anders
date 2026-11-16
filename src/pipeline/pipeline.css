@@ -203,20 +203,40 @@
 
 .pipeline-card.is-collapsed .pipeline-card__summary {
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
-.pipeline-card.is-collapsed .pipeline-status,
-.pipeline-card.is-collapsed .pipeline-shortlink,
-.pipeline-card.is-collapsed .pipeline-open,
-.pipeline-card.is-collapsed .pipeline-progress-num {
-  margin-top: 0.15rem;
+.pipeline-card__actions {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.pipeline-card__actions .pipeline-status,
+.pipeline-card__actions .pipeline-open,
+.pipeline-card__actions .pipeline-progress-num {
+  margin: 0;
 }
 
 .pipeline-pair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.75rem;
+  min-width: 0;
+}
+
+.pipeline-pair > div {
+  min-width: 0;
+}
+
+.pipeline-pair input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pipeline-shortlink {

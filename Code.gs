@@ -546,11 +546,13 @@ function sendDailyDigest_(force) {
       if (sh.getLastRow() >= 2) pruneChangeLog_(sh);
       if (!force) return;
     }
+    var plannerUrls = plannerUrlsByToken_();
     order.sort(function (a, b) { return groups[a].name.localeCompare(groups[b].name); });
     var body = order.length
       ? order.map(function (token) {
           var sections = Object.keys(groups[token].sections).join(', ');
-          return groups[token].name + ' (' + token + ')\nChanged: ' + sections + '\n' + groups[token].lines.join('\n');
+          var planner = plannerUrls[token.toLowerCase()] || ('https://andershyattmusic.com/planner/?c=' + encodeURIComponent(token));
+          return groups[token].name + ' (' + token + ')\nPlanner: ' + planner + '\nChanged: ' + sections + '\n' + groups[token].lines.join('\n');
         }).join('\n\n')
       : 'No planner changes in the last 24 hours. This is a test of the daily digest.';
     MailApp.sendEmail({
@@ -1017,6 +1019,26 @@ function mmddyy_(value) {
   var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
   if (!match) return '';
   return match[2] + match[3] + match[1].slice(2);
+}
+
+/** Public planner URL: the short link when the couple has one, otherwise the token link. */
+function plannerUrlsByToken_() {
+  var map = {};
+  var sh = couplesSheet_();
+  var headers = headerRow_(sh);
+  var tokenCol = headers.indexOf('Token');
+  var slugCol = headers.indexOf(SHORT_LINK_HEADER);
+  if (tokenCol < 0 || sh.getLastRow() < 2) return map;
+  var values = sh.getRange(2, 1, sh.getLastRow() - 1, headers.length).getValues();
+  for (var i = 0; i < values.length; i++) {
+    var token = String(values[i][tokenCol] || '').trim();
+    if (!token) continue;
+    var slug = slugCol >= 0 ? String(values[i][slugCol] || '').trim() : '';
+    map[token.toLowerCase()] = slug
+      ? 'https://andershyattmusic.com/' + slug
+      : 'https://andershyattmusic.com/planner/?c=' + encodeURIComponent(token);
+  }
+  return map;
 }
 
 function shortLinkBase_(names, dateValue) {
