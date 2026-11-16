@@ -56,7 +56,7 @@ import {
 import CheckAll from './CheckAll'
 import IntroSongs from './IntroSongs'
 import { PERFORMANCE_OPTIONS, applyPreCeremonyMusicTypeLabel } from './liveDj'
-import { suggestionIds, suggestionPlaylists, suggestedSongs, useSuggestionLists } from './suggestions'
+import { suggestionBrowseTitle, suggestionIds, suggestionPlaylists, suggestedSongs, useSuggestionLists } from './suggestions'
 import { clearPlannerCache, readPlannerCache, updatePlannerCacheFields, writePlannerCache } from './loadCache'
 import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
@@ -503,6 +503,7 @@ function FieldControl({
         help={field.help}
         hideLabel={field.hideLabel}
         suggestions={repertoireOnly ? [] : suggestedSongs(field.suggestions)}
+        suggestionTitle={repertoireOnly ? undefined : suggestionBrowseTitle(field.suggestions)}
         repertoireOnly={repertoireOnly}
         value={value}
         multiline={field.song === 'list'}

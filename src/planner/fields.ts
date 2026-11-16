@@ -959,6 +959,9 @@ export function neutralizeField(field: PlannerField, services: BookedServices): 
   const override = NEUTRAL_FIELD[field.key]
   if (!override) return field
   const next = { ...field, ...override }
+  if (field.key === 'Father/daughter dance song' || field.key === 'Mother/son dance song') {
+    next.suggestions = 'sheet-parents'
+  }
   if (field.key === 'Father/daughter format' || field.key === 'Mother/son format') {
     next.options = [...parentDanceFormatOptions(services)]
     next.stack = true
