@@ -4,6 +4,7 @@ import { useSongCatalog } from '../lib/songCatalog'
 import { repertoireChoices, repertoireMatch } from './repertoire'
 import SuggestionBrowser from './SuggestionBrowser'
 import type { SuggestedSong } from './suggestions'
+import { useSuggestionTap } from './useSuggestionTap'
 
 const MIN_QUERY = 2
 const DEBOUNCE_MS = 300
@@ -55,6 +56,8 @@ export default function SongField({
   const ignoreSelect = useRef(false)
   const retainFocus = useRef(false)
   const requestSeq = useRef(0)
+  const pickResult = useRef<(index: number) => void>(() => {})
+  const suggestionTap = useSuggestionTap((index) => pickResult.current(index))
   const { songs } = useSongCatalog()
 
   useEffect(() => {
@@ -215,6 +218,13 @@ export default function SongField({
     setQuery('')
   }
 
+  useEffect(() => {
+    pickResult.current = (index) => {
+      const song = freshResults[index]
+      if (song) choose(song)
+    }
+  })
+
   const onSelect = (event: SyntheticEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (ignoreSelect.current) {
       ignoreSelect.current = false
@@ -271,6 +281,7 @@ export default function SongField({
       window.setTimeout(() => fieldRef.current?.scrollIntoView({ block: 'center', inline: 'nearest' }), 300)
     },
     onBlur: () => {
+      // Leaving the field for a touch-scroll must not dismiss the suggestions.
       retainFocus.current = false
     },
     onKeyDown,
@@ -302,7 +313,7 @@ export default function SongField({
           <input {...fieldProps} ref={setFieldRef} type="text" />
         )}
         {showList && (
-          <ul className="planner-venue__list" id={listId} role="listbox">
+          <ul className="planner-venue__list" id={listId} role="listbox" {...suggestionTap}>
             {loading && freshResults.length === 0 && <li className="planner-venue__status">Searching songs…</li>}
             {freshResults.map((song, index) => (
               <li key={song.id} role="presentation">
@@ -310,23 +321,10 @@ export default function SongField({
                   type="button"
                   id={`${listId}-${index}`}
                   role="option"
+                  data-option-index={index}
                   aria-selected={index === activeIndex}
                   className={`planner-venue__option planner-song__option${index === activeIndex ? ' is-active' : ''}`}
                   onMouseEnter={() => setActiveIndex(index)}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onPointerDown={(event) => {
-                    if (event.pointerType === 'mouse') return
-                    event.preventDefault()
-                    event.currentTarget.dataset.touched = '1'
-                    choose(song)
-                  }}
-                  onClick={(event) => {
-                    if (event.currentTarget.dataset.touched === '1') {
-                      delete event.currentTarget.dataset.touched
-                      return
-                    }
-                    choose(song)
-                  }}
                 >
                   {song.artwork ? (
                     <img loading="lazy" decoding="async"

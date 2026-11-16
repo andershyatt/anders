@@ -64,7 +64,8 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function bookingStatusText(value: unknown): string {
-  if (value !== 'Booked' && value !== 'Not yet booked' && value !== 'Completed') return ''
+  if (value === 'Not yet booked') return 'Not booked'
+  if (value !== 'Booked' && value !== 'Not booked' && value !== 'Completed') return ''
   return value
 }
 

@@ -31,9 +31,10 @@ export interface PipelineDetail extends PipelineCouple {
   fields: Record<string, string>
 }
 
-export type BookingStage = 'Booked' | 'Not yet booked' | 'Completed'
+export type BookingStage = 'Booked' | 'Not booked' | 'Completed'
 
+/** Sheet rows saved before the rename still say "Not yet booked". */
 export function stageOf(status: string): BookingStage {
   if (status === 'Booked' || status === 'Completed') return status
-  return 'Not yet booked'
+  return 'Not booked'
 }

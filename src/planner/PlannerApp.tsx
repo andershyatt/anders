@@ -189,7 +189,7 @@ function BasicsCard({
     { label: 'Guest count', value: basics.guestCount },
     { label: 'Services booked', value: servicesBooked(services) },
     { label: 'Your team', value: basics.booked },
-    { label: 'Status', value: status, tone: status === 'Booked' ? 'booked' : status === 'Not yet booked' ? 'pending' : status === 'Completed' ? 'done' : '' },
+    { label: 'Status', value: status, tone: status === 'Booked' ? 'booked' : status === 'Not booked' ? 'pending' : status === 'Completed' ? 'done' : '' },
     {
       label: 'Lockout',
       value: lockoutDate(eventDate)
