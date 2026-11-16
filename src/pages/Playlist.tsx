@@ -166,7 +166,8 @@ export default function Playlist() {
         {step === 'browse' && (
           <p>
             Search and filter Anders&apos;s live repertoire, add the ones you want, then send your
-            playlist. Your selections are saved in this browser until you clear them.
+            playlist. Your selections are saved in this browser until you clear them. The Favorites
+            filter is ON by default, hit ‘Clear filters’ to see the full list.
           </p>
         )}
       </div>

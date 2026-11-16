@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import DisplayTitle from '../components/DisplayTitle'
-import Slideshow from '../components/Slideshow'
-import { images, photoBoothGallery } from '../data/media'
+import { asset, images } from '../data/media'
 import { boothBackdrops } from '../planner/photoBoothImages'
 import './PhotoBooth.css'
 
@@ -13,6 +12,25 @@ const packageItems = [
   'On-site prints for each guest per session (2x6 strips or 4x6)',
   'Multiple convenient digital sharing options',
   'Full setup, on-site technician, and teardown included',
+]
+
+const boothPhotos = [
+  {
+    src: asset('photo-booth-01.jpg'),
+    alt: 'Close-up of the wooden photo booth camera and studio light',
+  },
+  {
+    src: asset('photo-booth-02.jpg'),
+    alt: 'The wooden photo booth on a tripod with its studio light',
+  },
+  {
+    src: asset('photo-booth-03.jpg'),
+    alt: 'Front of the photo booth, with the camera above the guest screen',
+  },
+  {
+    src: asset('photo-booth-04.jpg'),
+    alt: 'Oak corner and wood grain of the photo booth enclosure',
+  },
 ]
 
 const boothBody =
@@ -50,7 +68,11 @@ export default function PhotoBooth() {
           </Link>
         </div>
 
-        <Slideshow images={photoBoothGallery} altPrefix="Photo booth" />
+        <div className="booth-photos">
+          {boothPhotos.map((photo) => (
+            <img key={photo.src} src={photo.src} alt={photo.alt} loading="lazy" />
+          ))}
+        </div>
 
         <section id="backdrops" className="booth-backdrop-section" aria-labelledby="backdrops-heading">
           <h2 id="backdrops-heading">Backdrop Options</h2>

@@ -26,8 +26,7 @@ export default function Home() {
       <div className="home-wrap">
         <header className="home-intro">
           <DisplayTitle as="h2">Live Music & DJ Services</DisplayTitle>
-          <p className="home-intro__welcome">Music, for music people</p>
-          <p className="home-intro__about">{homeAbout}</p>
+          <p className="home-intro__about copy-lg">{homeAbout}</p>
         </header>
 
         <section className="home-split" aria-labelledby="live-music-heading">
