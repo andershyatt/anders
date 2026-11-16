@@ -12,7 +12,7 @@ export const images = {
   duoAngella: asset('duo-angella-01.jpg'),
   duoBen: asset('duo-ben-01.jpg'),
   homeLiveMusic: asset('home-live-music.jpg'),
-  homeDj: asset('home-dj.jpg'),
+  homeDj: asset('dj-rane-four.jpg'),
   homeBanner: asset('home-banner.jpg'),
   plannerOverview: asset('planner-overview.jpg'),
   plannerCeremony: asset('planner-ceremony.jpg'),
