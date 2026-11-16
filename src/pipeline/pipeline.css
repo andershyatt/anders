@@ -168,7 +168,7 @@
 
 .pipeline-card {
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
   background: #fffdf8;
   border: 1px solid #c4b4a4;
@@ -176,8 +176,16 @@
   padding: 0.8rem;
 }
 
+.pipeline-card.has-photo {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
+
 .pipeline-card.is-collapsed {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.pipeline-card__body {
+  min-width: 0;
 }
 
 .pipeline-card__summary {
@@ -301,10 +309,8 @@
   background: #efe4d6;
 }
 
-.pipeline-card img.is-default {
-  object-fit: contain;
-  object-position: center;
-  background: #fff;
+.pipeline-card.has-photo img {
+  grid-row: 2;
 }
 
 .pipeline-name {
@@ -660,7 +666,7 @@ a.pipeline-open {
     grid-template-columns: 1fr;
   }
 
-  .pipeline-card {
-    grid-template-columns: 56px 1fr;
+  .pipeline-card.has-photo {
+    grid-template-columns: 56px minmax(0, 1fr);
   }
 }
