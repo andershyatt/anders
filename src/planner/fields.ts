@@ -273,6 +273,15 @@ export const plannerSections: PlannerSection[] = [
       },
       { key: 'Bridal processional song', label: 'Bridal processional song', kind: 'text', song: 'single' },
       { key: 'Bridal processional style', label: 'Bridal processional style', kind: 'style' },
+      { key: 'Additional processional song', label: 'Additional processional song', kind: 'text', song: 'single' },
+      { key: 'Additional processional style', label: 'Additional processional style', kind: 'style' },
+      {
+        key: 'Additional processional notes',
+        label: 'Notes',
+        kind: 'textarea',
+        rows: 2,
+        placeholder: 'Anything else for this processional',
+      },
       { key: 'Recessional song', label: 'Recessional song', kind: 'text', song: 'single' },
       { key: 'Recessional style', label: 'Recessional style', kind: 'style' },
       {
@@ -510,6 +519,9 @@ const CEREMONY_FIELDS = new Set([
   'Wedding party processional style (instrumental/vocals)',
   'Bridal processional song',
   'Bridal processional style',
+  'Additional processional song',
+  'Additional processional style',
+  'Additional processional notes',
   'Recessional song',
   'Recessional style',
   'Recessional cue',
@@ -718,6 +730,7 @@ const DJ_ONLY_HIDDEN = new Set([
   'Pre-ceremony performance',
   'Wedding party processional style (instrumental/vocals)',
   'Bridal processional style',
+  'Additional processional style',
   'Recessional style',
   'Cocktail hour music type',
   'Dinner music type',
@@ -725,13 +738,49 @@ const DJ_ONLY_HIDDEN = new Set([
 ])
 
 /** Hidden follow-ups stay out of the section so they are not shown or counted. */
+const ADDITIONAL_PROCESSIONAL = new Set([
+  'Additional processional song',
+  'Additional processional style',
+  'Additional processional notes',
+])
+
+const NEUTRAL_HIDDEN = new Set([
+  'Having a father-daughter dance',
+  'Having a mother-son dance',
+  'Father of the bride name',
+  'Mother of the groom name',
+])
+
+/** Follow-ups that used to wait on the parent-dance yes/no. N/A on the format question hides them. */
+const HIDE_WHEN_PARENT_NA: Record<string, string> = {
+  'Father/daughter dance song': 'Father/daughter format',
+  'Father of the bride dance choreographed': 'Father/daughter format',
+  'Father of the bride start cue': 'Father/daughter format',
+  'Father of the bride stop cue': 'Father/daughter format',
+  'Father of the bride fade out': 'Father/daughter format',
+  'Mother/son dance song': 'Mother/son format',
+  'Mother of the groom dance choreographed': 'Mother/son format',
+  'Mother of the groom start cue': 'Mother/son format',
+  'Mother of the groom stop cue': 'Mother/son format',
+  'Mother of the groom fade out': 'Mother/son format',
+}
+
+function answerIsNa(fields: Record<string, string>, key: string): boolean {
+  return (fields[key] ?? '').trim().toLowerCase() === 'n/a'
+}
+
 export function fieldAnswerVisible(
   key: string,
   services: BookedServices,
   fields: Record<string, string>,
+  genderNeutral = false,
 ): boolean {
   if (usesDjOnlyTemplate(services) && DJ_ONLY_HIDDEN.has(key)) return false
   if (usesLiveOnlyTemplate(services) && LIVE_ONLY_HIDDEN.has(key)) return false
+  if (ADDITIONAL_PROCESSIONAL.has(key) && !genderNeutral) return false
+  if (genderNeutral && NEUTRAL_HIDDEN.has(key)) return false
+  const parentGate = HIDE_WHEN_PARENT_NA[key]
+  if (genderNeutral && parentGate && answerIsNa(fields, parentGate)) return false
   const asked = usesDjOnlyTemplate(services) && LIVE_DJ_ONLY.has(key)
     ? { ...services, live: true }
     : usesLiveOnlyTemplate(services) && LIVE_DJ_ONLY.has(key)
@@ -752,7 +801,8 @@ export function fieldAnswerVisible(
     return false
   }
   const declined = HIDE_WHEN_NO[key]
-  if (declined && answerIsNo(fields, declined)) return false
+  const parentYesNo = declined === 'Having a father-daughter dance' || declined === 'Having a mother-son dance'
+  if (declined && answerIsNo(fields, declined) && !(genderNeutral && parentYesNo)) return false
   const removed = HIDE_WHEN_REMOVED[key]
   if (removed && (fields[removed] ?? '').trim().toLowerCase() === 'removed') return false
   return true
@@ -844,46 +894,86 @@ export function removedSectionEntries(
   return [...removed].map((id) => ({ id, label: labels.get(id) ?? id }))
 }
 
-const NEUTRAL_SWAPS: Array<[RegExp, string]> = [
-  [/Father-daughter/g, 'Parent'],
-  [/father-daughter/g, 'parent'],
-  [/Mother-son/g, 'Other parent'],
-  [/mother-son/g, 'other parent'],
-  [/Father of the bride/g, 'Parent'],
-  [/father of the bride/g, 'parent'],
-  [/Mother of the groom/g, 'Other parent'],
-  [/mother of the groom/g, 'other parent'],
-  [/Father\/daughter/g, 'Parent'],
-  [/Mother\/son/g, 'Other parent'],
-  [/Bridal Processional/g, 'Partner Processional'],
-  [/Bridal processional/g, 'Partner processional'],
-]
+export const PARENT_DANCE_LIVE_DJ = [
+  'Full song performed live',
+  "Full song DJ'ed",
+  'Shortened version performed live',
+  "Shortened version DJ'ed",
+  'N/A',
+] as const
 
-function neutralizeText(value: string | undefined): string | undefined {
-  if (!value) return value
-  return NEUTRAL_SWAPS.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), value)
+export const PARENT_DANCE_DJ_ONLY = ["Full song DJ'ed", 'Shortened version DJ\'ed', 'N/A'] as const
+
+export const PARENT_DANCE_LIVE_ONLY = [
+  'Full song performed live',
+  'Shortened version performed live',
+  'N/A',
+] as const
+
+export function parentDanceFormatOptions(services: BookedServices): readonly string[] {
+  if (services.live && services.dj) return PARENT_DANCE_LIVE_DJ
+  if (services.dj && !services.live) return PARENT_DANCE_DJ_ONLY
+  return PARENT_DANCE_LIVE_ONLY
+}
+
+/** Display copy used only when the couple's gender-neutral flag is on. Field keys stay the same. */
+const NEUTRAL_FIELD: Record<string, Partial<PlannerField>> = {
+  'Bridal processional song': {
+    heading: "Couple's Processional",
+    label: "Couple's processional song",
+  },
+  'Bridal processional style': { label: "Couple's processional style" },
+  'Additional processional song': {
+    heading: 'Additional Processional (optional)',
+    label: 'Additional processional song',
+  },
+  'Additional processional style': { label: 'Additional processional style' },
+  'Father-daughter section': { label: 'Parent Dance #1', foldLabel: 'Parent Dance #1' },
+  'Mother-son section': { label: 'Parent Dance #2', foldLabel: 'Parent Dance #2' },
+  'Father/daughter dance song': {
+    label:
+      'Song choice for Parent Dance #1 (please also provide names and relationship of the people dancing)',
+  },
+  'Mother/son dance song': {
+    label:
+      'Song choice for Parent Dance #2 (please also provide names and relationship of the people dancing)',
+  },
+  'Father/daughter format': {
+    label: 'Parent Dance #1 - How would you like this dance to be performed?',
+    kind: 'yesno',
+  },
+  'Mother/son format': {
+    label: 'Parent Dance #2 - How would you like this dance to be performed?',
+    kind: 'yesno',
+  },
+  'Father of the bride dance choreographed': { label: 'Is Parent Dance #1 choreographed?' },
+  'Mother of the groom dance choreographed': { label: 'Is Parent Dance #2 choreographed?' },
+  'Couple introduction name': {
+    label:
+      'How would you like to be named as a couple during introductions? (e.g. first names only, a more formal title, etc.)',
+  },
 }
 
 /** Display-only wording. The gender-neutral setting itself is never shown. */
-export function neutralizeField(field: PlannerField): PlannerField {
-  return {
-    ...field,
-    label: neutralizeText(field.label) ?? field.label,
-    heading: neutralizeText(field.heading),
-    foldLabel: neutralizeText(field.foldLabel),
-    note: neutralizeText(field.note),
-    help: neutralizeText(field.help),
-    callout: neutralizeText(field.callout),
+export function neutralizeField(field: PlannerField, services: BookedServices): PlannerField {
+  const override = NEUTRAL_FIELD[field.key]
+  if (!override) return field
+  const next = { ...field, ...override }
+  if (field.key === 'Father/daughter format' || field.key === 'Mother/son format') {
+    next.options = [...parentDanceFormatOptions(services)]
+    next.stack = true
   }
+  return next
 }
 
 export function fieldIncludedInSave(
   key: string,
   services: BookedServices,
   fields: Record<string, string>,
+  genderNeutral = false,
 ): boolean {
   if (key === REMOVED_SECTIONS_FIELD || key === COLLAPSED_SECTIONS_FIELD || key === PHOTOGRAPHER_LATE_FIELD) return true
-  if (fieldAnswerVisible(key, services, fields)) return true
+  if (fieldAnswerVisible(key, services, fields, genderNeutral)) return true
   const fold = FOLDED_ANSWER[key]
   return Boolean(fold && (fields[fold] ?? '').trim().toLowerCase() === 'removed')
 }
@@ -905,10 +995,11 @@ function sectionWithVisibleFields(
   section: PlannerSection,
   services: BookedServices,
   answers: Record<string, string>,
+  genderNeutral = false,
 ): PlannerSection[] {
   if (section.id === 'photo-booth') return services.photobooth ? [{ ...section, fields: [] }] : []
   if (section.id === 'basics') return [{ ...section, fields: [] }]
-  const fields = section.fields.filter((field) => fieldAnswerVisible(field.key, services, answers))
+  const fields = section.fields.filter((field) => fieldAnswerVisible(field.key, services, answers, genderNeutral))
   if (fields.length === 0) return []
   return [{ ...section, fields }]
 }
@@ -916,14 +1007,15 @@ function sectionWithVisibleFields(
 export function visibleSections(
   services: BookedServices,
   answers: Record<string, string> = {},
+  genderNeutral = false,
 ): PlannerSection[] {
   if (services.live && services.dj) {
     return plannerSections.flatMap((section) => {
       if (LIVE_DJ_SKIP.has(section.id)) return []
-      if (section.id === 'ceremony') return sectionWithVisibleFields(liveDjCeremony(findPlannerField), services, answers)
-      if (section.id === 'cocktail-hour') return sectionWithVisibleFields(liveDjCocktail(findPlannerField), services, answers)
-      if (section.id === 'reception') return sectionWithVisibleFields(liveDjReception(findPlannerField), services, answers)
-      return sectionWithVisibleFields(section, services, answers)
+      if (section.id === 'ceremony') return sectionWithVisibleFields(liveDjCeremony(findPlannerField), services, answers, genderNeutral)
+      if (section.id === 'cocktail-hour') return sectionWithVisibleFields(liveDjCocktail(findPlannerField), services, answers, genderNeutral)
+      if (section.id === 'reception') return sectionWithVisibleFields(liveDjReception(findPlannerField), services, answers, genderNeutral)
+      return sectionWithVisibleFields(section, services, answers, genderNeutral)
     })
   }
   if (usesDjOnlyTemplate(services)) {
@@ -941,7 +1033,7 @@ export function visibleSections(
         ...built,
         fields: built.fields.map((field) => (field.options === POWER_OPTIONS ? { ...field, options: DJ_POWER_OPTIONS } : field)),
       }
-      return sectionWithVisibleFields(withDjPower, services, answers)
+      return sectionWithVisibleFields(withDjPower, services, answers, genderNeutral)
     })
   }
   if (usesLiveOnlyTemplate(services)) {
@@ -959,10 +1051,10 @@ export function visibleSections(
         ...built,
         fields: built.fields.map((field) => (field.options === POWER_OPTIONS ? { ...field, options: LIVE_POWER_OPTIONS } : field)),
       }
-      return sectionWithVisibleFields(withLivePower, services, answers)
+      return sectionWithVisibleFields(withLivePower, services, answers, genderNeutral)
     })
   }
-  return plannerSections.flatMap((section) => sectionWithVisibleFields(section, services, answers))
+  return plannerSections.flatMap((section) => sectionWithVisibleFields(section, services, answers, genderNeutral))
 }
 
 /** Not a form field. Uploaded separately and never included in a normal save. */
@@ -981,6 +1073,7 @@ const DANCE_FORMAT_KEYS = [
 function danceLengthAnswer(value: string): string {
   const text = value.trim().toLowerCase()
   if (!text) return ''
+  if (text === 'n/a' || text.includes('performed') || text.includes("dj'ed") || text.includes('dj’ed')) return value.trim()
   if (/\bshort/.test(text)) return 'Shortened'
   if (/\bfull\b/.test(text)) return 'Full'
   return ''
@@ -1030,6 +1123,7 @@ export function applyLiveOnlyPreCeremony(
 export function fieldsForSave(
   fields: Record<string, string>,
   services: BookedServices,
+  genderNeutral = false,
 ): Record<string, string> {
   const normalized = applyDanceLengthAnswers(
     applyLiveOnlyPreCeremony(applyDjCeremonyStyleLabels(fields, services), services),
@@ -1041,7 +1135,7 @@ export function fieldsForSave(
         key !== COUPLE_PHOTO_FIELD &&
         key !== FLOOR_PLAN_FIELD &&
         !LOCKED_BASICS_KEYS.has(key) &&
-        fieldIncludedInSave(key, services, normalized),
+        fieldIncludedInSave(key, services, normalized, genderNeutral),
     ),
   )
 }
@@ -1079,6 +1173,7 @@ export const CEREMONY_STYLE_DJ_ONLY = ['Instrumental', 'Vocals'] as const
 const CEREMONY_STYLE_KEYS = new Set([
   'Wedding party processional style (instrumental/vocals)',
   'Bridal processional style',
+  'Additional processional style',
   'Recessional style',
 ])
 

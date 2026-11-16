@@ -63,7 +63,17 @@ import CocktailSongs from './CocktailSongs'
 import CouplePhoto from './CouplePhoto'
 import PhotoBoothPanel from './PhotoBoothPanel'
 import { useSongCatalog } from '../lib/songCatalog'
-import { isLivePerformance, LIVE_SONG_CONTROLS, REMOVED_LIVE_SONG, SONG_LIVE_CONTROL, songInRepertoire } from './repertoire'
+import {
+  isLivePerformance,
+  LIVE_SONG_CONTROLS,
+  liveSongSwitched,
+  LIVE_SONG_PICKER_TITLE,
+  LIVE_SONG_REMOVE,
+  LIVE_SONG_REMOVED,
+  resolveLiveSong,
+  SONG_LIVE_CONTROL,
+  type LiveSongResolution,
+} from './repertoire'
 import SongField from './SongField'
 import WelcomeInfo from './WelcomeInfo'
 
@@ -594,7 +604,7 @@ export default function PlannerApp() {
   const [services, setServices] = useState<BookedServices>(cachedView?.services ?? previewServices ?? ALL_SERVICES)
   const [genderNeutral, setGenderNeutral] = useState(cachedView?.genderNeutral ?? false)
   const [bookingStatus, setBookingStatus] = useState(cachedView?.bookingStatus ?? '')
-  const [songNotices, setSongNotices] = useState<Record<string, string>>({})
+  const [songNotices, setSongNotices] = useState<Record<string, { kind: 'text'; text: string } | { kind: 'picker'; options: string[] }>>({})
   const [basics, setBasics] = useState<PlannerBasics>(cachedView?.basics ?? EMPTY_BASICS)
   const [fields, setFields] = useState<Record<string, string>>(() => cachedView?.fields ?? emptyFields(plannerFieldKeys))
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => cachedView?.fields ?? emptyFields(plannerFieldKeys))
@@ -686,26 +696,49 @@ export default function PlannerApp() {
   }, [dirty])
 
   const updateField = useCallback((key: string, value: string) => {
-    let removedSong = ''
+    const songKey = LIVE_SONG_CONTROLS[key] ?? ''
+    const resolution: LiveSongResolution | null =
+      songKey && isLivePerformance(value) ? resolveLiveSong(fieldsRef.current[songKey] ?? '') : null
     setFields((current) => {
       const next = { ...current, [key]: value }
       const fold = SECTION_FOLD[key]
       if (fold && value.trim().toLowerCase() !== 'no') next[fold] = ''
-      const songKey = LIVE_SONG_CONTROLS[key]
-      if (songKey && isLivePerformance(value)) {
-        const song = next[songKey] ?? ''
-        if (song.trim() && !songInRepertoire(song)) {
-          next[songKey] = ''
-          removedSong = songKey
-        }
-      }
+      if (songKey && resolution?.kind === 'switch') next[songKey] = resolution.value
+      if (songKey && resolution?.kind === 'remove') next[songKey] = ''
+      fieldsRef.current = next
       return next
     })
-    if (removedSong) setSongNotices((current) => ({ ...current, [removedSong]: REMOVED_LIVE_SONG }))
-    else if (SONG_LIVE_CONTROL[key]) setSongNotices((current) => ({ ...current, [key]: '' }))
+    if (songKey && resolution) {
+      setSongNotices((current) => ({
+        ...current,
+        [songKey]:
+          resolution.kind === 'switch'
+            ? { kind: 'text', text: resolution.note }
+            : resolution.kind === 'remove'
+              ? { kind: 'text', text: LIVE_SONG_REMOVED }
+              : resolution.kind === 'picker'
+                ? { kind: 'picker', options: resolution.options }
+                : { kind: 'text', text: '' },
+      }))
+    } else if (SONG_LIVE_CONTROL[key]) {
+      setSongNotices((current) => ({ ...current, [key]: { kind: 'text', text: '' } }))
+    }
     setSaveFailed(false)
     setSaveMessage('')
   }, [])
+
+  const chooseLiveSong = useCallback((key: string, value: string) => {
+    updateField(key, value)
+    setSongNotices((current) => ({
+      ...current,
+      [key]: { kind: 'text', text: value ? liveSongSwitched(value) : '' },
+    }))
+  }, [updateField])
+
+  const removeLiveSong = useCallback((key: string) => {
+    updateField(key, '')
+    setSongNotices((current) => ({ ...current, [key]: { kind: 'text', text: LIVE_SONG_REMOVED } }))
+  }, [updateField])
 
   const onFloorPlan = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -788,7 +821,7 @@ export default function PlannerApp() {
     setSaving(true)
     setSaveFailed(false)
     setSaveMessage('')
-    const payload = fieldsForSave(fields, services)
+    const payload = fieldsForSave(fields, services, genderNeutral)
     if (timelineWasEmpty.current && fields.Timeline === TIMELINE_PREFILL) delete payload.Timeline
     const result = await savePlanner(token, payload)
     setSaving(false)
@@ -803,12 +836,15 @@ export default function PlannerApp() {
     setLastUpdated(savedAt)
     updatePlannerCacheFields(token, fields, savedAt)
     setSaveMessage('Saved')
-  }, [basics.date, fields, saving, services, token])
+  }, [basics.date, fields, genderNeutral, saving, services, token])
 
   const sections = useMemo(() => {
-    const visible = visibleSections(services, fields)
+    const visible = visibleSections(services, fields, genderNeutral)
     if (!genderNeutral) return visible
-    return visible.map((section) => ({ ...section, fields: section.fields.map(neutralizeField) }))
+    return visible.map((section) => ({
+      ...section,
+      fields: section.fields.map((field) => neutralizeField(field, services)),
+    }))
   }, [services, fields, genderNeutral])
   const shownSections = useMemo(() => applyRemovedSections(sections, fields), [sections, fields])
   const removedSections = useMemo(() => removedSectionEntries(sections, fields), [sections, fields])
@@ -1166,7 +1202,26 @@ export default function PlannerApp() {
                           sectionNote={fields[SECTION_NOTE_FIELD[field.key] ?? ''] ?? ''}
                           onChange={(value) => updateField(field.key, value)}
                         />
-                        {songNotices[field.key] && <p className="planner-song-removed">{songNotices[field.key]}</p>}
+                        {(() => {
+                          const notice = songNotices[field.key]
+                          if (!notice || (notice.kind === 'text' && !notice.text)) return null
+                          if (notice.kind === 'text') return <p className="planner-song-removed">{notice.text}</p>
+                          return (
+                            <div className="planner-live-picker">
+                              <p>{LIVE_SONG_PICKER_TITLE}</p>
+                              <div>
+                                {notice.options.map((option) => (
+                                  <button key={option} type="button" onClick={() => chooseLiveSong(field.key, option)}>
+                                    {option}
+                                  </button>
+                                ))}
+                                <button type="button" onClick={() => removeLiveSong(field.key)}>
+                                  {LIVE_SONG_REMOVE}
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })()}
                         {field.key === 'IG handle' && (
                           <p className="planner-ig-link">
                             <a

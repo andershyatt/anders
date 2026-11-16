@@ -77,6 +77,7 @@ const SONG_KEYS = new Set([
   'Do not play songs',
   'Wedding party processional song',
   'Bridal processional song',
+  'Additional processional song',
   'Recessional song',
   "Couple's first dance song",
   'Father/daughter dance song',
@@ -128,6 +129,9 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
       'Bridal processional song',
       'Bridal processional style',
       'Bridal processional notes',
+      'Additional processional song',
+      'Additional processional style',
+      'Additional processional notes',
       'Recessional song',
       'Recessional style',
       'Recessional cue',
@@ -179,6 +183,7 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
 const DJ_ONLY_SHEET_SKIP = new Set([
   'Wedding party processional style (instrumental/vocals)',
   'Bridal processional style',
+  'Additional processional style',
   'Recessional style',
   'Pre-ceremony performance',
   'Cocktail hour music type',
@@ -226,6 +231,26 @@ function hiddenOnSheet(detail: PipelineDetail, key: string): boolean {
   return hiddenOnDjOnlySheet(detail, key) || hiddenOnLiveOnlySheet(detail, key)
 }
 
+const NEUTRAL_SHEET_LABELS: Record<string, string> = {
+  'Bridal processional song': "Couple's Processional",
+  'Bridal processional style': "Couple's processional style",
+  'Bridal processional notes': "Couple's processional notes",
+  'Additional processional song': 'Additional Processional',
+  'Additional processional style': 'Additional processional style',
+  'Additional processional notes': 'Additional processional notes',
+  'Father/daughter dance song': 'Parent Dance #1',
+  'Father/daughter format': 'Parent Dance #1 - How would you like this dance to be performed?',
+  'Father of the bride dance choreographed': 'Is Parent Dance #1 choreographed?',
+  'Mother/son dance song': 'Parent Dance #2',
+  'Mother/son format': 'Parent Dance #2 - How would you like this dance to be performed?',
+  'Mother of the groom dance choreographed': 'Is Parent Dance #2 choreographed?',
+}
+
+function sheetLabel(detail: PipelineDetail, key: string): string {
+  if (!detail.genderNeutral) return key
+  return NEUTRAL_SHEET_LABELS[key] ?? key
+}
+
 export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
   const children: Array<Paragraph | Table> = [
     new Paragraph({
@@ -248,7 +273,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
       if (SONG_KEYS.has(key) && shown.includes('\n')) {
         return []
       }
-      return [[key, shown] as [string, string]]
+      return [[sheetLabel(detail, key), shown] as [string, string]]
     })
     const songBlocks = group.keys.flatMap((key) => {
       if (hiddenOnSheet(detail, key)) {
@@ -266,7 +291,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
     children.push(heading(group.title))
     if (rows.length) children.push(pairTable(rows))
     for (const block of songBlocks) {
-      children.push(para(block.key, true))
+      children.push(para(sheetLabel(detail, block.key), true))
       children.push(songColumns(block.lines))
     }
   }
@@ -281,7 +306,7 @@ export async function buildInfoSheet(detail: PipelineDetail): Promise<Blob> {
     ) {
       return []
     }
-    return [[key, readable(key, value)] as [string, string]]
+    return [[sheetLabel(detail, key), readable(key, value)] as [string, string]]
   })
   if (leftovers.length) {
     children.push(heading('Everything else'))
