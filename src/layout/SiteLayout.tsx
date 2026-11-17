@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect } from 'react'
-import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom'
-import { titleOption } from '../components/titleOption'
+import { Outlet, useLocation } from 'react-router-dom'
 import Nav from './Nav'
 import HeroBanner, { type HeroVariant } from './HeroBanner'
 import Footer from './Footer'
@@ -34,36 +33,6 @@ const routeMeta: Record<string, RouteMeta> = {
 const defaultMeta: RouteMeta = { hero: 'guitar' }
 
 const songListPaths = new Set(['/song-list', '/songlist', '/playlist'])
-
-const titleChoices = [
-  ['a', 'A · Like General & Song List'],
-  ['b', 'B · Bigger, full width'],
-  ['c', 'C · Fluid and bolder'],
-  ['services', 'One line · Live Music & DJ Services'],
-  ['short', 'One line · Live Music & DJ'],
-  ['plus', 'One line · Live Music • DJ'],
-] as const
-
-function TitlePreviewBar() {
-  const { pathname } = useLocation()
-  const [params] = useSearchParams()
-  if (!params.has('title')) return null
-  const current = titleOption(params.get('title'))
-  return (
-    <div className="title-preview" role="navigation" aria-label="Title style preview">
-      {titleChoices.map(([id, label]) => (
-        <Link
-          key={id}
-          to={{ pathname, search: `?title=${id}` }}
-          className={current === id ? 'is-on' : undefined}
-          aria-current={current === id ? 'true' : undefined}
-        >
-          {label}
-        </Link>
-      ))}
-    </div>
-  )
-}
 
 export default function SiteLayout() {
   const { pathname, hash } = useLocation()
@@ -107,7 +76,6 @@ export default function SiteLayout() {
   return (
     <div className={`site-layout${isHome ? ' site-layout--home' : ''}`}>
       <Nav />
-      <TitlePreviewBar />
       {isHome ? (
         <header className="home-hero">
           <img

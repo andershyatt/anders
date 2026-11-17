@@ -1,29 +1,16 @@
 import type { CSSProperties } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { titleOption } from './titleOption'
 import './DisplayTitle.css'
 
 interface DisplayTitleProps {
   as?: 'h1' | 'h2' | 'h3'
   children: string
-  /** Main page heading. Section titles stay on the current one-line fit. */
+  /** Page heading. Section titles keep the original one-line size. */
   page?: boolean
 }
 
-const HOME_TITLE = 'Live Music & DJ Services'
-const SHORT_HOME_TITLE = 'Live Music & DJ'
 const BULLET_HOME_TITLE = 'Live Music • DJ'
 
-/** One-line Home title trials. Other headings keep option B. */
-function homeTitleLine(option: string, text: string): string | null {
-  if (text.trim() !== HOME_TITLE) return null
-  if (option === 'services') return HOME_TITLE
-  if (option === 'short') return SHORT_HOME_TITLE
-  if (option === 'plus') return BULLET_HOME_TITLE
-  return null
-}
-
-/** Two lines of similar length, so a long title can fill the width at a large size. */
+/** Two lines of similar length, so a long title fills the width at a large size. */
 function splitTitle(text: string): string[] {
   const words = text.trim().split(/\s+/)
   if (words.length < 2 || text.trim().length <= 16) return [text.trim()]
@@ -44,28 +31,26 @@ function splitTitle(text: string): string[] {
 
 /** Josefin title sized to the content width. */
 export default function DisplayTitle({ as: Tag = 'h1', children, page = false }: DisplayTitleProps) {
-  const [params] = useSearchParams()
-  const option = page ? titleOption(params.get('title')) : 'a'
-  const forcedLine = page ? homeTitleLine(option, children) : null
-  const bullet = forcedLine === BULLET_HOME_TITLE
-  const look = bullet ? 'bullet' : forcedLine ? 'oneline' : option === 'services' || option === 'short' || option === 'plus' ? 'b' : option
-  const lines = forcedLine ? [forcedLine] : look === 'b' ? splitTitle(children) : [children.trim()]
+  const text = children.trim()
+  const bullet = text === BULLET_HOME_TITLE
+  const lines = page && !bullet ? splitTitle(text) : [text]
   const chars = Math.max(...lines.map((line) => line.length), 1)
+  const look = bullet ? 'bullet' : page ? 'b' : ''
   return (
-    <div className={`display-title${page ? ` display-title--${look}` : ''}`}>
+    <div className={`display-title${look ? ` display-title--${look}` : ''}`}>
       <Tag className="display-title__box" style={{ '--chars': chars } as CSSProperties}>
-        {look === 'b' ? (
+        {bullet ? (
+          <span className="display-title__text">
+            Live Music <span className="display-title__mark">•</span> DJ
+          </span>
+        ) : page ? (
           lines.map((line) => (
             <span className="display-title__line" key={line}>
               <span className="display-title__text">{line}</span>
             </span>
           ))
-        ) : bullet ? (
-          <span className="display-title__text">
-            Live Music <span className="display-title__mark">•</span> DJ
-          </span>
         ) : (
-          <span className="display-title__text">{lines[0]}</span>
+          <span className="display-title__text">{text}</span>
         )}
       </Tag>
     </div>

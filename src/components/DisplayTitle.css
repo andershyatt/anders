@@ -44,15 +44,7 @@
   white-space: nowrap;
 }
 
-/* Temporary Home-title trials: one line, same weight as B, scaled to the width. */
-.display-title--oneline .display-title__box {
-  display: block;
-  width: 100%;
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-/* Tighter tracking so "Live Music • DJ" can stay near option B's size. */
+/* Tighter tracking so the Home title stays near the two-line title size. */
 .display-title--bullet .display-title__box {
   display: block;
   width: 100%;
@@ -73,21 +65,4 @@
   line-height: 1;
   letter-spacing: 0;
   vertical-align: 0.22em;
-}
-
-/* C: one fluid size on every page, a step bolder, wrapping to the screen. */
-.display-title--c .display-title__box {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  font-weight: 600;
-  font-size: clamp(2.15rem, 7.4vw, 5.75rem);
-  line-height: 0.98;
-  white-space: normal;
-  text-wrap: balance;
-}
-
-.display-title--c .display-title__text {
-  letter-spacing: 0.08em;
-  margin-right: -0.08em;
 }
