@@ -12,7 +12,7 @@ export default function Dj() {
   return (
     <div className="page-content">
       <DisplayTitle as="h2" page>
-        Wedding DJ Services
+        Wedding DJ
       </DisplayTitle>
 
       <div className="lead">

@@ -62,7 +62,9 @@ export default function PhotoBooth() {
         alt="The Glamour Booth, a handcrafted wooden photo booth on a tripod"
       />
       <div className="page-content">
-        <DisplayTitle page>The Glamour Booth</DisplayTitle>
+        <DisplayTitle page single>
+          The Glamour Booth
+        </DisplayTitle>
         <p className="booth-subtitle">An open-air photo booth experience</p>
         <h2>Capture the Fun, Create Memories</h2>
         <p className="booth-subhead">Elevate your event with our elegant, handcrafted photo booth</p>

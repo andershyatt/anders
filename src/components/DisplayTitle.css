@@ -44,16 +44,25 @@
   white-space: nowrap;
 }
 
-/* Tighter tracking so the Home title stays near the two-line title size. */
-.display-title--bullet .display-title__box {
+/* One line, tighter tracking, scaled down until it fills the width. */
+.display-title--bullet .display-title__box,
+.display-title--single .display-title__box {
   display: block;
   width: 100%;
   font-weight: 400;
   white-space: nowrap;
+}
+
+.display-title--bullet .display-title__box {
   font-size: calc(96cqi / (var(--chars) * 0.6 + (var(--chars) - 1) * 0.12 + 0.28));
 }
 
-.display-title--bullet .display-title__text {
+.display-title--single .display-title__box {
+  font-size: calc(96cqi / (var(--chars) * 0.66 + (var(--chars) - 1) * 0.12 + 0.28));
+}
+
+.display-title--bullet .display-title__text,
+.display-title--single .display-title__text {
   letter-spacing: 0.12em;
   margin-right: -0.12em;
 }
