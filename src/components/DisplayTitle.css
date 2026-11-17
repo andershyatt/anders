@@ -44,6 +44,14 @@
   white-space: nowrap;
 }
 
+/* Temporary Home-title trials: one line, same weight as B, scaled to the width. */
+.display-title--oneline .display-title__box {
+  display: block;
+  width: 100%;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
 /* C: one fluid size on every page, a step bolder, wrapping to the screen. */
 .display-title--c .display-title__box {
   display: block;
