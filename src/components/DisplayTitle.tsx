@@ -12,12 +12,14 @@ interface DisplayTitleProps {
 
 const HOME_TITLE = 'Live Music & DJ Services'
 const SHORT_HOME_TITLE = 'Live Music & DJ'
+const BULLET_HOME_TITLE = 'Live Music • DJ'
 
 /** One-line Home title trials. Other headings keep option B. */
 function homeTitleLine(option: string, text: string): string | null {
   if (text.trim() !== HOME_TITLE) return null
   if (option === 'services') return HOME_TITLE
   if (option === 'short') return SHORT_HOME_TITLE
+  if (option === 'plus') return BULLET_HOME_TITLE
   return null
 }
 
@@ -45,7 +47,8 @@ export default function DisplayTitle({ as: Tag = 'h1', children, page = false }:
   const [params] = useSearchParams()
   const option = page ? titleOption(params.get('title')) : 'a'
   const forcedLine = page ? homeTitleLine(option, children) : null
-  const look = forcedLine ? 'oneline' : option === 'services' || option === 'short' ? 'b' : option
+  const bullet = forcedLine === BULLET_HOME_TITLE
+  const look = bullet ? 'bullet' : forcedLine ? 'oneline' : option === 'services' || option === 'short' || option === 'plus' ? 'b' : option
   const lines = forcedLine ? [forcedLine] : look === 'b' ? splitTitle(children) : [children.trim()]
   const chars = Math.max(...lines.map((line) => line.length), 1)
   return (
@@ -57,6 +60,10 @@ export default function DisplayTitle({ as: Tag = 'h1', children, page = false }:
               <span className="display-title__text">{line}</span>
             </span>
           ))
+        ) : bullet ? (
+          <span className="display-title__text">
+            Live Music <span className="display-title__mark">•</span> DJ
+          </span>
         ) : (
           <span className="display-title__text">{lines[0]}</span>
         )}

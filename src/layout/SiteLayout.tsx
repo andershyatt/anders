@@ -41,6 +41,7 @@ const titleChoices = [
   ['c', 'C · Fluid and bolder'],
   ['services', 'One line · Live Music & DJ Services'],
   ['short', 'One line · Live Music & DJ'],
+  ['plus', 'One line · Live Music • DJ'],
 ] as const
 
 function TitlePreviewBar() {
