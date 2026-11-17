@@ -25,8 +25,8 @@ export default function Home() {
       <h1 className="sr-only">Anders Hyatt Music</h1>
       <div className="home-wrap">
         <header className="home-intro">
-          <DisplayTitle as="h2" page>
-            Live Music • DJ
+          <DisplayTitle as="h2" page single>
+            Live Music & DJ
           </DisplayTitle>
           <p className="home-intro__about copy-lg">{homeAbout}</p>
         </header>
