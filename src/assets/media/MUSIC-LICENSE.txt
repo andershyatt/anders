@@ -1,0 +1,16 @@
+Replacement soundtrack for photobooth-glamour-terra.mp4 only.
+
+Title:    Sleepy Cat
+Artist:   Alejandro Magaña (A. M.)
+Source:   https://mixkit.co/free-stock-music/lo-fi/
+File:     https://assets.mixkit.co/music/135/135.mp3  (Mixkit music id 135)
+License:  Mixkit Stock Music Free License
+License URL: https://mixkit.co/license/modal/musicFree/
+
+The Mixkit Stock Music Free License allows free commercial and non-commercial
+use on websites and other web/social platforms, with no attribution required.
+It does not allow standalone resale, TV/radio broadcast, or video-game use.
+
+Treatment: 19.25s excerpt starting at 7.111s (four bars at the track's 135 BPM),
+0.7s fade-in, 1.3s fade-out, loudness-normalized to about -16 LUFS.
+The green-blue video keeps its original audio.

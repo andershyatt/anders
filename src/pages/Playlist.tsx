@@ -162,7 +162,9 @@ export default function Playlist() {
   return (
     <div className="page-content playlist-page left">
       <div className="playlist-intro">
-        <DisplayTitle as="h2">Live Song List</DisplayTitle>
+        <DisplayTitle as="h2" page>
+          Live Song List
+        </DisplayTitle>
         {step === 'browse' && (
           <p>
             Search and filter Anders&apos;s live repertoire, add the ones you want, then send your

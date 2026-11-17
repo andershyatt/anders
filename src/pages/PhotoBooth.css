@@ -37,6 +37,22 @@
   height: auto;
 }
 
+.booth-videos {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin: 1.75rem auto 0.5rem;
+}
+
+.booth-videos video {
+  display: block;
+  width: min(100%, 292px);
+  height: auto;
+  aspect-ratio: 9 / 16;
+  background: #111;
+}
+
 .booth-page h2 {
   margin-top: 1.35rem;
   color: var(--color-black);
@@ -114,6 +130,15 @@
 @media (max-width: 800px) {
   .booth-hero {
     max-height: 52vh;
+  }
+
+  .booth-videos {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .booth-videos video {
+    width: min(78%, 280px);
   }
 
   .booth-backdrop-grid {

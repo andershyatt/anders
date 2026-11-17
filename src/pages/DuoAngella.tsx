@@ -8,7 +8,7 @@ import { homeGallery, images } from '../data/media'
 export default function DuoAngella() {
   return (
     <div className="page-content">
-      <DisplayTitle>Anders & Angella Acoustic Duo</DisplayTitle>
+      <DisplayTitle page>Anders & Angella Acoustic Duo</DisplayTitle>
       <div className="lead">
         <YouTubeEmbed videoId="-SXiczxgHu8" title="Anders & Angella Cover Reel" />
         <div className="copy-lg">
