@@ -6,6 +6,8 @@ interface DisplayTitleProps {
   children: string
   /** Page heading. Section titles keep the original one-line size. */
   page?: boolean
+  /** Stay on one line and shrink to the width. */
+  single?: boolean
 }
 
 const BULLET_HOME_TITLE = 'Live Music • DJ'
@@ -30,12 +32,12 @@ function splitTitle(text: string): string[] {
 }
 
 /** Josefin title sized to the content width. */
-export default function DisplayTitle({ as: Tag = 'h1', children, page = false }: DisplayTitleProps) {
+export default function DisplayTitle({ as: Tag = 'h1', children, page = false, single = false }: DisplayTitleProps) {
   const text = children.trim()
   const bullet = text === BULLET_HOME_TITLE
-  const lines = page && !bullet ? splitTitle(text) : [text]
+  const lines = page && !bullet && !single ? splitTitle(text) : [text]
   const chars = Math.max(...lines.map((line) => line.length), 1)
-  const look = bullet ? 'bullet' : page ? 'b' : ''
+  const look = bullet ? 'bullet' : single ? 'single' : page ? 'b' : ''
   return (
     <div className={`display-title${look ? ` display-title--${look}` : ''}`}>
       <Tag className="display-title__box" style={{ '--chars': chars } as CSSProperties}>
@@ -43,7 +45,7 @@ export default function DisplayTitle({ as: Tag = 'h1', children, page = false }:
           <span className="display-title__text">
             Live Music <span className="display-title__mark">•</span> DJ
           </span>
-        ) : page ? (
+        ) : page && !single ? (
           lines.map((line) => (
             <span className="display-title__line" key={line}>
               <span className="display-title__text">{line}</span>
