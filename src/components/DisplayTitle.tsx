@@ -10,8 +10,6 @@ interface DisplayTitleProps {
   single?: boolean
 }
 
-const BULLET_HOME_TITLE = 'Live Music • DJ'
-
 /** Two lines of similar length, so a long title fills the width at a large size. */
 function splitTitle(text: string): string[] {
   const words = text.trim().split(/\s+/)
@@ -34,18 +32,13 @@ function splitTitle(text: string): string[] {
 /** Josefin title sized to the content width. */
 export default function DisplayTitle({ as: Tag = 'h1', children, page = false, single = false }: DisplayTitleProps) {
   const text = children.trim()
-  const bullet = text === BULLET_HOME_TITLE
-  const lines = page && !bullet && !single ? splitTitle(text) : [text]
+  const lines = page && !single ? splitTitle(text) : [text]
   const chars = Math.max(...lines.map((line) => line.length), 1)
-  const look = bullet ? 'bullet' : single ? 'single' : page ? 'b' : ''
+  const look = single ? 'single' : page ? 'b' : ''
   return (
     <div className={`display-title${look ? ` display-title--${look}` : ''}`}>
       <Tag className="display-title__box" style={{ '--chars': chars } as CSSProperties}>
-        {bullet ? (
-          <span className="display-title__text">
-            Live Music <span className="display-title__mark">•</span> DJ
-          </span>
-        ) : page && !single ? (
+        {page && !single ? (
           lines.map((line) => (
             <span className="display-title__line" key={line}>
               <span className="display-title__text">{line}</span>
