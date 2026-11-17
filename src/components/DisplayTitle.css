@@ -35,7 +35,7 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  font-weight: 400;
+  font-weight: 340;
 }
 
 .display-title--b .display-title__line {
@@ -48,7 +48,7 @@
 .display-title--single .display-title__box {
   display: block;
   width: 100%;
-  font-weight: 400;
+  font-weight: 340;
   white-space: nowrap;
   font-size: calc(96cqi / (var(--chars) * 0.66 + (var(--chars) - 1) * 0.12 + 0.28));
 }
