@@ -25,11 +25,11 @@ export default function LiveMusic() {
         <Link to="/live-music#events" className="cta-btn">
           See Anders Live
         </Link>
-        <Link to="/duo-angella" className="cta-btn">
-          Duo - Angella
-        </Link>
         <Link to="/duo-ben" className="cta-btn">
           Duo - Ben
+        </Link>
+        <Link to="/duo-angella" className="cta-btn">
+          Duo - Angella
         </Link>
         <Link to="/trio" className="cta-btn">
           The Trio
