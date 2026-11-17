@@ -10,7 +10,7 @@ import EventsSection from './Events'
 export default function LiveMusic() {
   return (
     <div className="page-content">
-      <DisplayTitle>Live Music</DisplayTitle>
+      <DisplayTitle page>Live Music</DisplayTitle>
       <div className="lead copy-lg">
         <p>
           Whether setting the mood for an elegant ceremony, providing background music for a

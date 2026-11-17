@@ -2,7 +2,24 @@ import { Link } from 'react-router-dom'
 import DisplayTitle from '../components/DisplayTitle'
 import { asset, images } from '../data/media'
 import { boothBackdrops } from '../planner/photoBoothImages'
+import glamourVideo from '../assets/media/photobooth-glamour-terra.mp4'
+import glamourPoster from '../assets/media/photobooth-glamour-terra-poster.jpg'
+import greenVideo from '../assets/media/photobooth-green-blue.mp4'
+import greenPoster from '../assets/media/photobooth-green-blue-poster.jpg'
 import './PhotoBooth.css'
+
+const boothVideos = [
+  {
+    src: glamourVideo,
+    poster: glamourPoster,
+    label: 'Glamour booth with terra lighting',
+  },
+  {
+    src: greenVideo,
+    poster: greenPoster,
+    label: 'Photo booth with green and blue lighting',
+  },
+]
 
 const packageItems = [
   'Handcrafted wooden photo booth enclosure & matching printer stand',
@@ -45,7 +62,7 @@ export default function PhotoBooth() {
         alt="The Glamour Booth, a handcrafted wooden photo booth on a tripod"
       />
       <div className="page-content">
-        <DisplayTitle>The Glamour Booth</DisplayTitle>
+        <DisplayTitle page>The Glamour Booth</DisplayTitle>
         <p className="booth-subtitle">An open-air photo booth experience</p>
         <h2>Capture the Fun, Create Memories</h2>
         <p className="booth-subhead">Elevate your event with our elegant, handcrafted photo booth</p>
@@ -73,6 +90,21 @@ export default function PhotoBooth() {
             <img key={photo.src} src={photo.src} alt={photo.alt} loading="lazy" />
           ))}
         </div>
+
+        <section className="booth-videos" aria-label="Photo booth videos">
+          {boothVideos.map((video) => (
+            <video
+              key={video.src}
+              controls
+              playsInline
+              preload="metadata"
+              poster={video.poster}
+              aria-label={video.label}
+            >
+              <source src={video.src} type="video/mp4" />
+            </video>
+          ))}
+        </section>
 
         <section id="backdrops" className="booth-backdrop-section" aria-labelledby="backdrops-heading">
           <h2 id="backdrops-heading">Backdrop Options</h2>

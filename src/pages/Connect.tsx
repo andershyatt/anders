@@ -54,7 +54,7 @@ export default function Connect() {
 
   return (
     <div className="page-content">
-      <DisplayTitle>Ready to start planning?</DisplayTitle>
+      <DisplayTitle page>Ready to start planning?</DisplayTitle>
       <p className="connect-intro">Share a few details below and we’ll be in touch.</p>
       <div className="connect-form">
         <div className={`connect-form__embed ${FORM_CLASS}`} />

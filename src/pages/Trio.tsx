@@ -10,7 +10,7 @@ const placeholderPhotos = [images.duoAngella, images.duoBen, ...homeGallery.slic
 export default function Trio() {
   return (
     <div className="page-content">
-      <DisplayTitle>The Trio — Anders, Angella & Ben</DisplayTitle>
+      <DisplayTitle page>The Trio — Anders, Angella & Ben</DisplayTitle>
       <div className="lead">
         <YouTubeEmbed videoId="qZhppNcsXlc" title="The Trio — Anders, Angella & Ben" />
         <div className="copy-lg">

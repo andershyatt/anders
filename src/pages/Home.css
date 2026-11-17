@@ -53,6 +53,12 @@
   display: block;
 }
 
+.home-split--image-right .home-split__media img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center center;
+}
+
 .home-split__copy {
   grid-row: 1;
   grid-column: 7 / 13;
@@ -387,11 +393,15 @@
   }
 
   .home-split--image-right .home-split__media {
-    grid-column: 3 / 13;
+    grid-column: 1 / -1;
+    grid-row: 1;
   }
 
   .home-split--image-right .home-split__copy {
-    grid-column: 1 / 10;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-items: stretch;
+    padding-top: 0.75rem;
   }
 
   .home-split__card {

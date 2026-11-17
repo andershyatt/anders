@@ -7,7 +7,7 @@ import { homeGallery, images } from '../data/media'
 export default function DuoBen() {
   return (
     <div className="page-content">
-      <DisplayTitle>Anders & Ben Acoustic Duo</DisplayTitle>
+      <DisplayTitle page>Anders & Ben Acoustic Duo</DisplayTitle>
       <div className="lead copy-lg">
         <p>
           Anders and Ben Rogers have been playing together since 2017, blending guitar, violin, and

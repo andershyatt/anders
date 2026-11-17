@@ -11,7 +11,9 @@ import './Dj.css'
 export default function Dj() {
   return (
     <div className="page-content">
-      <DisplayTitle as="h2">Wedding DJ Services</DisplayTitle>
+      <DisplayTitle as="h2" page>
+        Wedding DJ Services
+      </DisplayTitle>
 
       <div className="lead">
         <p>
