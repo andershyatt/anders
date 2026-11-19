@@ -22,22 +22,22 @@ export default function LiveMusic() {
       </div>
 
       <div className="cta-row cta-row--wide">
-        <Link to="/live-music#events" className="cta-btn">
+        <Link to="/live-music/#events" className="cta-btn">
           See Anders Live
         </Link>
-        <Link to="/duo-ben" className="cta-btn">
+        <Link to="/duo-ben/" className="cta-btn">
           Duo - Ben
         </Link>
-        <Link to="/duo-angella" className="cta-btn">
+        <Link to="/duo-angella/" className="cta-btn">
           Duo - Angella
         </Link>
-        <Link to="/trio" className="cta-btn">
+        <Link to="/trio/" className="cta-btn">
           The Trio
         </Link>
-        <Link to="/song-list" className="cta-btn">
+        <Link to="/song-list/" className="cta-btn">
           Song List
         </Link>
-        <Link to="/connect" className="cta-btn">
+        <Link to="/connect/" className="cta-btn">
           Book Anders
         </Link>
       </div>

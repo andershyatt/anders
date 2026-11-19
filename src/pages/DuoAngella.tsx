@@ -38,13 +38,13 @@ export default function DuoAngella() {
       </div>
 
       <div className="cta-row cta-row--wide">
-        <Link to="/connect" className="cta-btn">
+        <Link to="/connect/" className="cta-btn">
           Get a Quote
         </Link>
-        <Link to="/duo-ben" className="cta-btn">
+        <Link to="/duo-ben/" className="cta-btn">
           Duo &mdash; Anders &amp; Ben
         </Link>
-        <Link to="/trio" className="cta-btn">
+        <Link to="/trio/" className="cta-btn">
           The Trio
         </Link>
       </div>

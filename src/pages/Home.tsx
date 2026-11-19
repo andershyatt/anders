@@ -55,10 +55,10 @@ export default function Home() {
                 <em>Solo, duo and trio options</em>
               </p>
               <div className="home-split__actions">
-                <Link to="/live-music" className="home-btn">
+                <Link to="/live-music/" className="home-btn">
                   Learn more
                 </Link>
-                <Link to="/song-list" className="home-btn">
+                <Link to="/song-list/" className="home-btn">
                   Live song list
                 </Link>
               </div>
@@ -90,7 +90,7 @@ export default function Home() {
               <p>
                 <em>Emcee services included</em>
               </p>
-              <Link to="/dj" className="home-btn">
+              <Link to="/dj/" className="home-btn">
                 Learn more
               </Link>
             </div>
@@ -98,10 +98,10 @@ export default function Home() {
         </section>
 
         <div className="home-ctas">
-          <Link to="/connect" className="home-btn home-btn--block">
+          <Link to="/connect/" className="home-btn home-btn--block">
             GET A QUOTE
           </Link>
-          <Link to="/song-list" className="home-btn home-btn--block">
+          <Link to="/song-list/" className="home-btn home-btn--block">
             LIVE SONG LIST
           </Link>
         </div>

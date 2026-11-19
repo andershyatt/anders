@@ -25,10 +25,10 @@ export default function Dj() {
       </div>
 
       <div className="cta-row">
-        <Link to="/dj#faq" className="cta-btn">
+        <Link to="/dj/#faq" className="cta-btn">
           DJ FAQ
         </Link>
-        <Link to="/connect" className="cta-btn">
+        <Link to="/connect/" className="cta-btn">
           Get a Quote
         </Link>
       </div>

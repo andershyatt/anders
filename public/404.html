@@ -18,11 +18,12 @@
           '/connect': true,
         }
         var aliases = {
-          '/songlist': '/song-list',
-          '/playlist': '/song-list',
-          '/faq': '/live-music#faq',
-          '/dj-faq': '/dj#faq',
-          '/events': '/live-music#events',
+          '/songlist': '/song-list/',
+          '/playlist': '/song-list/',
+          '/faq': '/live-music/#faq',
+          '/dj-faq': '/dj/#faq',
+          '/events': '/live-music/#events',
+          '/home': '/',
         }
         var path = location.pathname.replace(/\/index\.html$/, '').replace(/\/+$/, '') || '/'
         if (path === '/planner' || path.indexOf('/planner/') === 0) return
@@ -42,7 +43,7 @@
             .catch(function () { location.replace('/') })
           return
         }
-        var target = aliases[path] || (pages[path] ? path : '/')
+        var target = aliases[path] || (pages[path] ? (path === '/' ? '/' : path + '/') : '/')
         var meta = document.createElement('meta')
         meta.httpEquiv = 'refresh'
         meta.content = '0; url=' + target

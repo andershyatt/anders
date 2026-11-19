@@ -82,7 +82,7 @@ export default function PhotoBooth() {
         </ul>
 
         <div className="cta-row">
-          <Link to="/connect" className="cta-btn">
+          <Link to="/connect/" className="cta-btn">
             Get a Quote
           </Link>
         </div>

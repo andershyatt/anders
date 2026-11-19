@@ -14,28 +14,36 @@ interface NavDropdown {
 }
 
 const liveMusicDropdown: NavLink[] = [
-  { label: 'General', to: '/live-music' },
-  { label: 'Live Song List', to: '/song-list' },
-  { label: 'Duo - Ben', to: '/duo-ben' },
-  { label: 'Duo - Angella', to: '/duo-angella' },
-  { label: 'The Trio', to: '/trio' },
+  { label: 'General', to: '/live-music/' },
+  { label: 'Live Song List', to: '/song-list/' },
+  { label: 'Duo - Ben', to: '/duo-ben/' },
+  { label: 'Duo - Angella', to: '/duo-angella/' },
+  { label: 'The Trio', to: '/trio/' },
 ]
 
 const topLinks: (NavLink | NavDropdown)[] = [
   { label: 'Home', to: '/' },
   { label: 'Live Music', items: liveMusicDropdown },
-  { label: 'DJ', to: '/dj' },
-  { label: 'Photo Booth', to: '/photo-booth' },
-  { label: 'Connect', to: '/connect' },
+  { label: 'DJ', to: '/dj/' },
+  { label: 'Photo Booth', to: '/photo-booth/' },
+  { label: 'Connect', to: '/connect/' },
 ]
 
 function isDropdown(item: NavLink | NavDropdown): item is NavDropdown {
   return 'items' in item
 }
 
+function pathOnly(value: string): string {
+  const path = value.split('#')[0].split('?')[0]
+  if (path.length > 1 && path.endsWith('/')) return path.replace(/\/+$/, '')
+  return path
+}
+
 function isActive(pathname: string, to: string): boolean {
-  if (to === '/') return pathname === '/'
-  return pathname === to || pathname.startsWith(`${to}/`)
+  const path = pathOnly(pathname)
+  const target = pathOnly(to)
+  if (target === '/') return path === '/'
+  return path === target || path.startsWith(`${target}/`)
 }
 
 function isDropdownActive(pathname: string, to: string | undefined, items: NavLink[]): boolean {
