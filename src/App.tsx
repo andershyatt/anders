@@ -13,14 +13,14 @@ import Connect from './pages/Connect'
 import Playlist from './pages/Playlist'
 
 const LEGACY_HASH: Record<string, string> = {
-  '/songlist': '/song-list',
-  '/playlist': '/song-list',
-  '/faq': '/live-music#faq',
-  '/dj-faq': '/dj#faq',
-  '/events': '/live-music#events',
+  '/songlist': '/song-list/',
+  '/playlist': '/song-list/',
+  '/faq': '/live-music/#faq',
+  '/dj-faq': '/dj/#faq',
+  '/events': '/live-music/#events',
 }
 
-/** Old /#/route links, and GitHub's trailing slash on directory pages. */
+/** Old /#/route links, and paths missing the directory trailing slash. */
 function CleanUrls() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -35,10 +35,8 @@ function CleanUrls() {
       navigate(LEGACY_HASH[path] ?? `${path}${anchor}`, { replace: true })
       return
     }
-    if (location.pathname.length > 1 && location.pathname.endsWith('/')) {
-      navigate(`${location.pathname.replace(/\/+$/, '')}${location.search}${location.hash}`, {
-        replace: true,
-      })
+    if (location.pathname.length > 1 && !location.pathname.endsWith('/')) {
+      navigate(`${location.pathname}/${location.search}${location.hash}`, { replace: true })
     }
   }, [location, navigate])
 
@@ -84,13 +82,13 @@ export default function App() {
           <Route path="duo-angella" element={<DuoAngella />} />
           <Route path="duo-ben" element={<DuoBen />} />
           <Route path="trio" element={<Trio />} />
-          <Route path="faq" element={<Navigate to="/live-music#faq" replace />} />
+          <Route path="faq" element={<Navigate to="/live-music/#faq" replace />} />
           <Route path="song-list" element={<Playlist />} />
-          <Route path="playlist" element={<Navigate to="/song-list" replace />} />
-          <Route path="songlist" element={<Navigate to="/song-list" replace />} />
+          <Route path="playlist" element={<Navigate to="/song-list/" replace />} />
+          <Route path="songlist" element={<Navigate to="/song-list/" replace />} />
           <Route path="dj" element={<Dj />} />
-          <Route path="dj-faq" element={<Navigate to="/dj#faq" replace />} />
-          <Route path="events" element={<Navigate to="/live-music#events" replace />} />
+          <Route path="dj-faq" element={<Navigate to="/dj/#faq" replace />} />
+          <Route path="events" element={<Navigate to="/live-music/#events" replace />} />
           <Route path="photo-booth" element={<PhotoBooth />} />
           <Route path="connect" element={<Connect />} />
         </Route>

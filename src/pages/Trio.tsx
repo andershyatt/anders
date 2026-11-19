@@ -43,13 +43,13 @@ export default function Trio() {
       </div>
 
       <div className="cta-row cta-row--wide">
-        <Link to="/connect" className="cta-btn">
+        <Link to="/connect/" className="cta-btn">
           Get a Quote
         </Link>
-        <Link to="/duo-angella" className="cta-btn">
+        <Link to="/duo-angella/" className="cta-btn">
           Duo &mdash; Anders &amp; Angella
         </Link>
-        <Link to="/duo-ben" className="cta-btn">
+        <Link to="/duo-ben/" className="cta-btn">
           Duo &mdash; Anders &amp; Ben
         </Link>
       </div>

@@ -2,5 +2,7 @@ User-agent: *
 Disallow: /planner/
 Disallow: /pipeline/
 
+Sitemap: https://andershyattmusic.com/sitemap.xml
+
 # Served at https://andershyattmusic.com/robots.txt once the custom domain is live.
 # The planner page also sends a noindex, nofollow meta tag.

@@ -34,18 +34,24 @@ const defaultMeta: RouteMeta = { hero: 'guitar' }
 
 const songListPaths = new Set(['/song-list', '/songlist', '/playlist'])
 
+function pathKey(pathname: string): string {
+  if (pathname.length > 1 && pathname.endsWith('/')) return pathname.replace(/\/+$/, '')
+  return pathname
+}
+
 export default function SiteLayout() {
   const { pathname, hash } = useLocation()
-  const meta = routeMeta[pathname] ?? defaultMeta
+  const path = pathKey(pathname)
+  const meta = routeMeta[path] ?? defaultMeta
 
   useEffect(() => {
-    if (!songListPaths.has(pathname) || !meta.title) return
+    if (!songListPaths.has(path) || !meta.title) return
     const previous = document.title
     document.title = `${meta.title} · Anders Hyatt Music`
     return () => {
       document.title = previous
     }
-  }, [pathname, meta.title])
+  }, [path, meta.title])
 
   useLayoutEffect(() => {
     const id = decodeURIComponent(hash.replace(/^#/, ''))
@@ -71,7 +77,7 @@ export default function SiteLayout() {
     return () => window.cancelAnimationFrame(frame)
   }, [pathname, hash])
 
-  const isHome = pathname === '/'
+  const isHome = path === '/'
 
   return (
     <div className={`site-layout${isHome ? ' site-layout--home' : ''}`}>
@@ -87,7 +93,7 @@ export default function SiteLayout() {
             <SocialBar variant="hero" />
           </div>
         </header>
-      ) : pathname === '/photo-booth' ? null : (
+      ) : path === '/photo-booth' ? null : (
         <HeroBanner variant={meta.hero} title={meta.title} subtitle={meta.subtitle} />
       )}
       <main className="site-main">

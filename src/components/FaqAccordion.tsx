@@ -50,7 +50,7 @@ export default function FaqAccordion({
           <div className="faq-accordion__cta">
             <p>Don&apos;t see the answer to your question?</p>
             <div className="cta-row">
-              <Link to="/connect" className="cta-btn">
+              <Link to="/connect/" className="cta-btn">
                 Ask Anders directly
               </Link>
             </div>
@@ -58,7 +58,7 @@ export default function FaqAccordion({
         ) : (
           <p className="faq-accordion__cta">
             Don&apos;t see the answer to your question?{' '}
-            <Link to="/connect">Ask Anders directly!</Link>
+            <Link to="/connect/">Ask Anders directly!</Link>
           </p>
         ))}
     </div>

@@ -32,7 +32,7 @@ export default function EventsSection() {
         <a className="cta-btn" href={socialLinks.facebook} target="_blank" rel="noopener noreferrer">
           Facebook
         </a>
-        <Link to="/song-list" className="cta-btn">
+        <Link to="/song-list/" className="cta-btn">
           Send Song Requests
         </Link>
       </div>
