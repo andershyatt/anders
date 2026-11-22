@@ -1095,7 +1095,6 @@
 
 .planner-section-box--sub {
   margin-left: 0.85rem;
-  width: calc(100% - 0.85rem);
   padding-top: 0.55rem;
   padding-bottom: 0.55rem;
   font-weight: 600;
@@ -1136,6 +1135,14 @@
 
 .planner-section-box.is-current {
   box-shadow: inset 0 0 0 2px currentColor;
+}
+
+.planner-section-box.planner-section-box--sub {
+  width: calc(100% - 0.85rem);
+}
+
+.planner-section-box--heading {
+  cursor: default;
 }
 
 .planner-section-box__pct {
@@ -1209,7 +1216,11 @@
     grid-row: 2;
     position: sticky;
     top: 5.5rem;
+    align-self: start;
+    max-height: calc(100svh - 5.5rem - 6.25rem - env(safe-area-inset-bottom));
     margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .planner-section.is-selected {

@@ -831,6 +831,7 @@ export interface ProgressCount {
 /** Notes, fade timestamps, optional free text, and "Anders chooses" checks do not count. */
 export function fieldCountsTowardProgress(field: PlannerField): boolean {
   if (field.kind === 'fold' || field.kind === 'floorplan' || field.kind === 'check') return false
+  if (field.key === 'Do not play songs') return true
   const label = field.label.trim().toLowerCase().replace(/\s+/g, ' ')
   if (label === 'notes' || label === 'additional notes') return false
   if (label.includes('specific timestamp')) return false
@@ -884,6 +885,36 @@ export function songListStat(
     count: parseCocktailSongs(answers[songs[0].key] ?? '', limit).length,
     limit,
   }
+}
+
+/** Slow dances and do-not-play stay a percent. Other song lists show the count beside it. */
+export function hidesSongCount(title: string): boolean {
+  return title === 'Slow Dance Songs' || title === 'Do Not Play'
+}
+
+/** A saved song-picker list, shown as one plain line per song. Other text stays as written. */
+export function songListAsPlainText(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed.startsWith('[')) return raw
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(trimmed)
+  } catch {
+    return raw
+  }
+  if (!Array.isArray(parsed)) return raw
+  const songs = parseCocktailSongs(trimmed, 500)
+  if (songs.length === 0) return ''
+  return songs.map((song) => (song.artist ? `${song.title} – ${song.artist}` : song.title)).join('\n')
+}
+
+/** Do Not Play used to be a song search. Keep those picks as text in the notes box. */
+export function applyPlainSongLists(fields: Record<string, string>): Record<string, string> {
+  const key = 'Do not play songs'
+  const current = fields[key] ?? ''
+  const next = songListAsPlainText(current)
+  if (next === current) return fields
+  return { ...fields, [key]: next }
 }
 
 export function progressTone(count: Pick<ProgressCount, 'answered' | 'total'>): ProgressTone {
