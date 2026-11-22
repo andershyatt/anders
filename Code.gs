@@ -15,7 +15,7 @@ var PLANNER_SHEET = 'Planner';
 
 var COUPLES_HEADERS = ['Token', 'Couple Names', 'Event Date', 'Venue', 'Planner Link', 'Created', 'Last Updated', 'Status',
   'Live music', 'DJ', 'Photo booth',
-  'Event Type', 'Venue Address', 'Start Time', 'Length of Service', 'Guest Count', 'Who did you book?', 'Known venue', 'Gender neutral', 'Booking status', 'Updated by'];
+  'Event Type', 'Venue Address', 'Start Time', 'Length of Service', 'Guest Count', 'Who did you book?', 'Known venue', 'Gender neutral', 'Booking status', 'Updated by', 'Lock override'];
 var PLANNER_FIELDS = [
   'Couple photo', 'Names', 'Event type', 'Event date', 'Venue', 'Venue address', 'Start time', 'Length of service',
   'Guest count', 'Who did you book?', 'Wedding website', 'Wedding website password', 'Social media permission', 'IG handle',
@@ -170,7 +170,8 @@ function findCouple_(token) {
       venueQuestions: norm_(get('Known venue')) === 'no' || norm_(get('Known venue')) === 'n' || norm_(get('Known venue')) === 'false' },
     genderNeutral: norm_(get('Gender neutral')) === 'yes',
     bookingStatus: bookingStage_(get('Booking status')),
-    knownVenue: !(norm_(get('Known venue')) === 'no' || norm_(get('Known venue')) === 'n' || norm_(get('Known venue')) === 'false')
+    knownVenue: !(norm_(get('Known venue')) === 'no' || norm_(get('Known venue')) === 'n' || norm_(get('Known venue')) === 'false'),
+    lockOverride: norm_(get('Lock override')) === 'unlocked' ? 'Unlocked' : ''
   };
 }
 
@@ -225,6 +226,7 @@ function loadResponse_(token) {
       genderNeutral: couple.genderNeutral === true,
       bookingStatus: bookingStage_(couple.bookingStatus),
       knownVenue: couple.knownVenue === true,
+      lockOverride: couple.lockOverride === 'Unlocked' ? 'Unlocked' : '',
       lastUpdated: lastUpdated
     });
   } catch (err) {
@@ -258,7 +260,7 @@ function doPost(e) {
       var lockDate = couple.date instanceof Date ? Utilities.formatDate(couple.date, 'America/New_York', 'yyyy-MM-dd') : String(couple.date || '').trim();
       var lockedOn = lockoutIso_(lockDate);
       var today = Utilities.formatDate(new Date(), 'America/New_York', 'yyyy-MM-dd');
-      if (lockedOn && today >= lockedOn) return json_({ ok: false, error: 'locked' });
+      if (couple.lockOverride !== 'Unlocked' && lockedOn && today >= lockedOn) return json_({ ok: false, error: 'locked' });
     }
     var incoming = (body.fields && typeof body.fields === 'object') ? body.fields : {};
 
@@ -519,6 +521,52 @@ function sendDigestNow() {
   sendDailyDigest_(true);
 }
 
+function digestEscape_(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function digestDate_(value) {
+  var ymd = ymd_(value);
+  var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+  if (!match) return String(value || '').trim();
+  var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return months[Number(match[2]) - 1] + ' ' + Number(match[3]) + ', ' + match[1];
+}
+
+function coupleDigestMeta_() {
+  var map = {};
+  var sh = couplesSheet_();
+  var headers = headerRow_(sh);
+  var tokenCol = headers.indexOf('Token');
+  var nameCol = headers.indexOf('Couple Names');
+  var dateCol = headers.indexOf('Event Date');
+  var slugCol = headers.indexOf(SHORT_LINK_HEADER);
+  if (tokenCol < 0 || sh.getLastRow() < 2) return map;
+  var values = sh.getRange(2, 1, sh.getLastRow() - 1, headers.length).getValues();
+  var display = sh.getRange(2, 1, sh.getLastRow() - 1, headers.length).getDisplayValues();
+  for (var i = 0; i < values.length; i++) {
+    var token = String(values[i][tokenCol] || '').trim();
+    if (!token) continue;
+    var slug = slugCol >= 0 ? String(values[i][slugCol] || '').trim() : '';
+    map[token.toLowerCase()] = {
+      name: nameCol >= 0 ? String(values[i][nameCol] || '').trim() : '',
+      date: dateCol >= 0 ? digestDate_(dayOf_(values[i][dateCol], display[i][dateCol])) : '',
+      planner: slug
+        ? 'https://andershyattmusic.com/' + slug
+        : 'https://andershyattmusic.com/planner/?c=' + encodeURIComponent(token)
+    };
+  }
+  return map;
+}
+
+function digestStamp_(when) {
+  return when instanceof Date ? Utilities.formatDate(when, 'America/New_York', 'MMM d, yyyy h:mm a') : String(when || '');
+}
+
 function sendDailyDigest_(force) {
   try {
     var sh = ensureHeaders_(sheet_(CHANGE_LOG_SHEET, CHANGE_HEADERS), CHANGE_HEADERS);
@@ -533,32 +581,120 @@ function sendDailyDigest_(force) {
       var token = String(values[i][1] || '').trim();
       if (!token) continue;
       if (!groups[token]) {
-        groups[token] = { name: String(values[i][2] || token), lines: [], sections: {} };
+        groups[token] = { name: String(values[i][2] || token), changes: [] };
         order.push(token);
       }
       var place = placeFor_(String(values[i][4] || ''));
-      var placeLabel = place.section + ' › ' + place.subsection;
-      groups[token].sections[placeLabel] = true;
-      var stamp = when instanceof Date ? Utilities.formatDate(when, 'America/New_York', 'yyyy-MM-dd HH:mm') : String(when);
-      groups[token].lines.push('  ' + stamp + ' · ' + values[i][3] + ' · ' + placeLabel + '\n    was: ' + clipChange_(values[i][5]) + '\n    now: ' + clipChange_(values[i][6]));
+      groups[token].changes.push({
+        time: time,
+        stamp: digestStamp_(when),
+        by: String(values[i][3] || '').trim() || 'someone',
+        section: place.section,
+        subsection: place.subsection,
+        field: String(values[i][4] || '').trim(),
+        before: clipChange_(values[i][5]),
+        after: clipChange_(values[i][6])
+      });
     }
     if (!order.length) {
       if (sh.getLastRow() >= 2) pruneChangeLog_(sh);
       if (!force) return;
     }
-    var plannerUrls = plannerUrlsByToken_();
-    order.sort(function (a, b) { return groups[a].name.localeCompare(groups[b].name); });
-    var body = order.length
-      ? order.map(function (token) {
-          var sections = Object.keys(groups[token].sections).join(', ');
-          var planner = plannerUrls[token.toLowerCase()] || ('https://andershyattmusic.com/planner/?c=' + encodeURIComponent(token));
-          return groups[token].name + ' (' + token + ')\nPlanner: ' + planner + '\nChanged: ' + sections + '\n' + groups[token].lines.join('\n');
-        }).join('\n\n')
-      : 'No planner changes in the last 24 hours. This is a test of the daily digest.';
+    var meta = coupleDigestMeta_();
+    var sheetUrl = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/edit';
+    order.sort(function (a, b) {
+      var left = (meta[a.toLowerCase()] && meta[a.toLowerCase()].name) || groups[a].name;
+      var right = (meta[b.toLowerCase()] && meta[b.toLowerCase()].name) || groups[b].name;
+      return left.localeCompare(right);
+    });
+    var textBlocks = [];
+    var htmlBlocks = [];
+    order.forEach(function (token) {
+      var info = meta[token.toLowerCase()] || {};
+      var name = info.name || groups[token].name || token;
+      var date = info.date || '';
+      var planner = info.planner || ('https://andershyattmusic.com/planner/?c=' + encodeURIComponent(token));
+      var changes = groups[token].changes.slice().sort(function (a, b) {
+        var section = a.section.localeCompare(b.section);
+        if (section) return section;
+        var sub = a.subsection.localeCompare(b.subsection);
+        if (sub) return sub;
+        return a.time - b.time;
+      });
+      var who = {};
+      var latest = '';
+      var latestTime = 0;
+      changes.forEach(function (change) {
+        who[change.by] = true;
+        if (change.time >= latestTime) {
+          latestTime = change.time;
+          latest = change.stamp;
+        }
+      });
+      var whoList = Object.keys(who).join(', ');
+      var lines = [
+        name + (date ? ' — ' + date : ''),
+        'Token: ' + token,
+        'Planner: ' + planner,
+        'Sheet: ' + sheetUrl,
+        'Changed by: ' + whoList,
+        'Latest change: ' + latest,
+        ''
+      ];
+      var html = [
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;background:#fffdf8;border:1px solid #e4d8c8;border-radius:12px;">',
+        '<tr><td style="padding:16px 16px 8px;font-family:Georgia,serif;">',
+        '<div style="font-size:20px;line-height:1.3;color:#1c1916;font-weight:700;">' + digestEscape_(name) + '</div>',
+        date ? '<div style="margin-top:2px;font-size:14px;color:#6f655b;">' + digestEscape_(date) + '</div>' : '',
+        '<div style="margin-top:4px;font-size:12px;color:#8a7d72;">' + digestEscape_(token) + '</div>',
+        '</td></tr>',
+        '<tr><td style="padding:0 16px 8px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45;">',
+        '<div><a href="' + digestEscape_(planner) + '" style="color:#4e5c41;">Open planner</a></div>',
+        '<div><a href="' + digestEscape_(sheetUrl) + '" style="color:#4e5c41;">Open sheet</a></div>',
+        '<div style="margin-top:6px;color:#3c342c;">Changed by ' + digestEscape_(whoList) + '</div>',
+        '<div style="color:#6f655b;">Latest change ' + digestEscape_(latest) + '</div>',
+        '</td></tr>'
+      ];
+      var currentSection = '';
+      var currentSub = '';
+      changes.forEach(function (change) {
+        if (change.section !== currentSection) {
+          currentSection = change.section;
+          currentSub = '';
+          lines.push(change.section);
+          html.push('<tr><td style="padding:10px 16px 2px;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#4e5c41;">' + digestEscape_(change.section) + '</td></tr>');
+        }
+        if (change.subsection !== currentSub) {
+          currentSub = change.subsection;
+          lines.push('  ' + change.subsection);
+          html.push('<tr><td style="padding:6px 16px 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#1c1916;">' + digestEscape_(change.subsection) + '</td></tr>');
+        }
+        lines.push('    ' + change.field + ': ' + change.after);
+        lines.push('    was: ' + change.before);
+        lines.push('    ' + change.by + ' · ' + change.stamp);
+        html.push(
+          '<tr><td style="padding:4px 16px 8px 24px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.4;color:#3c342c;">' +
+          '<div><strong>' + digestEscape_(change.field) + ':</strong> ' + digestEscape_(change.after) + '</div>' +
+          '<div style="color:#6f655b;font-size:13px;">was: ' + digestEscape_(change.before) + '</div>' +
+          '<div style="color:#8a7d72;font-size:12px;">' + digestEscape_(change.by) + ' · ' + digestEscape_(change.stamp) + '</div>' +
+          '</td></tr>'
+        );
+      });
+      html.push('</table>');
+      textBlocks.push(lines.join('\n'));
+      htmlBlocks.push(html.join(''));
+    });
+    var text = order.length
+      ? textBlocks.join('\n\n') + '\n\nOpen the sheet: ' + sheetUrl
+      : 'No planner changes in the last 24 hours. This is a test of the daily digest.\n\nOpen the sheet: ' + sheetUrl;
+    var htmlBody = order.length
+      ? '<div style="margin:0;padding:16px;background:#f4efe7;">' + htmlBlocks.join('') + '</div>'
+      : '<div style="margin:0;padding:16px;background:#f4efe7;font-family:Helvetica,Arial,sans-serif;color:#3c342c;">No planner changes in the last 24 hours. This is a test of the daily digest.<br><br><a href="' + digestEscape_(sheetUrl) + '">Open the sheet</a></div>';
     MailApp.sendEmail({
       to: NOTIFY_EMAIL,
       subject: force && !order.length ? 'Planner digest test' : 'Planner changes in the last 24 hours',
-      body: body + '\n\nOpen the sheet: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/edit'
+      body: text,
+      htmlBody: htmlBody
     });
     if (sh.getLastRow() >= 2) pruneChangeLog_(sh);
   } catch (err) {
@@ -1292,6 +1428,7 @@ function coupleSummary_(get, txt, date) {
     lastSections: String(get(LAST_SECTIONS_HEADER) || '').trim(),
     genderNeutral: norm_(get('Gender neutral')) === 'yes',
     knownVenue: !(norm_(get('Known venue')) === 'no' || norm_(get('Known venue')) === 'n' || norm_(get('Known venue')) === 'false'),
+    lockOverride: norm_(get('Lock override')) === 'unlocked' ? 'Unlocked' : '',
     photo: '',
     lastUpdated: updatedStamp_(get('Last Updated')),
     updatedBy: who === 'Anders' || who === 'couple' ? who : ''
@@ -1433,6 +1570,12 @@ function adminSetStatus_(body) {
       sh.getRange(couple.row, guestCol + 1).setNumberFormat('@');
       sh.getRange(couple.row, guestCol + 1).setValue(clean(body.guestCount, 50));
     }
+  }
+  if (body.lockOverride != null) {
+    ensureHeaders_(sh, ['Lock override']);
+    headers = headerRow_(sh);
+    var lockCol = headers.indexOf('Lock override');
+    if (lockCol >= 0) sh.getRange(couple.row, lockCol + 1).setValue(norm_(body.lockOverride) === 'unlocked' ? 'Unlocked' : '');
   }
   var updated = headers.indexOf('Last Updated');
   var by = headers.indexOf('Updated by');

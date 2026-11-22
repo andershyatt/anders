@@ -205,6 +205,23 @@ export const PHOTO_BOOTH_ITEMS: BoothItem[] = [
 
 export const PHOTO_BOOTH_FIELDS = PHOTO_BOOTH_ITEMS.filter((item): item is BoothField => item.kind === 'field')
 
+/** Optional write-in boxes do not count. Choices and short answers do. */
+export function photoBoothProgress(
+  fields: Record<string, string>,
+  knownVenue: boolean,
+): { answered: number; total: number; percent: number } {
+  const questions = PHOTO_BOOTH_FIELDS.filter(
+    (field) => (knownVenue ? !field.newVenue : true) && field.input !== 'textarea',
+  )
+  const answered = questions.filter((field) => (fields[field.key] ?? '').trim() !== '').length
+  const total = questions.length
+  return {
+    answered,
+    total,
+    percent: total === 0 ? 100 : Math.round((answered / total) * 100),
+  }
+}
+
 export const RETIRED_PHOTO_BOOTH_KEYS = [
   'Photo Booth start/end',
   'Photo Booth backdrop',

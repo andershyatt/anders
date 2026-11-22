@@ -38,6 +38,7 @@ export function coupleLocallyEdited(local: PipelineCouple, baseline: PipelineCou
     local.bookingStatus !== baseline.bookingStatus ||
     local.services.live !== baseline.services.live ||
     local.services.dj !== baseline.services.dj ||
-    local.services.photobooth !== baseline.services.photobooth
+    local.services.photobooth !== baseline.services.photobooth ||
+    (local.lockOverride ?? '') !== (baseline.lockOverride ?? '')
   )
 }

@@ -24,6 +24,8 @@ export interface PlannerLoadSuccess {
   genderNeutral: boolean
   /** Couples-sheet value. Not a planner field. */
   bookingStatus: string
+  /** "Unlocked" when Anders has overridden the 7-day lock. Blank uses the date. */
+  lockOverride: '' | 'Unlocked'
   lastUpdated?: string | number
 }
 
@@ -154,6 +156,7 @@ function parseLoad(value: unknown): PlannerLoadResult | null {
     floorPlan: parseFloorPlan(record.floorPlan),
     genderNeutral: record.genderNeutral === true,
     bookingStatus: bookingStatusText(record.bookingStatus),
+    lockOverride: record.lockOverride === 'Unlocked' ? 'Unlocked' : '',
     lastUpdated:
       typeof lastUpdated === 'string' || typeof lastUpdated === 'number' ? lastUpdated : undefined,
   }

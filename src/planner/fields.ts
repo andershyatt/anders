@@ -12,7 +12,7 @@ import {
   liveOnlyReception,
 } from './liveDj'
 import { parseChecks, serializeChecks } from './checks'
-import { PHOTO_BOOTH_FIELDS } from './photoBooth'
+import { PHOTO_BOOTH_FIELDS, photoBoothProgress } from './photoBooth'
 import type { SuggestionListId } from './suggestions'
 
 export type FieldKind =
@@ -153,7 +153,7 @@ export const plannerSections: PlannerSection[] = [
   {
     id: 'vendors',
     title: 'Vendors',
-    blurb: 'Who else is on site, in case Anders needs to coordinate.',
+    blurb: 'Who else is on your vendor team, in case Anders needs to coordinate.',
     fields: [
       {
         key: 'Planner (name/contact)',
@@ -817,28 +817,85 @@ const FOLDED_ANSWER: Record<string, string> = {
   'Introductions happening': 'Introductions section',
 }
 
-const PROGRESS_SKIP = new Set([
-  'Cocktail hour Anders chooses',
-  'Dinner Anders chooses',
-  'Open dancing Anders chooses',
-  'Reception music Anders chooses',
-])
+export type ProgressTone = 'empty' | 'partial' | 'complete'
 
-/** Share of visible questions that have an answer. Declined or removed sections are already hidden. */
-export function answeredProgress(sections: PlannerSection[], fields: Record<string, string>): number {
+export interface ProgressCount {
+  answered: number
+  total: number
+  percent: number
+}
+
+/** Notes, fade timestamps, optional free text, and "Anders chooses" checks do not count. */
+export function fieldCountsTowardProgress(field: PlannerField): boolean {
+  if (field.kind === 'fold' || field.kind === 'floorplan' || field.kind === 'check') return false
+  const label = field.label.trim().toLowerCase().replace(/\s+/g, ' ')
+  if (label === 'notes' || label === 'additional notes') return false
+  if (label.includes('specific timestamp')) return false
+  if (field.kind === 'textarea' && field.song !== 'list' && field.key !== 'Timeline') return false
+  return true
+}
+
+function percentOf(answered: number, total: number): number {
+  if (total === 0) return 100
+  return Math.round((answered / total) * 100)
+}
+
+export function tallyPlannerFields(list: readonly PlannerField[], answers: Record<string, string>): ProgressCount {
   let total = 0
   let answered = 0
-  for (const section of sections) {
-    for (const field of section.fields) {
-      if (field.kind === 'fold' || field.kind === 'floorplan' || field.kind === 'check' || PROGRESS_SKIP.has(field.key)) {
-        continue
-      }
-      total += 1
-      if ((fields[field.key] ?? '').trim() !== '') answered += 1
-    }
+  for (const field of list) {
+    if (!fieldCountsTowardProgress(field)) continue
+    total += 1
+    if ((answers[field.key] ?? '').trim() !== '') answered += 1
   }
-  if (total === 0) return 0
-  return Math.round((answered / total) * 100)
+  return { answered, total, percent: percentOf(answered, total) }
+}
+
+export function sectionProgress(
+  section: PlannerSection,
+  answers: Record<string, string>,
+  knownVenue = false,
+): ProgressCount {
+  if (section.id === 'basics') return { answered: 0, total: 0, percent: 100 }
+  if (section.id === 'photo-booth') return photoBoothProgress(answers, knownVenue)
+  return tallyPlannerFields(section.fields, answers)
+}
+
+export function progressTone(count: Pick<ProgressCount, 'answered' | 'total'>): ProgressTone {
+  if (count.total === 0 || count.answered >= count.total) return 'complete'
+  if (count.answered === 0) return 'empty'
+  return 'partial'
+}
+
+/** Share of visible required questions that have an answer. Declined or removed sections are already hidden. */
+export function answeredProgress(
+  sections: PlannerSection[],
+  fields: Record<string, string>,
+  knownVenue = false,
+): number {
+  let answered = 0
+  let total = 0
+  for (const section of sections) {
+    const tally = sectionProgress(section, fields, knownVenue)
+    answered += tally.answered
+    total += tally.total
+  }
+  return percentOf(answered, total)
+}
+
+export function plannerProgressCount(
+  sections: PlannerSection[],
+  fields: Record<string, string>,
+  knownVenue = false,
+): ProgressCount {
+  let answered = 0
+  let total = 0
+  for (const section of sections) {
+    const tally = sectionProgress(section, fields, knownVenue)
+    answered += tally.answered
+    total += tally.total
+  }
+  return { answered, total, percent: percentOf(answered, total) }
 }
 
 export function subsectionId(sectionId: string, fieldKey: string): string {

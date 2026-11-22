@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import BoothGallery from './BoothGallery'
 import CheckAll from './CheckAll'
 import HalfHourTime from './HalfHourTime'
-import { PHOTO_BOOTH_ITEMS, type BoothField } from './photoBooth'
+import { PHOTO_BOOTH_ITEMS, photoBoothProgress, type BoothField } from './photoBooth'
 import { boothImage } from './photoBoothImages'
 
 interface PhotoBoothPanelProps {
@@ -141,16 +141,17 @@ export default function PhotoBoothPanel({ knownVenue, fields, locked, onChange }
     else setOpen(false)
   }
 
-  const questions = itemsFor(knownVenue).filter((item) => item.kind === 'field')
-  const answered = questions.filter((item) => (fields[item.key] ?? '').trim() !== '').length
-  const progress = questions.length === 0 ? 0 : Math.round((answered / questions.length) * 100)
+  const booth = photoBoothProgress(fields, knownVenue)
+  const progress = booth.percent
+  const answered = booth.answered
+  const questionCount = booth.total
 
   return (
     <div className="planner-booth">
       <div className="planner-booth__progress" aria-label={`${progress} percent of the photo booth questionnaire`}>
         <div className="planner-booth__fill" style={{ width: `${progress}%` }} />
         <span>
-          {answered} of {questions.length} answered
+          {answered} of {questionCount} answered
         </span>
       </div>
       <button type="button" className="planner-songcompact__open" onClick={openForm}>

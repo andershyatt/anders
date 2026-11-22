@@ -43,5 +43,5 @@ export function coupleProgress(couple: PipelineCouple): number | null {
   const choices = cocktailMusicChoices(services)
   if (choices.length === 1) fields['Cocktail hour music type'] = choices[0]
   fields = applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(fields, services), services)
-  return answeredProgress(applyRemovedSections(visibleSections(services, fields), fields), fields)
+  return answeredProgress(applyRemovedSections(visibleSections(services, fields), fields), fields, services.knownVenue)
 }

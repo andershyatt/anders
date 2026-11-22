@@ -151,7 +151,9 @@ export function todayInNewYork(now = new Date()): string {
   }).format(now)
 }
 
-export function plannerLocked(eventDate: string, now = new Date()): boolean {
+/** A Couples-sheet "Lock override" of Unlocked keeps the planner open inside the 7-day window. */
+export function plannerLocked(eventDate: string, now = new Date(), override = ''): boolean {
+  if (override.trim().toLowerCase() === 'unlocked') return false
   const lock = lockoutDate(eventDate)
   if (!lock) return false
   return todayInNewYork(now) >= lock

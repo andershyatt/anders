@@ -23,7 +23,9 @@ import {
   visibleSections,
   usesDjOnlyTemplate,
   usesLiveOnlyTemplate,
-  answeredProgress,
+  plannerProgressCount,
+  progressTone,
+  sectionProgress,
   DJ_POWER_OPTION,
   LIVE_POWER_OPTION,
   MUSICIAN_POWER_OPTION,
@@ -182,11 +184,13 @@ function BasicsCard({
   services,
   status,
   eventDate,
+  lockOverride,
 }: {
   basics: PlannerBasics
   services: BookedServices
   status: string
   eventDate: string
+  lockOverride: string
 }) {
   const rows = [
     { label: 'Names', value: basics.names },
@@ -203,7 +207,7 @@ function BasicsCard({
     {
       label: 'Lockout',
       value: lockoutDate(eventDate)
-        ? `${formatCoupleDate(lockoutDate(eventDate))} · ${plannerLocked(eventDate) ? '🔒 Locked' : '🔓 Unlocked'}`
+        ? `${formatCoupleDate(lockoutDate(eventDate))} · ${plannerLocked(eventDate, undefined, lockOverride) ? '🔒 Locked' : '🔓 Unlocked'}`
         : '',
     },
   ].filter((row) => row.value.trim() !== '')
@@ -591,6 +595,7 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
     timelinePdf: result.timelinePdf,
     genderNeutral: result.genderNeutral,
     bookingStatus: result.bookingStatus,
+    lockOverride: result.lockOverride,
     lastUpdated: result.lastUpdated,
   }
 }
@@ -605,6 +610,7 @@ export default function PlannerApp() {
   const [services, setServices] = useState<BookedServices>(cachedView?.services ?? previewServices ?? ALL_SERVICES)
   const [genderNeutral, setGenderNeutral] = useState(cachedView?.genderNeutral ?? false)
   const [bookingStatus, setBookingStatus] = useState(cachedView?.bookingStatus ?? '')
+  const [lockOverride, setLockOverride] = useState<'' | 'Unlocked'>(cachedView?.lockOverride ?? '')
   const [songNotices, setSongNotices] = useState<Record<string, { kind: 'text'; text: string } | { kind: 'picker'; options: string[] }>>({})
   const [basics, setBasics] = useState<PlannerBasics>(cachedView?.basics ?? EMPTY_BASICS)
   const [fields, setFields] = useState<Record<string, string>>(() => cachedView?.fields ?? emptyFields(plannerFieldKeys))
@@ -677,6 +683,7 @@ export default function PlannerApp() {
       setServices(view.services)
       setGenderNeutral(view.genderNeutral)
       setBookingStatus(view.bookingStatus)
+      setLockOverride(view.lockOverride)
       setLastUpdated(view.lastUpdated)
       setStatus({ kind: 'ready' })
     })
@@ -818,7 +825,7 @@ export default function PlannerApp() {
   )
 
   const onSave = useCallback(async () => {
-    if (!token || saving || plannerLocked(basics.date)) return
+    if (!token || saving || plannerLocked(basics.date, undefined, lockOverride)) return
     setSaving(true)
     setSaveFailed(false)
     setSaveMessage('')
@@ -837,7 +844,7 @@ export default function PlannerApp() {
     setLastUpdated(savedAt)
     updatePlannerCacheFields(token, fields, savedAt)
     setSaveMessage('Saved')
-  }, [basics.date, fields, genderNeutral, saving, services, token])
+  }, [basics.date, fields, genderNeutral, lockOverride, saving, services, token])
 
   const sections = useMemo(() => {
     const visible = visibleSections(services, fields, genderNeutral)
@@ -853,7 +860,53 @@ export default function PlannerApp() {
     () => parseRemovedSections(fields[COLLAPSED_SECTIONS_FIELD]),
     [fields],
   )
-  const progress = answeredProgress(shownSections, fields)
+  const progressCount = plannerProgressCount(shownSections, fields, services.knownVenue)
+  const progress = progressCount.percent
+  const progressLook = progressTone(progressCount)
+  const contentSections = useMemo(() => shownSections.filter((section) => section.id !== 'basics'), [shownSections])
+  const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches)
+  const [sectionId, setSectionId] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, '')))
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 900px)')
+    const onMedia = () => setWide(media.matches)
+    const onHash = () => setSectionId(decodeURIComponent(window.location.hash.replace(/^#/, '')))
+    media.addEventListener('change', onMedia)
+    window.addEventListener('hashchange', onHash)
+    window.addEventListener('popstate', onHash)
+    return () => {
+      media.removeEventListener('change', onMedia)
+      window.removeEventListener('hashchange', onHash)
+      window.removeEventListener('popstate', onHash)
+    }
+  }, [])
+  const selectedId = contentSections.some((section) => section.id === sectionId)
+    ? sectionId
+    : wide
+      ? (contentSections[0]?.id ?? '')
+      : ''
+  useEffect(() => {
+    if (!wide || status.kind !== 'ready' || contentSections.length === 0) return
+    if (contentSections.some((section) => section.id === sectionId)) return
+    const first = contentSections[0]?.id
+    if (!first) return
+    const nextHash = `#${encodeURIComponent(first)}`
+    if (window.location.hash === nextHash) return
+    window.history.replaceState({ plannerSection: first }, '', `${window.location.pathname}${window.location.search}${nextHash}`)
+  }, [contentSections, sectionId, status.kind, wide])
+  function selectSection(id: string) {
+    const url = `${window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`
+    if (wide) window.history.replaceState({ plannerSection: id }, '', url)
+    else window.history.pushState({ plannerSection: id }, '', url)
+    setSectionId(id)
+  }
+  function closeSection() {
+    if (window.history.state?.plannerSection) {
+      window.history.back()
+      return
+    }
+    window.history.pushState({}, '', `${window.location.pathname}${window.location.search}`)
+    setSectionId('')
+  }
   const savedLabel = formatSavedAt(lastUpdated)
   const [place, setPlace] = useState('')
   useEffect(() => {
@@ -863,10 +916,13 @@ export default function PlannerApp() {
       frame = 0
       const header = document.querySelector('.planner-top')
       const line = (header?.getBoundingClientRect().bottom ?? 0) + 4
-      let section = ''
+      const selectedHeading = document.querySelector('.planner-section.is-selected h2')
+      let section = selectedHeading?.textContent?.trim() ?? ''
       let sub = ''
-      for (const el of document.querySelectorAll('.planner-section h2, .planner-subhead')) {
-        if (el.getBoundingClientRect().top > line) break
+      for (const el of document.querySelectorAll('.planner-section.is-selected h2, .planner-section.is-selected .planner-subhead')) {
+        const rect = el.getBoundingClientRect()
+        if (rect.height === 0) continue
+        if (rect.top > line) break
         if (el.classList.contains('planner-subhead')) sub = el.textContent?.trim() ?? ''
         else {
           section = el.textContent?.trim() ?? ''
@@ -989,7 +1045,7 @@ export default function PlannerApp() {
 
 
             <form
-              className={`planner-form${plannerLocked(basics.date) ? ' is-locked' : ''}`}
+              className={`planner-form${plannerLocked(basics.date, undefined, lockOverride) ? ' is-locked' : ''}`}
               data-suggestions={suggestionsReady ? 'ready' : 'loading'}
               onSubmit={(event) => {
                 event.preventDefault()
@@ -1011,43 +1067,40 @@ export default function PlannerApp() {
                   </ul>
                 </section>
               )}
+              <div className="planner-layout">
               {shownSections.map((section) => {
-                const sectionCollapsed = collapsedIds.has(section.id)
                 const managed = MANAGED_SECTION_IDS.has(section.id)
                 let hideSubsection = false
                 return (
-                <section key={section.id} id={section.id} className={`planner-section${sectionCollapsed ? ' is-collapsed' : ''}`}>
+                <section key={section.id} id={section.id} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}`}>
                   <div className="planner-section__head">
+                    {!wide && section.id === selectedId && (
+                      <button type="button" className="planner-section__back" onClick={closeSection}>
+                        Back
+                      </button>
+                    )}
                     <h2>{section.title}</h2>
                     {managed && (
                       <div className="planner-section__tools">
-                        <button
-                          type="button"
-                          className="planner-section__toggle"
-                          aria-expanded={!sectionCollapsed}
-                          onClick={() => toggleCollapsed(section.id)}
-                        >
-                          {sectionCollapsed ? 'Expand' : 'Collapse'}
-                        </button>
                         <button type="button" onClick={() => removeManaged(section.id)}>
                           Remove
                         </button>
                       </div>
                     )}
                   </div>
-                  {!sectionCollapsed && section.blurb && (
+                  {section.blurb && (
                     <p className="planner-callout">
                       <span>{section.blurb}</span>
                     </p>
                   )}
                   {section.id === 'basics' && (
-                    <BasicsCard basics={basics} services={services} status={bookingStatus} eventDate={basics.date} />
+                    <BasicsCard basics={basics} services={services} status={bookingStatus} eventDate={basics.date} lockOverride={lockOverride} />
                   )}
                   {section.id === 'photo-booth' && (
                     <PhotoBoothPanel
                       knownVenue={services.knownVenue}
                       fields={fields}
-                      locked={plannerLocked(basics.date)}
+                      locked={plannerLocked(basics.date, undefined, lockOverride)}
                       onChange={updateField}
                     />
                   )}
@@ -1280,12 +1333,31 @@ export default function PlannerApp() {
                 </section>
                 )
               })}
+              <nav className="planner-section-nav" aria-label="Planner sections">
+                {contentSections.map((section) => {
+                  const tally = sectionProgress(section, fields, services.knownVenue)
+                  const tone = progressTone(tally)
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      className={`planner-section-box is-${tone}${section.id === selectedId ? ' is-current' : ''}`}
+                      aria-current={section.id === selectedId ? 'true' : undefined}
+                      onClick={() => selectSection(section.id)}
+                    >
+                      <span className="planner-section-box__name">{section.title}</span>
+                      <span className="planner-section-box__pct">{tally.percent}%</span>
+                    </button>
+                  )
+                })}
+              </nav>
+              </div>
 
               <figure className="planner-quote">
                 <blockquote>You must always believe that life is as extraordinary as music says it is.</blockquote>
                 <figcaption>— Rebecca West, The Fountain Overflows</figcaption>
               </figure>
-              <div className="planner-progress" aria-label={`Planner progress ${progress} percent`}>
+              <div className={`planner-progress is-${progressLook}`} aria-label={`Planner progress ${progress} percent`}>
                 <div className="planner-progress__fill" style={{ width: `${progress}%` }} />
                 <span>{progress}% answered</span>
               </div>
@@ -1296,7 +1368,7 @@ export default function PlannerApp() {
                   {!saveMessage && dirty && <p>You have unsaved changes</p>}
                   {savedLabel && <p className="planner-savebar__time">Last saved {savedLabel}</p>}
                 </div>
-                <button type="submit" className="btn" disabled={saving || plannerLocked(basics.date)}>
+                <button type="submit" className="btn" disabled={saving || plannerLocked(basics.date, undefined, lockOverride)}>
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>

@@ -16,7 +16,7 @@
   top: 0;
   z-index: 25;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   background: #1c1916;
   color: #fffdf8;
@@ -51,7 +51,7 @@
 }
 
 .planner-menu {
-  position: relative;
+  display: none;
 }
 
 .planner-menu__button {
@@ -1018,6 +1018,146 @@
   background: #6d7f5b;
 }
 
+.planner-progress.is-empty .planner-progress__fill {
+  background: #a33b32;
+}
+
+.planner-progress.is-partial .planner-progress__fill {
+  background: #c4922a;
+}
+
+.planner-progress.is-complete .planner-progress__fill {
+  background: #6d7f5b;
+}
+
+.planner-layout {
+  display: block;
+}
+
+.planner-section-nav {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0 0 0.8rem;
+}
+
+.planner-section-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid #c4b4a4;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #3c342c;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.planner-section-box.is-empty {
+  border-color: #a33b32;
+}
+
+.planner-section-box.is-partial {
+  border-color: #c4922a;
+}
+
+.planner-section-box.is-complete {
+  border-color: #6d7f5b;
+}
+
+.planner-section-box.is-current {
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+.planner-section-box__pct {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.planner-section-box.is-empty .planner-section-box__pct {
+  color: #a33b32;
+}
+
+.planner-section-box.is-partial .planner-section-box__pct {
+  color: #8a6410;
+}
+
+.planner-section-box.is-complete .planner-section-box__pct {
+  color: #4e5c41;
+}
+
+.planner-section__back {
+  display: none;
+}
+
+.planner-section:not(#basics):not(.is-selected) {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .planner-section.is-selected {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    overflow: auto;
+    background: #f4efe7;
+    padding: calc(3.4rem + env(safe-area-inset-top)) 0.9rem calc(6.5rem + env(safe-area-inset-bottom));
+  }
+
+  .planner-section__back {
+    display: inline-flex;
+    position: fixed;
+    top: calc(0.65rem + env(safe-area-inset-top));
+    left: calc(0.7rem + env(safe-area-inset-left));
+    z-index: 41;
+    border: 0;
+    border-radius: 999px;
+    background: #1c1916;
+    color: #fffdf8;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 0.45rem 0.8rem;
+    cursor: pointer;
+  }
+}
+
+@media (min-width: 900px) {
+  .planner-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr);
+    gap: 1rem 1.25rem;
+    align-items: start;
+  }
+
+  .planner-layout > #basics {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .planner-section-nav {
+    grid-column: 1;
+    grid-row: 2;
+    position: sticky;
+    top: 5.5rem;
+    margin: 0;
+  }
+
+  .planner-section.is-selected {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+  }
+
+  .planner-section__back {
+    display: none;
+  }
+}
+
 .planner-progress span {
   position: absolute;
   inset: 0;
@@ -1611,7 +1751,7 @@
   text-align: left;
 }
 
-.planner-form.is-locked .planner-section :is(label, input, textarea, select, button):not(.planner-songcompact__open):not(.planner-section__toggle) {
+.planner-form.is-locked .planner-section :is(label, input, textarea, select, button):not(.planner-songcompact__open):not(.planner-section__toggle):not(.planner-section__back) {
   pointer-events: none;
 }
 
