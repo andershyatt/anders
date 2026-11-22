@@ -28,7 +28,8 @@ function Field({
   onChange: (value: string) => void
 }) {
   const id = `booth-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
-  const visual = (field.options ?? []).some((option) => boothImage(option))
+  const visual =
+    field.key === 'Photo Booth: Print size' || (field.options ?? []).some((option) => boothImage(option))
   if (visual && (field.input === 'choice' || field.input === 'checks')) {
     return <BoothGallery field={field} value={value} locked={locked} onChange={onChange} />
   }

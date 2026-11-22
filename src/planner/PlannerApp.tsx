@@ -935,6 +935,8 @@ export default function PlannerApp() {
   const progressLook = progressTone(progressCount)
   const contentSections = useMemo(() => shownSections.filter((section) => section.id !== 'basics'), [shownSections])
   const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches)
+  const [basicsOpen, setBasicsOpen] = useState(true)
+  const pendingScroll = useRef<string | null>(null)
   const [sectionHash, setSectionHash] = useState(() => window.location.hash)
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
@@ -973,23 +975,33 @@ export default function PlannerApp() {
     window.history.replaceState({ plannerSection: first }, '', `${window.location.pathname}${window.location.search}${nextHash}`)
   }, [contentSections, hashParts.anchor, hashParts.id, status.kind, wide])
   useEffect(() => {
-    if (!hashParts.anchor) return
+    if (!hashParts.anchor || wide) return
     const frame = window.requestAnimationFrame(() => {
-      if (hashParts.id === 'reception') {
-        const section = document.getElementById('reception')
-        if (section) section.scrollTop = 0
-        window.scrollTo(0, 0)
-        return
-      }
-      document.getElementById(hashParts.anchor)?.scrollIntoView({ block: 'start' })
+      const section = document.getElementById(hashParts.id)
+      if (section && getComputedStyle(section).position === 'fixed') section.scrollTop = 0
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [hashParts.anchor, hashParts.id, selectedId])
+  }, [hashParts.anchor, hashParts.id, wide])
+  useEffect(() => {
+    if (!wide || !pendingScroll.current) return
+    const id = pendingScroll.current
+    pendingScroll.current = null
+    const frame = window.requestAnimationFrame(() => {
+      const section = document.getElementById(id)
+      if (!section) return
+      const headerBottom = document.querySelector('.planner-top')?.getBoundingClientRect().bottom ?? 0
+      const y = section.getBoundingClientRect().top + window.scrollY - headerBottom - 8
+      window.scrollTo(0, Math.max(0, y))
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [sectionHash, wide])
   function selectSection(id: string, anchor = '') {
     const hash = anchor ? `#${encodeURIComponent(id)}/${anchor}` : `#${encodeURIComponent(id)}`
     const url = `${window.location.pathname}${window.location.search}${hash}`
-    if (wide) window.history.replaceState({ plannerSection: id }, '', url)
-    else window.history.pushState({ plannerSection: id }, '', url)
+    if (wide) {
+      pendingScroll.current = id
+      window.history.replaceState({ plannerSection: id }, '', url)
+    } else window.history.pushState({ plannerSection: id }, '', url)
     setSectionHash(hash)
   }
   function closeSection() {
@@ -1172,7 +1184,7 @@ export default function PlannerApp() {
                 const sectionFields = receptionGroup ? receptionGroup.fields : section.fields
                 let hideSubsection = false
                 return (
-                <section key={section.id} id={section.id} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}`}>
+                <section key={section.id} id={section.id} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}${section.id === 'basics' && !basicsOpen ? ' is-collapsed' : ''}`}>
                   {(!receptionGroup || (!wide && section.id === selectedId)) && (
                   <div className="planner-section__head">
                     {!wide && section.id === selectedId && (
@@ -1181,6 +1193,18 @@ export default function PlannerApp() {
                       </button>
                     )}
                     {!receptionGroup && <h2>{section.title}</h2>}
+                    {section.id === 'basics' && (
+                      <div className="planner-section__tools">
+                        <button
+                          type="button"
+                          className="planner-section__toggle"
+                          aria-expanded={basicsOpen}
+                          onClick={() => setBasicsOpen((open) => !open)}
+                        >
+                          {basicsOpen ? 'Collapse' : 'Expand'}
+                        </button>
+                      </div>
+                    )}
                     {managed && !receptionGroup && (
                       <div className="planner-section__tools">
                         <button type="button" onClick={() => removeManaged(section.id)}>

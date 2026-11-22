@@ -1313,16 +1313,30 @@
 }
 
 @media (min-width: 900px) {
+  .planner-lead {
+    max-width: none;
+  }
+
   .planner-main {
-    width: 92%;
-    max-width: 1280px;
+    width: 76.31%;
+    max-width: 1072px;
+  }
+
+  .planner-layout > #basics {
+    justify-self: start;
+    width: max-content;
+    max-width: 100%;
+  }
+
+  #basics .planner-basics__row {
+    grid-template-columns: max-content max-content;
   }
 
   .planner-savebar,
   .planner-progress {
     left: 50%;
     right: auto;
-    width: min(1280px, 92%);
+    width: min(1072px, 76.31%);
     transform: translateX(-50%);
   }
 }
@@ -1688,7 +1702,10 @@
 }
 
 .planner-songcompact__must {
-  color: var(--color-accent-dark);
+  color: #3c342c;
+  background: #e4c98a;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
   font-family: var(--font-nav);
   font-size: 11px;
   font-weight: 700;
@@ -2051,11 +2068,30 @@
 }
 
 .planner-gallery__card.is-text {
-  align-self: start;
+  align-self: stretch;
 }
 
-.planner-gallery__card.is-text:last-child {
-  grid-column: 1 / -1;
+.planner-gallery__card.is-text::before {
+  content: '';
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #efe8dc;
+}
+
+.planner-gallery__popular {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 1;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #e4c98a;
+  color: #3c342c;
+  font-family: var(--font-nav);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .planner-gallery label {
