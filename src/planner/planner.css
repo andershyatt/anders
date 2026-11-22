@@ -930,16 +930,23 @@
 }
 
 .planner-choices--stack .planner-choices__row {
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.planner-choices--stack label {
+  flex: 0 0 auto;
+  max-width: 100%;
 }
 
 .planner-choices--stack span {
-  display: block;
+  display: inline-block;
   width: auto;
+  max-width: 100%;
   min-width: 0;
-  text-align: left;
-  line-height: 1.4;
+  text-align: center;
+  line-height: 1.3;
 }
 
 .planner-other {
