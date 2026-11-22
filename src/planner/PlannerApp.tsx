@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf, type PlannerLoadSuccess } from './api'
 import {
   DANCE_LENGTH,
@@ -936,7 +936,31 @@ export default function PlannerApp() {
   const contentSections = useMemo(() => shownSections.filter((section) => section.id !== 'basics'), [shownSections])
   const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches)
   const [basicsOpen, setBasicsOpen] = useState(true)
+  const basicsRef = useRef<HTMLElement | null>(null)
   const pendingScroll = useRef<string | null>(null)
+  useLayoutEffect(() => {
+    const el = basicsRef.current
+    if (!el) return
+    const apply = () => {
+      if (!window.matchMedia('(min-width: 900px)').matches) {
+        el.style.width = ''
+        return
+      }
+      el.style.width = 'max-content'
+      const natural = el.getBoundingClientRect().width
+      const column = el.parentElement?.clientWidth ?? natural
+      el.style.width = `${Math.min(column, Math.round(natural * 1.3))}px`
+    }
+    apply()
+    const parent = el.parentElement
+    const observer = new ResizeObserver(apply)
+    if (parent) observer.observe(parent)
+    window.addEventListener('resize', apply)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', apply)
+    }
+  }, [basicsOpen, wide])
   const [sectionHash, setSectionHash] = useState(() => window.location.hash)
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
@@ -978,7 +1002,8 @@ export default function PlannerApp() {
     if (!hashParts.anchor || wide) return
     const frame = window.requestAnimationFrame(() => {
       const section = document.getElementById(hashParts.id)
-      if (section && getComputedStyle(section).position === 'fixed') section.scrollTop = 0
+      const scroller = section?.querySelector('.planner-section__body')
+      if (scroller) scroller.scrollTop = 0
     })
     return () => window.cancelAnimationFrame(frame)
   }, [hashParts.anchor, hashParts.id, wide])
@@ -1184,7 +1209,7 @@ export default function PlannerApp() {
                 const sectionFields = receptionGroup ? receptionGroup.fields : section.fields
                 let hideSubsection = false
                 return (
-                <section key={section.id} id={section.id} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}${section.id === 'basics' && !basicsOpen ? ' is-collapsed' : ''}`}>
+                <section key={section.id} id={section.id} ref={section.id === 'basics' ? basicsRef : undefined} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}${section.id === 'basics' && !basicsOpen ? ' is-collapsed' : ''}`}>
                   {(!receptionGroup || (!wide && section.id === selectedId)) && (
                   <div className="planner-section__head">
                     {!wide && section.id === selectedId && (
@@ -1214,6 +1239,7 @@ export default function PlannerApp() {
                     )}
                   </div>
                   )}
+                  <div className="planner-section__body">
                   {section.blurb && (
                     <p className="planner-callout">
                       <span>{section.blurb}</span>
@@ -1458,6 +1484,7 @@ export default function PlannerApp() {
                     </Fragment>
                     )
                   })}
+                  </div>
                 </section>
                 )
               })}

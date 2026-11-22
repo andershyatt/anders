@@ -1178,20 +1178,39 @@
 
 @media (max-width: 899px) {
   .planner-section.is-selected {
+    display: flex;
+    flex-direction: column;
     position: fixed;
     inset: 0;
     z-index: 40;
-    overflow: auto;
+    overflow: hidden;
     background: #f4efe7;
-    padding: calc(3.4rem + env(safe-area-inset-top)) 0.9rem calc(6.5rem + env(safe-area-inset-bottom));
+    padding: 0;
+  }
+
+  .planner-section.is-selected .planner-section__head {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: calc(0.65rem + env(safe-area-inset-top)) 0.9rem 0.55rem;
+    background: #f4efe7;
+  }
+
+  .planner-section.is-selected .planner-section__back {
+    flex: 1 0 100%;
+    margin-bottom: 0.35rem;
+  }
+
+  .planner-section.is-selected .planner-section__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 0.35rem 0.9rem calc(6.5rem + env(safe-area-inset-bottom));
   }
 
   .planner-section__back {
     display: inline-flex;
-    position: fixed;
-    top: calc(0.65rem + env(safe-area-inset-top));
-    left: calc(0.7rem + env(safe-area-inset-left));
-    z-index: 41;
+    position: static;
     border: 0;
     border-radius: 999px;
     background: #1c1916;
@@ -1323,7 +1342,7 @@
   }
 
   .planner-layout > #basics {
-    justify-self: start;
+    justify-self: center;
     width: max-content;
     max-width: 100%;
   }
@@ -1745,12 +1764,8 @@
 }
 
 @media (max-width: 899px) {
-  .planner-picker__back {
-    display: none;
-  }
-
   .planner-picker__bar {
-    padding-left: 5.6rem;
+    padding-top: calc(0.65rem + env(safe-area-inset-top));
   }
 }
 
@@ -2079,7 +2094,8 @@
   background: #efe8dc;
 }
 
-.planner-gallery__popular {
+.planner-gallery__popular,
+.planner-popular {
   position: absolute;
   top: 0.4rem;
   right: 0.4rem;
@@ -2090,8 +2106,15 @@
   color: #3c342c;
   font-family: var(--font-nav);
   font-size: 10px;
+  font-style: normal;
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+.planner-choices .planner-popular {
+  position: static;
+  margin-left: 0.45rem;
+  vertical-align: middle;
 }
 
 .planner-gallery label {
