@@ -117,6 +117,7 @@ function coupleOf(value: unknown): PipelineCouple | null {
     updatedBy: record.updatedBy === 'Anders' || record.updatedBy === 'couple' ? record.updatedBy : '',
     slug: text(record.slug),
     lastSections: text(record.lastSections),
+    lockOverride: record.lockOverride === 'Unlocked' ? 'Unlocked' : '',
   }
 }
 
@@ -193,6 +194,7 @@ export async function adminSetStatus(
     venue?: string
     venueAddress?: string
     guestCount?: string
+    lockOverride?: '' | 'Unlocked'
   },
 ): Promise<void> {
   await postAdmin({ action: 'adminSetStatus', key, token, ...patch })

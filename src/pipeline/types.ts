@@ -29,6 +29,8 @@ export interface PipelineCouple {
   slug?: string
   /** Sections changed on the last save, such as "Ceremony › Processional". */
   lastSections?: string
+  /** Blank follows the 7-day lock. Unlocked keeps the planner open. */
+  lockOverride?: '' | 'Unlocked'
 }
 
 export interface PipelineDetail extends PipelineCouple {

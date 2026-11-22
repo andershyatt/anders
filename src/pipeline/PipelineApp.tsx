@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { shortPlannerUrl } from '../planner/config'
+import { plannerLocked } from '../planner/format'
 import '../planner/planner.css'
 import VenueField from '../planner/VenueField'
 import { loadGooglePlace, searchVenues, type VenueMatch } from '../planner/venueSearch'
@@ -195,7 +196,7 @@ export default function PipelineApp() {
         const local = current.find((couple) => couple.token === item.token)
         const baseline = serverList.current.find((couple) => couple.token === item.token)
         if (!local || !baseline || !coupleLocallyEdited(local, baseline)) return item
-        return { ...item, team: local.team, bookingStatus: local.bookingStatus, services: local.services }
+        return { ...item, team: local.team, bookingStatus: local.bookingStatus, services: local.services, lockOverride: local.lockOverride }
       }),
     )
     serverList.current = list
@@ -289,6 +290,36 @@ export default function PipelineApp() {
       cancelled = true
     }
   }, [])
+
+  const loadRef = useRef(load)
+  loadRef.current = load
+  useEffect(() => {
+    if (!key) return
+    let awayAt = 0
+    const markAway = () => {
+      if (!awayAt) awayAt = Date.now()
+    }
+    const markBack = () => {
+      if (!awayAt) return
+      const elapsed = Date.now() - awayAt
+      awayAt = 0
+      if (elapsed > 60 * 60 * 1000) void loadRef.current(key)
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') markAway()
+      else markBack()
+    }
+    const onBlur = () => markAway()
+    const onFocus = () => markBack()
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('blur', onBlur)
+    window.addEventListener('focus', onFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [key])
 
   useEffect(() => {
     const query = venueQuery.trim()
@@ -690,6 +721,8 @@ function CoupleCard({
   const tone = stageOf(couple.bookingStatus)
   const toneClass = tone === 'Booked' ? 'booked' : tone === 'Completed' ? 'done' : 'pending'
   const progress = coupleProgress(couple)
+  const progressLook = progress === null ? '' : progress <= 0 ? 'empty' : progress >= 100 ? 'complete' : 'partial'
+  const locked = plannerLocked(couple.date, undefined, couple.lockOverride ?? '')
   const booked = SERVICE_TOGGLES.filter(([key]) => couple.services[key]).map(([, label]) => label)
   const bookedCollapsed = SERVICE_TOGGLES.filter(([key]) => couple.services[key]).map(([key, label]) =>
     key === 'photobooth' ? 'PB' : label,
@@ -703,6 +736,7 @@ function CoupleCard({
     venueAddress?: string
     guestCount?: string
     services?: PipelineCouple['services']
+    lockOverride?: '' | 'Unlocked'
   }) {
     await adminSetStatus(adminKey, couple.token, patch)
     onChange({ ...couple, ...patch, updatedBy: 'Anders' })
@@ -798,6 +832,7 @@ function CoupleCard({
                   </div>
                 )}
               </div>
+              <span className={`pipeline-lock${locked ? ' is-locked' : ' is-open'}`}>{locked ? 'Locked' : 'Unlocked'}</span>
               <a
                 className="pipeline-open"
                 href={plannerLink(couple.token, standalone)}
@@ -805,7 +840,7 @@ function CoupleCard({
               >
                 Open
               </a>
-              {progress !== null && <span className="pipeline-progress-num">{progress}%</span>}
+              {progress !== null && <span className={`pipeline-progress-num is-${progressLook}`}>{progress}%</span>}
             </div>
           </>
         ) : (
@@ -888,7 +923,7 @@ function CoupleCard({
           }}
         />
         {progress !== null && (
-          <div className="pipeline-progress" aria-label={`Planner progress ${progress} percent`}>
+          <div className={`pipeline-progress is-${progressLook}`} aria-label={`Planner progress ${progress} percent`}>
             <div className="pipeline-progress__fill" style={{ width: `${progress}%` }} />
             <span>{progress}% answered</span>
           </div>
@@ -926,6 +961,18 @@ function CoupleCard({
           >
             Open planner
           </a>
+          {(locked || couple.lockOverride === 'Unlocked') && (
+            <button
+              type="button"
+              onClick={() => {
+                const next = couple.lockOverride === 'Unlocked' ? '' : 'Unlocked'
+                onChange({ ...couple, lockOverride: next })
+                void save({ lockOverride: next }).catch((reason: unknown) => onError(messageFor(reason)))
+              }}
+            >
+              {couple.lockOverride === 'Unlocked' ? 'Re-lock planner' : 'Unlock planner'}
+            </button>
+          )}
           <button
             type="button"
             disabled={busy === 'info'}
