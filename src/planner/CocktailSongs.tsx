@@ -41,6 +41,8 @@ interface CocktailSongsProps {
   /** Live-only lists search the repertoire and do not offer the DJ catalog. */
   repertoireOnly?: boolean
   sectionNote?: string
+  /** Per-song note button. Do Not Play keeps notes in a separate box. */
+  allowNotes?: boolean
 }
 
 function songId(): string {
@@ -70,6 +72,7 @@ export default function CocktailSongs({
   pickerMode = 'dj',
   repertoireOnly = false,
   sectionNote = '',
+  allowNotes = true,
 }: CocktailSongsProps) {
   const listId = useId()
   const { songs } = useSongCatalog()
@@ -391,7 +394,7 @@ export default function CocktailSongs({
       {rows.length > 0 && (
         <ol className="planner-songlist__rows">
           {rows.map((song, index) => {
-            const noteOpen = openNotes[song.id] ?? song.note.trim() !== ''
+            const noteOpen = allowNotes && (openNotes[song.id] ?? song.note.trim() !== '')
             return (
               <li key={song.id} className="planner-songlist__row">
                 {song.artwork ? (
@@ -423,13 +426,15 @@ export default function CocktailSongs({
                       Must-play
                     </button>
                   )}
-                  <button
-                    type="button"
-                    aria-expanded={noteOpen}
-                    onClick={() => setOpenNotes((current) => ({ ...current, [song.id]: !noteOpen }))}
-                  >
-                    {noteOpen ? 'Hide note' : 'Note'}
-                  </button>
+                  {allowNotes && (
+                    <button
+                      type="button"
+                      aria-expanded={noteOpen}
+                      onClick={() => setOpenNotes((current) => ({ ...current, [song.id]: !noteOpen }))}
+                    >
+                      {noteOpen ? 'Hide note' : 'Note'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     aria-label={`Move ${song.title} up`}
