@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import BoothGallery from './BoothGallery'
+import { choiceGroupIsLong } from './format'
 import CheckAll from './CheckAll'
 import HalfHourTime from './HalfHourTime'
-import { PHOTO_BOOTH_ITEMS, photoBoothProgress, type BoothField } from './photoBooth'
+import { PHOTO_BOOTH_ITEMS, type BoothField } from './photoBooth'
 import { boothImage } from './photoBoothImages'
 
 interface PhotoBoothPanelProps {
@@ -15,24 +14,6 @@ interface PhotoBoothPanelProps {
 
 function itemsFor(knownVenue: boolean) {
   return PHOTO_BOOTH_ITEMS.filter((item) => (knownVenue ? !item.newVenue : true))
-}
-
-function summary(fields: Record<string, string>, knownVenue: boolean): Array<{ label: string; value: string }> {
-  return itemsFor(knownVenue).flatMap((item) => {
-    if (item.kind !== 'field') return []
-    const value = (fields[item.key] ?? '').trim()
-    if (!value) return []
-    const label = item.label.split('\n')[0] ?? item.label
-    if (item.input === 'checks') {
-      try {
-        const parsed = JSON.parse(value) as unknown
-        if (Array.isArray(parsed)) return [{ label, value: parsed.filter((entry) => typeof entry === 'string').join(', ') }]
-      } catch {
-        return [{ label, value }]
-      }
-    }
-    return [{ label, value }]
-  })
 }
 
 function Field({
@@ -52,8 +33,14 @@ function Field({
     return <BoothGallery field={field} value={value} locked={locked} onChange={onChange} />
   }
   if (field.input === 'choice') {
+    const options = field.options ?? []
+    const long = choiceGroupIsLong(options)
+    const inline = !long && options.every((option) => option.trim().length <= 12)
     return (
-      <fieldset className="planner-choices planner-choices--stack" disabled={locked}>
+      <fieldset
+        className={`planner-choices${inline ? ' planner-choices--inline' : ' planner-choices--stack'}${long ? ' planner-choices--long' : ''}`}
+        disabled={locked}
+      >
         <legend>{field.label}</legend>
         {field.help && <p className="planner-field__help">{field.help}</p>}
         <div className="planner-choices__row">
@@ -111,96 +98,38 @@ function Field({
 }
 
 export default function PhotoBoothPanel({ knownVenue, fields, locked, onChange }: PhotoBoothPanelProps) {
-  const [open, setOpen] = useState(false)
-  const backRef = useRef<HTMLButtonElement>(null)
-  const answers = summary(fields, knownVenue)
-
-  useEffect(() => {
-    const onPop = () => setOpen(window.history.state?.plannerPhotoBooth === true)
-    window.addEventListener('popstate', onPop)
-    return () => window.removeEventListener('popstate', onPop)
-  }, [])
-
-  useEffect(() => {
-    if (!open) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    backRef.current?.focus()
-    return () => {
-      document.body.style.overflow = previous
-    }
-  }, [open])
-
-  const openForm = () => {
-    window.history.pushState({ ...(window.history.state ?? {}), plannerPhotoBooth: true }, '')
-    setOpen(true)
-  }
-
-  const closeForm = () => {
-    if (window.history.state?.plannerPhotoBooth) window.history.back()
-    else setOpen(false)
-  }
-
-  const booth = photoBoothProgress(fields, knownVenue)
-  const progress = booth.percent
-  const answered = booth.answered
-  const questionCount = booth.total
-
   return (
     <div className="planner-booth">
-      <div className="planner-booth__progress" aria-label={`${progress} percent of the photo booth questionnaire`}>
-        <div className="planner-booth__fill" style={{ width: `${progress}%` }} />
-        <span>
-          {answered} of {questionCount} answered
-        </span>
-      </div>
-      <button type="button" className="planner-songcompact__open" onClick={openForm}>
-        {answers.length > 0 ? 'Edit questionnaire' : 'Fill questionnaire'}
-      </button>
-      {open &&
-        createPortal(
-        <div className="planner-picker" role="dialog" aria-modal="true" aria-label="Photo booth questionnaire">
-          <div className="planner-picker__bar">
-            <button ref={backRef} type="button" className="planner-picker__back" onClick={closeForm}>
-              Back
-            </button>
-            <p>Photo Booth Experience questionnaire</p>
-          </div>
-          <div className="planner-picker__body planner-booth-form">
-            <p className="planner-note">
-              Help us create the perfect photo booth experience for your event! Please take a few minutes to fill out
-              this form so we can tailor everything to your preferences.
-            </p>
-            {itemsFor(knownVenue).map((item) => {
-              if (item.kind === 'heading') return <h3 key={item.text} className="planner-subhead">{item.text}</h3>
-              if (item.kind === 'note') {
-                return (
-                  <div key={item.text}>
-                    <p className="planner-note">{item.text}</p>
-                    {item.href && (
-                      <p>
-                        <a className="btn planner-booth-form__schedule" href={item.href} target="_blank" rel="noopener noreferrer">
-                          {item.linkLabel ?? 'Schedule a call'}
-                        </a>
-                      </p>
-                    )}
-                  </div>
-                )
-              }
-              return (
-                <Field
-                  key={item.key}
-                  field={item}
-                  value={fields[item.key] ?? ''}
-                  locked={locked}
-                  onChange={(value) => onChange(item.key, value)}
-                />
-              )
-            })}
-          </div>
-        </div>,
-        document.body,
-        )}
+      <p className="planner-note">
+        Help us create the perfect photo booth experience for your event! Please take a few minutes to fill out this
+        form so we can tailor everything to your preferences.
+      </p>
+      {itemsFor(knownVenue).map((item) => {
+        if (item.kind === 'heading') return <h3 key={item.text} className="planner-subhead">{item.text}</h3>
+        if (item.kind === 'note') {
+          return (
+            <div key={item.text}>
+              <p className="planner-note">{item.text}</p>
+              {item.href && (
+                <p>
+                  <a className="btn" href={item.href} target="_blank" rel="noopener noreferrer">
+                    {item.linkLabel ?? 'Schedule a call'}
+                  </a>
+                </p>
+              )}
+            </div>
+          )
+        }
+        return (
+          <Field
+            key={item.key}
+            field={item}
+            value={fields[item.key] ?? ''}
+            locked={locked}
+            onChange={(value) => onChange(item.key, value)}
+          />
+        )
+      })}
     </div>
   )
 }

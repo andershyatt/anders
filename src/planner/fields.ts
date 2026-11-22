@@ -12,6 +12,7 @@ import {
   liveOnlyReception,
 } from './liveDj'
 import { parseChecks, serializeChecks } from './checks'
+import { parseCocktailSongs } from './cocktailSongs'
 import { PHOTO_BOOTH_FIELDS, photoBoothProgress } from './photoBooth'
 import type { SuggestionListId } from './suggestions'
 
@@ -364,7 +365,7 @@ export const plannerSections: PlannerSection[] = [
   },
   {
     id: 'notes',
-    title: 'Notes',
+    title: 'Additional Notes',
     blurb: '',
     fields: [{ key: 'Notes', label: 'Anything else Anders should know?', kind: 'textarea' }],
   },
@@ -823,6 +824,8 @@ export interface ProgressCount {
   answered: number
   total: number
   percent: number
+  /** Additional Notes is shown, but it is not a completion score. */
+  omit?: boolean
 }
 
 /** Notes, fade timestamps, optional free text, and "Anders chooses" checks do not count. */
@@ -856,9 +859,31 @@ export function sectionProgress(
   answers: Record<string, string>,
   knownVenue = false,
 ): ProgressCount {
-  if (section.id === 'basics') return { answered: 0, total: 0, percent: 100 }
+  if (section.id === 'basics' || section.id === 'notes') return { answered: 0, total: 0, percent: 0, omit: true }
   if (section.id === 'photo-booth') return photoBoothProgress(answers, knownVenue)
+  if (section.id === 'timeline') {
+    const notes = (answers.Timeline ?? '').trim()
+    const edited = notes !== '' && notes !== TIMELINE_PREFILL
+    const pdf = (answers['Timeline PDF'] ?? '').trim() !== ''
+    const done = edited || pdf
+    return { answered: done ? 1 : 0, total: 1, percent: done ? 100 : 0 }
+  }
   return tallyPlannerFields(section.fields, answers)
+}
+
+export function songListStat(
+  list: readonly PlannerField[],
+  answers: Record<string, string>,
+): { count: number; limit: number } | null {
+  const songs = list.filter(
+    (field) => (field.kind === 'songlist' || field.kind === 'cocktail-songs') && typeof field.maxSongs === 'number',
+  )
+  const limit = songs.length === 1 ? songs[0].maxSongs : undefined
+  if (!limit) return null
+  return {
+    count: parseCocktailSongs(answers[songs[0].key] ?? '', limit).length,
+    limit,
+  }
 }
 
 export function progressTone(count: Pick<ProgressCount, 'answered' | 'total'>): ProgressTone {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { choiceGroupIsLong } from './format'
 
 function matchesOption(options: readonly string[], value: string): string | undefined {
   const trimmed = value.trim().toLowerCase()
@@ -44,9 +45,10 @@ export default function ChoiceWithOther({ name, legend, options, value, help, on
     onChange('')
   }
 
-  const inline = options.every((option) => option.trim().length <= 12)
+  const long = choiceGroupIsLong(options)
+  const inline = !long && options.every((option) => option.trim().length <= 12)
   return (
-    <fieldset className={inline ? 'planner-choices planner-choices--inline' : 'planner-choices planner-choices--stack'}>
+    <fieldset className={`planner-choices${inline ? ' planner-choices--inline' : ' planner-choices--stack'}${long ? ' planner-choices--long' : ''}`}>
       <legend>{legend}</legend>
       {help && <p className="planner-field__help">{help}</p>}
       <div className="planner-choices__row" role="radiogroup" aria-label={legend}>

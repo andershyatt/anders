@@ -5,25 +5,26 @@ interface HalfHourTimeProps {
   onChange: (value: string) => void
 }
 
+import { normalizePlannerTime } from './format'
+
 const HALF_HOURS = Array.from({ length: 48 }, (_, index) => {
   const hours = Math.floor(index / 2)
   const minutes = index % 2 === 0 ? '00' : '30'
-  const value = `${String(hours).padStart(2, '0')}:${minutes}`
   const hour12 = hours % 12 === 0 ? 12 : hours % 12
-  const label = `${hour12}:${minutes} ${hours < 12 ? 'AM' : 'PM'}`
-  return { value, label }
+  return `${hour12}:${minutes} ${hours < 12 ? 'AM' : 'PM'}`
 })
 
 /** Time answers in 30-minute steps. A saved off-step time stays selectable until it is changed. */
 export default function HalfHourTime({ id, value, disabled, onChange }: HalfHourTimeProps) {
-  const known = HALF_HOURS.some((option) => option.value === value)
+  const shown = normalizePlannerTime(value)
+  const known = HALF_HOURS.includes(shown)
   return (
-    <select id={id} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
+    <select id={id} value={shown} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
       <option value="">Select a time</option>
-      {value && !known && <option value={value}>{value}</option>}
+      {shown && !known && <option value={shown}>{shown}</option>}
       {HALF_HOURS.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
+        <option key={option} value={option}>
+          {option}
         </option>
       ))}
     </select>

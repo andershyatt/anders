@@ -126,6 +126,49 @@ function cellOut_(v) {
   return v == null ? '' : String(v);
 }
 
+/** Clock fields only. Timeline text contains the word time and must stay as written. */
+function isTimeField_(header) {
+  var name = String(header || '').trim();
+  if (/timeline/i.test(name)) return false;
+  return /time$/i.test(name);
+}
+
+function timeLabel_(hour, minute) {
+  var suffix = hour < 12 ? 'AM' : 'PM';
+  var hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return hour12 + ':' + ('0' + minute).slice(-2) + ' ' + suffix;
+}
+
+/** Sheets stores a time-only cell as a Date on 1899-12-30. The planner options are 12:30 AM. */
+function plannerTime_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    var clock = Utilities.formatDate(value, sheetTz_(), 'HH:mm');
+    var parts = clock.split(':');
+    return timeLabel_(Number(parts[0]), Number(parts[1]));
+  }
+  var text = String(value == null ? '' : value).trim();
+  if (!text) return '';
+  var twelve = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])$/.exec(text);
+  if (twelve) {
+    var hour = Number(twelve[1]);
+    var suffix = twelve[3].toUpperCase();
+    if (suffix === 'AM') hour = hour === 12 ? 0 : hour;
+    else hour = hour === 12 ? 12 : hour + 12;
+    if (hour > 23) return text;
+    return timeLabel_(hour, Number(twelve[2]));
+  }
+  var sheets = /^1899-\d{2}-\d{2}[ T](\d{1,2}):(\d{2})/.exec(text);
+  var plain = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(text);
+  var match = sheets || plain;
+  if (!match) return text;
+  if (Number(match[1]) > 23) return text;
+  return timeLabel_(Number(match[1]), Number(match[2]));
+}
+
+function fieldOut_(header, value) {
+  return isTimeField_(header) ? plannerTime_(value) : cellOut_(value);
+}
+
 function headerRow_(sh) {
   var lastCol = Math.max(sh.getLastColumn(), 1);
   return sh.getRange(1, 1, 1, lastCol).getValues()[0].map(function (h) { return String(h).trim(); });
@@ -200,7 +243,7 @@ function loadResponse_(token) {
     var lastUpdated = '';
     if (hit) {
       hit.headers.forEach(function (h, i) {
-        if (fields.hasOwnProperty(h)) fields[h] = cellOut_(hit.values[i]);
+        if (fields.hasOwnProperty(h)) fields[h] = fieldOut_(h, hit.values[i]);
       });
       if (fields['Event date']) fields['Event date'] = dayOf_(hit.values[hit.headers.indexOf('Event date')], hit.display[hit.headers.indexOf('Event date')]);
       lastUpdated = cellOut_(hit.values[1]);
@@ -1442,7 +1485,7 @@ function plannerFieldsFor_(token) {
   PLANNER_FIELDS.forEach(function (f) { fields[f] = ''; });
   if (hit) {
     hit.headers.forEach(function (h, i) {
-      if (fields.hasOwnProperty(h)) fields[h] = cellOut_(hit.values[i]);
+      if (fields.hasOwnProperty(h)) fields[h] = fieldOut_(h, hit.values[i]);
     });
   }
   return fields;
@@ -1637,7 +1680,7 @@ function plannerFieldsByToken_() {
     var fields = {};
     headers.forEach(function (h, i) {
       if (h === 'Token' || h === 'Last Updated' || h === PHOTO_FIELD) return;
-      var text = cellOut_(row[i]);
+      var text = fieldOut_(h, row[i]);
       if (!String(text).trim()) return;
       fields[h] = text;
     });
