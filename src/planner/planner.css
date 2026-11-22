@@ -1196,9 +1196,17 @@
     background: #f4efe7;
   }
 
-  .planner-section.is-selected .planner-section__back {
-    flex: 1 0 100%;
+  .planner-section.is-selected .planner-section__back-row {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: flex-start;
     margin-bottom: 0.35rem;
+  }
+
+  .planner-section.is-selected .planner-section__back {
+    flex: 0 0 auto;
+    width: auto;
+    align-self: flex-start;
   }
 
   .planner-section.is-selected .planner-section__body {

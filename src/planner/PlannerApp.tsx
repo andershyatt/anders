@@ -1213,9 +1213,11 @@ export default function PlannerApp() {
                   {(!receptionGroup || (!wide && section.id === selectedId)) && (
                   <div className="planner-section__head">
                     {!wide && section.id === selectedId && (
-                      <button type="button" className="planner-section__back" onClick={closeSection}>
-                        Back
-                      </button>
+                      <div className="planner-section__back-row">
+                        <button type="button" className="planner-section__back" onClick={closeSection}>
+                          Back
+                        </button>
+                      </div>
                     )}
                     {!receptionGroup && <h2>{section.title}</h2>}
                     {section.id === 'basics' && (
