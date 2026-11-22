@@ -1062,6 +1062,23 @@
   margin: 0 0 0.8rem;
 }
 
+.planner-section-nav__group {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.planner-section-box--sub {
+  margin-left: 0.85rem;
+  width: calc(100% - 0.85rem);
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  font-weight: 600;
+}
+
+.planner-section-box.is-plain {
+  border-color: #c4b4a4;
+}
+
 .planner-section-box {
   display: flex;
   align-items: center;
@@ -1482,6 +1499,15 @@
   cursor: pointer;
 }
 
+.planner-songlist__must {
+  color: #8a6410;
+  border-color: #c4a56a;
+}
+
+.planner-songlist__must.is-selected {
+  color: #fffdf8;
+}
+
 .planner-songlist__actions button.is-selected {
   background: var(--color-accent);
   border-color: var(--color-accent);
@@ -1656,6 +1682,16 @@
   font-family: var(--font-nav);
   font-size: 15px;
   font-weight: 700;
+}
+
+@media (max-width: 899px) {
+  .planner-picker__back {
+    display: none;
+  }
+
+  .planner-picker__bar {
+    padding-left: 5.6rem;
+  }
 }
 
 .planner-picker__body {

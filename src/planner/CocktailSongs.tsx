@@ -409,7 +409,7 @@ export default function CocktailSongs({
                   {showMustPlay && (
                     <button
                       type="button"
-                      className={song.mustPlay ? 'is-selected' : undefined}
+                      className={`planner-songlist__must${song.mustPlay ? ' is-selected' : ''}`}
                       aria-pressed={song.mustPlay}
                       onClick={() => {
                         if (!song.mustPlay && mustPlays >= maxMustPlays) {

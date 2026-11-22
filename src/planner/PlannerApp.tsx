@@ -26,6 +26,7 @@ import {
   plannerProgressCount,
   progressTone,
   sectionProgress,
+  songListStat,
   DJ_POWER_OPTION,
   LIVE_POWER_OPTION,
   MUSICIAN_POWER_OPTION,
@@ -115,13 +116,40 @@ function songListMode(key: string, answers: Record<string, string>): 'live' | 'd
         ? answers['Dinner music type']
         : ''
   const text = (source ?? '').trim().toLowerCase()
-  if (text.includes('mixture')) return 'mix'
+  if (!text || text.includes('mixture')) return 'mix'
   if (text.startsWith('live')) return 'live'
   return 'dj'
 }
 
 function sectionSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function hashTarget(hash: string): { id: string; anchor: string } {
+  const raw = decodeURIComponent(hash.replace(/^#/, ''))
+  const cut = raw.indexOf('/')
+  if (cut === -1) return { id: raw, anchor: '' }
+  return { id: raw.slice(0, cut), anchor: raw.slice(cut + 1) }
+}
+
+function receptionGroups(section: PlannerSection): Array<{ title: string; anchor: string; fields: PlannerField[] }> {
+  const groups: Array<{ title: string; anchor: string; fields: PlannerField[] }> = []
+  const seen = new Map<string, { title: string; anchor: string; fields: PlannerField[] }>()
+  let current: { title: string; anchor: string; fields: PlannerField[] } | null = null
+  for (const field of section.fields) {
+    if (field.heading) {
+      const anchor = `sub-${sectionSlug(field.heading)}`
+      const existing = seen.get(anchor)
+      if (existing) current = existing
+      else {
+        current = { title: field.heading, anchor, fields: [] }
+        seen.set(anchor, current)
+        groups.push(current)
+      }
+    }
+    if (current) current.fields.push(field)
+  }
+  return groups
 }
 
 function SectionMenu({ sections }: { sections: PlannerSection[] }) {
@@ -861,16 +889,20 @@ export default function PlannerApp() {
     () => parseRemovedSections(fields[COLLAPSED_SECTIONS_FIELD]),
     [fields],
   )
-  const progressCount = plannerProgressCount(shownSections, fields, services.knownVenue)
+  const progressFields = useMemo(() => {
+    if (!timelinePdf?.url || (fields['Timeline PDF'] ?? '').trim()) return fields
+    return { ...fields, 'Timeline PDF': timelinePdf.url }
+  }, [fields, timelinePdf])
+  const progressCount = plannerProgressCount(shownSections, progressFields, services.knownVenue)
   const progress = progressCount.percent
   const progressLook = progressTone(progressCount)
   const contentSections = useMemo(() => shownSections.filter((section) => section.id !== 'basics'), [shownSections])
   const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches)
-  const [sectionId, setSectionId] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, '')))
+  const [sectionHash, setSectionHash] = useState(() => window.location.hash)
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
     const onMedia = () => setWide(media.matches)
-    const onHash = () => setSectionId(decodeURIComponent(window.location.hash.replace(/^#/, '')))
+    const onHash = () => setSectionHash(window.location.hash)
     media.addEventListener('change', onMedia)
     window.addEventListener('hashchange', onHash)
     window.addEventListener('popstate', onHash)
@@ -880,25 +912,34 @@ export default function PlannerApp() {
       window.removeEventListener('popstate', onHash)
     }
   }, [])
-  const selectedId = contentSections.some((section) => section.id === sectionId)
-    ? sectionId
+  const hashParts = hashTarget(sectionHash)
+  const selectedId = contentSections.some((section) => section.id === hashParts.id)
+    ? hashParts.id
     : wide
       ? (contentSections[0]?.id ?? '')
       : ''
   useEffect(() => {
     if (!wide || status.kind !== 'ready' || contentSections.length === 0) return
-    if (contentSections.some((section) => section.id === sectionId)) return
+    if (contentSections.some((section) => section.id === hashParts.id)) return
     const first = contentSections[0]?.id
     if (!first) return
     const nextHash = `#${encodeURIComponent(first)}`
     if (window.location.hash === nextHash) return
     window.history.replaceState({ plannerSection: first }, '', `${window.location.pathname}${window.location.search}${nextHash}`)
-  }, [contentSections, sectionId, status.kind, wide])
-  function selectSection(id: string) {
-    const url = `${window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`
+  }, [contentSections, hashParts.id, status.kind, wide])
+  useEffect(() => {
+    if (!hashParts.anchor) return
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(hashParts.anchor)?.scrollIntoView({ block: 'start' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [hashParts.anchor, selectedId])
+  function selectSection(id: string, anchor = '') {
+    const hash = anchor ? `#${encodeURIComponent(id)}/${anchor}` : `#${encodeURIComponent(id)}`
+    const url = `${window.location.pathname}${window.location.search}${hash}`
     if (wide) window.history.replaceState({ plannerSection: id }, '', url)
     else window.history.pushState({ plannerSection: id }, '', url)
-    setSectionId(id)
+    setSectionHash(hash)
   }
   function closeSection() {
     if (window.history.state?.plannerSection) {
@@ -906,7 +947,7 @@ export default function PlannerApp() {
       return
     }
     window.history.pushState({}, '', `${window.location.pathname}${window.location.search}`)
-    setSectionId('')
+    setSectionHash('')
   }
   const savedLabel = formatSavedAt(lastUpdated)
   const [place, setPlace] = useState('')
@@ -1336,19 +1377,55 @@ export default function PlannerApp() {
               })}
               <nav className="planner-section-nav" aria-label="Planner sections">
                 {contentSections.map((section) => {
-                  const tally = sectionProgress(section, fields, services.knownVenue)
-                  const tone = progressTone(tally)
+                  const tally = sectionProgress(section, progressFields, services.knownVenue)
+                  const songs = section.id === 'reception' ? null : songListStat(section.fields, progressFields)
+                  const tone = tally.omit ? 'plain' : songs ? (songs.count === 0 ? 'empty' : songs.count >= songs.limit ? 'complete' : 'partial') : progressTone(tally)
+                  const subs = section.id === 'reception' ? receptionGroups(section) : []
                   return (
-                    <button
-                      key={section.id}
-                      type="button"
-                      className={`planner-section-box is-${tone}${section.id === selectedId ? ' is-current' : ''}`}
-                      aria-current={section.id === selectedId ? 'true' : undefined}
-                      onClick={() => selectSection(section.id)}
-                    >
-                      <span className="planner-section-box__name">{section.title}</span>
-                      <span className="planner-section-box__pct">{tally.percent}%</span>
-                    </button>
+                    <div key={section.id} className="planner-section-nav__group">
+                      <button
+                        type="button"
+                        className={`planner-section-box is-${tone}${section.id === selectedId && !hashParts.anchor ? ' is-current' : ''}`}
+                        aria-current={section.id === selectedId && !hashParts.anchor ? 'true' : undefined}
+                        onClick={() => selectSection(section.id)}
+                      >
+                        <span className="planner-section-box__name">{section.title}</span>
+                        {!tally.omit && (
+                          <span className="planner-section-box__pct">
+                            {songs ? `${songs.count}/${songs.limit} songs` : `${tally.percent}%`}
+                          </span>
+                        )}
+                      </button>
+                      {subs.map((sub) => {
+                        const subSongs = songListStat(sub.fields, progressFields)
+                        const subTally = sectionProgress(
+                          { ...section, fields: sub.fields },
+                          progressFields,
+                          services.knownVenue,
+                        )
+                        const subTone = subSongs
+                          ? subSongs.count === 0
+                            ? 'empty'
+                            : subSongs.count >= subSongs.limit
+                              ? 'complete'
+                              : 'partial'
+                          : progressTone(subTally)
+                        return (
+                          <button
+                            key={sub.anchor}
+                            type="button"
+                            className={`planner-section-box planner-section-box--sub is-${subTone}${hashParts.anchor === sub.anchor ? ' is-current' : ''}`}
+                            aria-current={hashParts.anchor === sub.anchor ? 'true' : undefined}
+                            onClick={() => selectSection(section.id, sub.anchor)}
+                          >
+                            <span className="planner-section-box__name">{sub.title}</span>
+                            <span className="planner-section-box__pct">
+                              {subSongs ? `${subSongs.count}/${subSongs.limit} songs` : `${subTally.percent}%`}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
                   )
                 })}
               </nav>
