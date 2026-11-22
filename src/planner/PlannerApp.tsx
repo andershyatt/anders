@@ -52,6 +52,7 @@ import {
   formatSavedAt,
   isIsoDate,
   lockoutDate,
+  choiceGroupIsLong,
   normalizePlannerTimes,
   parseDanceFormat,
   plannerLocked,
@@ -283,9 +284,12 @@ function ChoiceGroup({
   onChange: (next: string) => void
   stack?: boolean
 }) {
-  const inline = !stack && options.every((option) => option.trim().length <= 12)
+  const long = choiceGroupIsLong(options)
+  const inline = !stack && !long && options.every((option) => option.trim().length <= 12)
   return (
-    <fieldset className={stack ? 'planner-choices planner-choices--stack' : inline ? 'planner-choices planner-choices--inline' : 'planner-choices'}>
+    <fieldset
+      className={`planner-choices${stack || !inline ? ' planner-choices--stack' : ' planner-choices--inline'}${long ? ' planner-choices--long' : ''}`}
+    >
       <legend>{legend}</legend>
       <div className="planner-choices__row" role="radiogroup" aria-label={legend}>
         {options.map((option) => {

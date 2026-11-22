@@ -152,6 +152,16 @@ export function todayInNewYork(now = new Date()): string {
 }
 
 /** A Couples-sheet "Lock override" of Unlocked keeps the planner open inside the 7-day window. */
+/**
+ * A label longer than this cannot sit two-across on a narrow phone without the
+ * text wrapping inside the button. "Live - instrumental" still fits; a sentence does not.
+ */
+const SHORT_CHOICE_LABEL = 20
+
+export function choiceGroupIsLong(options: readonly string[]): boolean {
+  return options.some((option) => option.trim().length > SHORT_CHOICE_LABEL)
+}
+
 /** A Sheets time-only cell, or a 24-hour clock, as the planner's 12-hour option, e.g. "12:30 AM". */
 export function normalizePlannerTime(value: string): string {
   const trimmed = value.trim()

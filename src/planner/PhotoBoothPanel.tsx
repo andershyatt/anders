@@ -1,4 +1,5 @@
 import BoothGallery from './BoothGallery'
+import { choiceGroupIsLong } from './format'
 import CheckAll from './CheckAll'
 import HalfHourTime from './HalfHourTime'
 import { PHOTO_BOOTH_ITEMS, type BoothField } from './photoBooth'
@@ -32,9 +33,14 @@ function Field({
     return <BoothGallery field={field} value={value} locked={locked} onChange={onChange} />
   }
   if (field.input === 'choice') {
-    const inline = (field.options ?? []).every((option) => option.trim().length <= 12)
+    const options = field.options ?? []
+    const long = choiceGroupIsLong(options)
+    const inline = !long && options.every((option) => option.trim().length <= 12)
     return (
-      <fieldset className={inline ? 'planner-choices planner-choices--inline' : 'planner-choices planner-choices--stack'} disabled={locked}>
+      <fieldset
+        className={`planner-choices${inline ? ' planner-choices--inline' : ' planner-choices--stack'}${long ? ' planner-choices--long' : ''}`}
+        disabled={locked}
+      >
         <legend>{field.label}</legend>
         {field.help && <p className="planner-field__help">{field.help}</p>}
         <div className="planner-choices__row">
