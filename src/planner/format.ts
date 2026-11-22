@@ -152,6 +152,54 @@ export function todayInNewYork(now = new Date()): string {
 }
 
 /** A Couples-sheet "Lock override" of Unlocked keeps the planner open inside the 7-day window. */
+/** A Sheets time-only cell, or a 24-hour clock, as the planner's 12-hour option, e.g. "12:30 AM". */
+export function normalizePlannerTime(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  const twelve = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])$/.exec(trimmed)
+  if (twelve) {
+    let hour = Number(twelve[1])
+    const suffix = twelve[3].toUpperCase()
+    if (suffix === 'AM') hour = hour === 12 ? 0 : hour
+    else hour = hour === 12 ? 12 : hour + 12
+    if (hour > 23) return trimmed
+    return clockLabel(hour, twelve[2])
+  }
+  const sheets = /^1899-\d{2}-\d{2}[ T](\d{1,2}):(\d{2})(?::\d{2})?/.exec(trimmed)
+  const clock = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(trimmed)
+  const match = sheets ?? clock
+  if (!match) return trimmed
+  const hour = Number(match[1])
+  if (hour > 23) return trimmed
+  return clockLabel(hour, match[2])
+}
+
+function clockLabel(hour: number, minutes: string): string {
+  const suffix = hour < 12 ? 'AM' : 'PM'
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12
+  return `${hour12}:${minutes} ${suffix}`
+}
+
+/** Start time, load-in time, and any other clock field. Timeline text is not a time. */
+export function isPlannerTimeField(key: string): boolean {
+  if (/timeline/i.test(key)) return false
+  return /time$/i.test(key.trim())
+}
+
+export function normalizePlannerTimes(fields: Record<string, string>): Record<string, string> {
+  let changed = false
+  const next = { ...fields }
+  for (const key of Object.keys(next)) {
+    if (!isPlannerTimeField(key)) continue
+    const normalized = normalizePlannerTime(next[key] ?? '')
+    if (normalized !== next[key]) {
+      next[key] = normalized
+      changed = true
+    }
+  }
+  return changed ? next : fields
+}
+
 export function plannerLocked(eventDate: string, now = new Date(), override = ''): boolean {
   if (override.trim().toLowerCase() === 'unlocked') return false
   const lock = lockoutDate(eventDate)

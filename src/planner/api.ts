@@ -1,4 +1,5 @@
 import { PLANNER_API_URL } from './config'
+import { normalizePlannerTime } from './format'
 import { ALL_SERVICES, type BookedServices, type PlannerBasics } from './fields'
 
 export interface CoupleInfo {
@@ -98,7 +99,7 @@ function parseBasics(value: unknown): PlannerBasics | null {
     date: basicsText(record.date),
     venue: basicsText(record.venue),
     venueAddress: basicsText(record.venueAddress),
-    startTime: basicsText(record.startTime),
+    startTime: normalizePlannerTime(basicsText(record.startTime)),
     length: basicsText(record.length),
     guestCount: basicsText(record.guestCount),
     booked: basicsText(record.booked),

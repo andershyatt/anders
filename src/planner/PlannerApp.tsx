@@ -52,6 +52,7 @@ import {
   formatSavedAt,
   isIsoDate,
   lockoutDate,
+  normalizePlannerTimes,
   parseDanceFormat,
   plannerLocked,
   toIsoDate,
@@ -605,12 +606,14 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
   const services = preview ?? result.services
   const musicChoices = cocktailMusicChoices(services)
   if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
-  const fields = applyDanceLengthAnswers(
-    applyLiveOnlyPreCeremony(
-      applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services),
+  const fields = normalizePlannerTimes(
+    applyDanceLengthAnswers(
+      applyLiveOnlyPreCeremony(
+        applyPreCeremonyMusicTypeLabel(applyDjCeremonyStyleLabels(next, services), services),
+        services,
+      ),
       services,
     ),
-    services,
   )
   const photo = result.fields[COUPLE_PHOTO_FIELD]
   return {
