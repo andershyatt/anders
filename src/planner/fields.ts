@@ -831,7 +831,6 @@ export interface ProgressCount {
 /** Notes, fade timestamps, optional free text, and "Anders chooses" checks do not count. */
 export function fieldCountsTowardProgress(field: PlannerField): boolean {
   if (field.kind === 'fold' || field.kind === 'floorplan' || field.kind === 'check') return false
-  if (field.key === 'Do not play songs') return true
   const label = field.label.trim().toLowerCase().replace(/\s+/g, ' ')
   if (label === 'notes' || label === 'additional notes') return false
   if (label.includes('specific timestamp')) return false
@@ -844,13 +843,41 @@ function percentOf(answered: number, total: number): number {
   return Math.round((answered / total) * 100)
 }
 
+const DO_NOT_PLAY_SONGS = 'Do not play songs'
+const DO_NOT_PLAY_NOTES = 'Do-not-play list'
+
+function isSongListJson(raw: string): boolean {
+  const trimmed = raw.trim()
+  if (!trimmed.startsWith('[')) return false
+  try {
+    return Array.isArray(JSON.parse(trimmed))
+  } catch {
+    return false
+  }
+}
+
+/** Do Not Play is complete when a song is listed or the notes box has text. */
+export function doNotPlayAnswered(answers: Record<string, string>): boolean {
+  if ((answers[DO_NOT_PLAY_NOTES] ?? '').trim() !== '') return true
+  return parseCocktailSongs(answers[DO_NOT_PLAY_SONGS] ?? '', 500).length > 0
+}
+
 export function tallyPlannerFields(list: readonly PlannerField[], answers: Record<string, string>): ProgressCount {
   let total = 0
   let answered = 0
+  let doNotPlay = false
   for (const field of list) {
+    if (field.key === DO_NOT_PLAY_SONGS || field.key === DO_NOT_PLAY_NOTES) {
+      doNotPlay = true
+      continue
+    }
     if (!fieldCountsTowardProgress(field)) continue
     total += 1
     if ((answers[field.key] ?? '').trim() !== '') answered += 1
+  }
+  if (doNotPlay) {
+    total += 1
+    if (doNotPlayAnswered(answers)) answered += 1
   }
   return { answered, total, percent: percentOf(answered, total) }
 }
@@ -908,13 +935,23 @@ export function songListAsPlainText(raw: string): string {
   return songs.map((song) => (song.artist ? `${song.title} – ${song.artist}` : song.title)).join('\n')
 }
 
-/** Do Not Play used to be a song search. Keep those picks as text in the notes box. */
-export function applyPlainSongLists(fields: Record<string, string>): Record<string, string> {
-  const key = 'Do not play songs'
-  const current = fields[key] ?? ''
-  const next = songListAsPlainText(current)
-  if (next === current) return fields
-  return { ...fields, [key]: next }
+/**
+ * Do Not Play keeps its song list. Text from the old songs box and from
+ * "Other music or styles to avoid" is combined into the one notes box.
+ */
+export function applyDoNotPlayFields(fields: Record<string, string>): Record<string, string> {
+  const songsRaw = fields[DO_NOT_PLAY_SONGS] ?? ''
+  const notesRaw = fields[DO_NOT_PLAY_NOTES] ?? ''
+  const songsAreList = isSongListJson(songsRaw)
+  const looseSongText = songsAreList ? '' : songsRaw.trim()
+  const notesText = songListAsPlainText(notesRaw).trim()
+  const parts: string[] = []
+  if (looseSongText) parts.push(looseSongText)
+  if (notesText && notesText !== looseSongText && !looseSongText.includes(notesText)) parts.push(notesText)
+  const notes = parts.join('\n')
+  const songs = songsAreList ? songsRaw : ''
+  if (songs === songsRaw && notes === notesRaw) return fields
+  return { ...fields, [DO_NOT_PLAY_SONGS]: songs, [DO_NOT_PLAY_NOTES]: notes }
 }
 
 export function progressTone(count: Pick<ProgressCount, 'answered' | 'total'>): ProgressTone {

@@ -218,12 +218,14 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   },
   {
     key: 'Do not play songs',
-    label: 'Songs or styles to avoid',
-    kind: 'textarea',
-    rows: 6,
+    label: 'Songs',
+    kind: 'songlist',
+    picker: true,
+    screenTitle: 'Do Not Play Songs',
     heading: 'Do Not Play',
     note: 'Often just as important as the play list. Please list any music or types of music that you do not want to hear at your wedding.',
-    placeholder: 'One song or style per line',
+    maxSongs: 50,
+    maxMustPlays: 0,
   },
   {
     key: 'Cocktail hour Anders chooses',
@@ -455,7 +457,12 @@ export function liveDjReception(find: FindField): PlannerSection {
       take(find, 'Private last dance wanted'),
       take(find, 'Private last dance', { suggestions: 'sheet-first-dance' }),
       take(find, 'Do not play songs'),
-      take(find, 'Do-not-play list', { label: 'Other music or styles to avoid', song: undefined }),
+      take(find, 'Do-not-play list', {
+        label: 'Notes',
+        song: undefined,
+        rows: 4,
+        placeholder: 'No line dances, no country music, or anything else to avoid',
+      }),
     ],
   }
 }

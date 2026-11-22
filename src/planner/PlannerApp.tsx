@@ -23,7 +23,7 @@ import {
   visibleSections,
   usesDjOnlyTemplate,
   usesLiveOnlyTemplate,
-  applyPlainSongLists,
+  applyDoNotPlayFields,
   hidesSongCount,
   plannerProgressCount,
   progressTone,
@@ -108,7 +108,6 @@ const SECTION_NOTE_FIELD: Record<string, string> = {
   'Dinner songs': 'Dinner music notes',
   'Reception music songs': 'Reception music notes',
   'Open dancing songs': 'DJ music requests',
-  'Do not play songs': 'Do-not-play list',
 }
 
 function songListMode(key: string, answers: Record<string, string>): 'live' | 'dj' | 'mix' {
@@ -432,6 +431,7 @@ function FieldControl({
         pickerMode={pickerMode}
         repertoireOnly={repertoireOnly}
         sectionNote={sectionNote}
+        allowNotes={field.key !== 'Do not play songs'}
       />
     )
   }
@@ -638,7 +638,7 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
   const services = preview ?? result.services
   const musicChoices = cocktailMusicChoices(services)
   if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
-  const fields = applyPlainSongLists(
+  const fields = applyDoNotPlayFields(
     normalizePlannerTimes(
       applyDanceLengthAnswers(
         applyLiveOnlyPreCeremony(
@@ -975,10 +975,16 @@ export default function PlannerApp() {
   useEffect(() => {
     if (!hashParts.anchor) return
     const frame = window.requestAnimationFrame(() => {
+      if (hashParts.id === 'reception') {
+        const section = document.getElementById('reception')
+        if (section) section.scrollTop = 0
+        window.scrollTo(0, 0)
+        return
+      }
       document.getElementById(hashParts.anchor)?.scrollIntoView({ block: 'start' })
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [hashParts.anchor, selectedId])
+  }, [hashParts.anchor, hashParts.id, selectedId])
   function selectSection(id: string, anchor = '') {
     const hash = anchor ? `#${encodeURIComponent(id)}/${anchor}` : `#${encodeURIComponent(id)}`
     const url = `${window.location.pathname}${window.location.search}${hash}`
@@ -1170,8 +1176,8 @@ export default function PlannerApp() {
                         Back
                       </button>
                     )}
-                    <h2>{section.title}</h2>
-                    {managed && (
+                    <h2>{receptionGroup ? receptionGroup.title : section.title}</h2>
+                    {managed && !receptionGroup && (
                       <div className="planner-section__tools">
                         <button type="button" onClick={() => removeManaged(section.id)}>
                           Remove
