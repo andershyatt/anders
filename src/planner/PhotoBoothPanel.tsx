@@ -55,7 +55,12 @@ function Field({
                   if (value === option) onChange('')
                 }}
               />
-              <span>{option}</span>
+              <span>
+                {option}
+                {field.key === 'Photo Booth: Print size' && option.startsWith('2"x6"') && (
+                  <em className="planner-popular">Most popular</em>
+                )}
+              </span>
             </label>
           ))}
         </div>

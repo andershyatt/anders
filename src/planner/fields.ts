@@ -831,6 +831,7 @@ export interface ProgressCount {
 /** Notes, fade timestamps, optional free text, and "Anders chooses" checks do not count. */
 export function fieldCountsTowardProgress(field: PlannerField): boolean {
   if (field.kind === 'fold' || field.kind === 'floorplan' || field.kind === 'check') return false
+  if (field.key === 'Toasts/speeches' || field.key === 'Other announcement notes') return true
   const label = field.label.trim().toLowerCase().replace(/\s+/g, ' ')
   if (label === 'notes' || label === 'additional notes') return false
   if (label.includes('specific timestamp')) return false

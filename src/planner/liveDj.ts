@@ -143,7 +143,6 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     kind: 'songlist',
     picker: true,
     screenTitle: 'Dinner Songs',
-    suggestions: 'cocktail-dinner',
     note: 'Add as many or as few songs as you like.',
     maxSongs: 50,
     maxMustPlays: 10,
@@ -376,7 +375,6 @@ export function liveDjCocktail(find: FindField): PlannerSection {
       take(find, 'Cocktail hour songs', {
         picker: true,
         screenTitle: 'Cocktail Hour Songs',
-        suggestions: 'cocktail-dinner',
         note: 'Add as many or as few songs as you like.',
         maxSongs: 30,
         maxMustPlays: 10,
@@ -461,7 +459,6 @@ export function liveDjReception(find: FindField): PlannerSection {
         label: 'Notes',
         song: undefined,
         rows: 4,
-        placeholder: 'No line dances, no country music, or anything else to avoid',
       }),
     ],
   }

@@ -1178,20 +1178,47 @@
 
 @media (max-width: 899px) {
   .planner-section.is-selected {
+    display: flex;
+    flex-direction: column;
     position: fixed;
     inset: 0;
     z-index: 40;
-    overflow: auto;
+    overflow: hidden;
     background: #f4efe7;
-    padding: calc(3.4rem + env(safe-area-inset-top)) 0.9rem calc(6.5rem + env(safe-area-inset-bottom));
+    padding: 0;
+  }
+
+  .planner-section.is-selected .planner-section__head {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: calc(0.65rem + env(safe-area-inset-top)) 0.9rem 0.55rem;
+    background: #f4efe7;
+  }
+
+  .planner-section.is-selected .planner-section__back-row {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 0.35rem;
+  }
+
+  .planner-section.is-selected .planner-section__back {
+    flex: 0 0 auto;
+    width: auto;
+    align-self: flex-start;
+  }
+
+  .planner-section.is-selected .planner-section__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 0.35rem 0.9rem calc(6.5rem + env(safe-area-inset-bottom));
   }
 
   .planner-section__back {
     display: inline-flex;
-    position: fixed;
-    top: calc(0.65rem + env(safe-area-inset-top));
-    left: calc(0.7rem + env(safe-area-inset-left));
-    z-index: 41;
+    position: static;
     border: 0;
     border-radius: 999px;
     background: #1c1916;
@@ -1313,16 +1340,30 @@
 }
 
 @media (min-width: 900px) {
+  .planner-lead {
+    max-width: none;
+  }
+
   .planner-main {
-    width: 92%;
-    max-width: 1280px;
+    width: 76.31%;
+    max-width: 1072px;
+  }
+
+  .planner-layout > #basics {
+    justify-self: center;
+    width: max-content;
+    max-width: 100%;
+  }
+
+  #basics .planner-basics__row {
+    grid-template-columns: max-content max-content;
   }
 
   .planner-savebar,
   .planner-progress {
     left: 50%;
     right: auto;
-    width: min(1280px, 92%);
+    width: min(1072px, 76.31%);
     transform: translateX(-50%);
   }
 }
@@ -1688,7 +1729,10 @@
 }
 
 .planner-songcompact__must {
-  color: var(--color-accent-dark);
+  color: #3c342c;
+  background: #e4c98a;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
   font-family: var(--font-nav);
   font-size: 11px;
   font-weight: 700;
@@ -1728,12 +1772,8 @@
 }
 
 @media (max-width: 899px) {
-  .planner-picker__back {
-    display: none;
-  }
-
   .planner-picker__bar {
-    padding-left: 5.6rem;
+    padding-top: calc(0.65rem + env(safe-area-inset-top));
   }
 }
 
@@ -2051,11 +2091,38 @@
 }
 
 .planner-gallery__card.is-text {
-  align-self: start;
+  align-self: stretch;
 }
 
-.planner-gallery__card.is-text:last-child {
-  grid-column: 1 / -1;
+.planner-gallery__card.is-text::before {
+  content: '';
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #efe8dc;
+}
+
+.planner-gallery__popular,
+.planner-popular {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 1;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #e4c98a;
+  color: #3c342c;
+  font-family: var(--font-nav);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.planner-choices .planner-popular {
+  position: static;
+  margin-left: 0.45rem;
+  vertical-align: middle;
 }
 
 .planner-gallery label {

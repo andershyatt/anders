@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf, type PlannerLoadSuccess } from './api'
 import {
   DANCE_LENGTH,
@@ -935,6 +935,32 @@ export default function PlannerApp() {
   const progressLook = progressTone(progressCount)
   const contentSections = useMemo(() => shownSections.filter((section) => section.id !== 'basics'), [shownSections])
   const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches)
+  const [basicsOpen, setBasicsOpen] = useState(true)
+  const basicsRef = useRef<HTMLElement | null>(null)
+  const pendingScroll = useRef<string | null>(null)
+  useLayoutEffect(() => {
+    const el = basicsRef.current
+    if (!el) return
+    const apply = () => {
+      if (!window.matchMedia('(min-width: 900px)').matches) {
+        el.style.width = ''
+        return
+      }
+      el.style.width = 'max-content'
+      const natural = el.getBoundingClientRect().width
+      const column = el.parentElement?.clientWidth ?? natural
+      el.style.width = `${Math.min(column, Math.round(natural * 1.3))}px`
+    }
+    apply()
+    const parent = el.parentElement
+    const observer = new ResizeObserver(apply)
+    if (parent) observer.observe(parent)
+    window.addEventListener('resize', apply)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', apply)
+    }
+  }, [basicsOpen, wide])
   const [sectionHash, setSectionHash] = useState(() => window.location.hash)
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
@@ -973,23 +999,34 @@ export default function PlannerApp() {
     window.history.replaceState({ plannerSection: first }, '', `${window.location.pathname}${window.location.search}${nextHash}`)
   }, [contentSections, hashParts.anchor, hashParts.id, status.kind, wide])
   useEffect(() => {
-    if (!hashParts.anchor) return
+    if (!hashParts.anchor || wide) return
     const frame = window.requestAnimationFrame(() => {
-      if (hashParts.id === 'reception') {
-        const section = document.getElementById('reception')
-        if (section) section.scrollTop = 0
-        window.scrollTo(0, 0)
-        return
-      }
-      document.getElementById(hashParts.anchor)?.scrollIntoView({ block: 'start' })
+      const section = document.getElementById(hashParts.id)
+      const scroller = section?.querySelector('.planner-section__body')
+      if (scroller) scroller.scrollTop = 0
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [hashParts.anchor, hashParts.id, selectedId])
+  }, [hashParts.anchor, hashParts.id, wide])
+  useEffect(() => {
+    if (!wide || !pendingScroll.current) return
+    const id = pendingScroll.current
+    pendingScroll.current = null
+    const frame = window.requestAnimationFrame(() => {
+      const section = document.getElementById(id)
+      if (!section) return
+      const headerBottom = document.querySelector('.planner-top')?.getBoundingClientRect().bottom ?? 0
+      const y = section.getBoundingClientRect().top + window.scrollY - headerBottom - 8
+      window.scrollTo(0, Math.max(0, y))
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [sectionHash, wide])
   function selectSection(id: string, anchor = '') {
     const hash = anchor ? `#${encodeURIComponent(id)}/${anchor}` : `#${encodeURIComponent(id)}`
     const url = `${window.location.pathname}${window.location.search}${hash}`
-    if (wide) window.history.replaceState({ plannerSection: id }, '', url)
-    else window.history.pushState({ plannerSection: id }, '', url)
+    if (wide) {
+      pendingScroll.current = id
+      window.history.replaceState({ plannerSection: id }, '', url)
+    } else window.history.pushState({ plannerSection: id }, '', url)
     setSectionHash(hash)
   }
   function closeSection() {
@@ -1172,15 +1209,29 @@ export default function PlannerApp() {
                 const sectionFields = receptionGroup ? receptionGroup.fields : section.fields
                 let hideSubsection = false
                 return (
-                <section key={section.id} id={section.id} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}`}>
+                <section key={section.id} id={section.id} ref={section.id === 'basics' ? basicsRef : undefined} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}${section.id === 'basics' && !basicsOpen ? ' is-collapsed' : ''}`}>
                   {(!receptionGroup || (!wide && section.id === selectedId)) && (
                   <div className="planner-section__head">
                     {!wide && section.id === selectedId && (
-                      <button type="button" className="planner-section__back" onClick={closeSection}>
-                        Back
-                      </button>
+                      <div className="planner-section__back-row">
+                        <button type="button" className="planner-section__back" onClick={closeSection}>
+                          Back
+                        </button>
+                      </div>
                     )}
                     {!receptionGroup && <h2>{section.title}</h2>}
+                    {section.id === 'basics' && (
+                      <div className="planner-section__tools">
+                        <button
+                          type="button"
+                          className="planner-section__toggle"
+                          aria-expanded={basicsOpen}
+                          onClick={() => setBasicsOpen((open) => !open)}
+                        >
+                          {basicsOpen ? 'Collapse' : 'Expand'}
+                        </button>
+                      </div>
+                    )}
                     {managed && !receptionGroup && (
                       <div className="planner-section__tools">
                         <button type="button" onClick={() => removeManaged(section.id)}>
@@ -1190,6 +1241,7 @@ export default function PlannerApp() {
                     )}
                   </div>
                   )}
+                  <div className="planner-section__body">
                   {section.blurb && (
                     <p className="planner-callout">
                       <span>{section.blurb}</span>
@@ -1434,6 +1486,7 @@ export default function PlannerApp() {
                     </Fragment>
                     )
                   })}
+                  </div>
                 </section>
                 )
               })}
