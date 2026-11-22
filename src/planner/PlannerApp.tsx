@@ -1009,15 +1009,18 @@ export default function PlannerApp() {
       frame = 0
       const header = document.querySelector('.planner-top')
       const line = (header?.getBoundingClientRect().bottom ?? 0) + 4
-      const selectedHeading = document.querySelector('.planner-section.is-selected h2')
+      const selectedHeading = document.querySelector('.planner-section.is-selected h2, .planner-section.is-selected .planner-subhead')
       let section = selectedHeading?.textContent?.trim() ?? ''
       let sub = ''
       for (const el of document.querySelectorAll('.planner-section.is-selected h2, .planner-section.is-selected .planner-subhead')) {
         const rect = el.getBoundingClientRect()
         if (rect.height === 0) continue
         if (rect.top > line) break
-        if (el.classList.contains('planner-subhead')) sub = el.textContent?.trim() ?? ''
-        else {
+        if (el.classList.contains('planner-subhead')) {
+          const title = el.textContent?.trim() ?? ''
+          if (!section || section.toLowerCase() === title.toLowerCase()) section = title
+          else sub = title
+        } else {
           section = el.textContent?.trim() ?? ''
           sub = ''
         }
@@ -1169,14 +1172,15 @@ export default function PlannerApp() {
                 const sectionFields = receptionGroup ? receptionGroup.fields : section.fields
                 let hideSubsection = false
                 return (
-                <section key={section.id} id={section.id} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}`}>
+                <section key={section.id} id={section.id} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}`}>
+                  {(!receptionGroup || (!wide && section.id === selectedId)) && (
                   <div className="planner-section__head">
                     {!wide && section.id === selectedId && (
                       <button type="button" className="planner-section__back" onClick={closeSection}>
                         Back
                       </button>
                     )}
-                    <h2>{receptionGroup ? receptionGroup.title : section.title}</h2>
+                    {!receptionGroup && <h2>{section.title}</h2>}
                     {managed && !receptionGroup && (
                       <div className="planner-section__tools">
                         <button type="button" onClick={() => removeManaged(section.id)}>
@@ -1185,6 +1189,7 @@ export default function PlannerApp() {
                       </div>
                     )}
                   </div>
+                  )}
                   {section.blurb && (
                     <p className="planner-callout">
                       <span>{section.blurb}</span>
@@ -1242,20 +1247,22 @@ export default function PlannerApp() {
                     return (
                     <Fragment key={field.key}>
                       {field.heading && (
-                        <div className="planner-subhead-row">
+                        <div className={`planner-subhead-row${receptionGroup && field.heading === receptionGroup.title ? ' is-page-title' : ''}`}>
                           <h3 className="planner-subhead" id={`sub-${sectionSlug(field.heading)}`}>
                             {field.heading}
                           </h3>
                           {section.id === 'reception' && (
                             <div className="planner-section__tools">
-                              <button
-                                type="button"
-                                className="planner-section__toggle"
-                                aria-expanded={showField}
-                                onClick={() => toggleCollapsed(subId)}
-                              >
-                                {showField ? 'Collapse' : 'Expand'}
-                              </button>
+                              {!receptionGroup && (
+                                <button
+                                  type="button"
+                                  className="planner-section__toggle"
+                                  aria-expanded={showField}
+                                  onClick={() => toggleCollapsed(subId)}
+                                >
+                                  {showField ? 'Collapse' : 'Expand'}
+                                </button>
+                              )}
                               <button type="button" onClick={() => removeManaged(subId)}>
                                 Remove
                               </button>
