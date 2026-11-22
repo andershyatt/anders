@@ -254,8 +254,9 @@ function ChoiceGroup({
   onChange: (next: string) => void
   stack?: boolean
 }) {
+  const inline = !stack && options.every((option) => option.trim().length <= 12)
   return (
-    <fieldset className={stack ? 'planner-choices planner-choices--stack' : 'planner-choices'}>
+    <fieldset className={stack ? 'planner-choices planner-choices--stack' : inline ? 'planner-choices planner-choices--inline' : 'planner-choices'}>
       <legend>{legend}</legend>
       <div className="planner-choices__row" role="radiogroup" aria-label={legend}>
         {options.map((option) => {
