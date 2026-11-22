@@ -1611,7 +1611,7 @@
   text-align: left;
 }
 
-.planner-form.is-locked .planner-section :is(input, textarea, select, button):not(.planner-songcompact__open) {
+.planner-form.is-locked .planner-section :is(label, input, textarea, select, button):not(.planner-songcompact__open):not(.planner-section__toggle) {
   pointer-events: none;
 }
 

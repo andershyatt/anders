@@ -1023,6 +1023,7 @@ export default function PlannerApp() {
                       <div className="planner-section__tools">
                         <button
                           type="button"
+                          className="planner-section__toggle"
                           aria-expanded={!sectionCollapsed}
                           onClick={() => toggleCollapsed(section.id)}
                         >
@@ -1099,6 +1100,7 @@ export default function PlannerApp() {
                             <div className="planner-section__tools">
                               <button
                                 type="button"
+                                className="planner-section__toggle"
                                 aria-expanded={showField}
                                 onClick={() => toggleCollapsed(subId)}
                               >
