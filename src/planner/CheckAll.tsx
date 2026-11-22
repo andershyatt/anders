@@ -50,8 +50,9 @@ export default function CheckAll({ name, legend, options, value, onChange, help,
     onChange(saved)
   }
 
+  const inline = options.every((option) => option.trim().length <= 12)
   return (
-    <fieldset className="planner-choices planner-choices--stack">
+    <fieldset className={inline ? 'planner-choices planner-choices--inline' : 'planner-choices planner-choices--stack'}>
       <legend>{legend}</legend>
       {help && <p className="planner-field__help">{help}</p>}
       <div className="planner-choices__row" role="group" aria-label={legend}>
