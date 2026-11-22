@@ -1252,6 +1252,21 @@
   }
 }
 
+@media (min-width: 900px) {
+  .planner-main {
+    width: 92%;
+    max-width: 1280px;
+  }
+
+  .planner-savebar,
+  .planner-progress {
+    left: 50%;
+    right: auto;
+    width: min(1280px, 92%);
+    transform: translateX(-50%);
+  }
+}
+
 @media (max-width: 520px) {
   .planner-welcome h1,
   .planner-panel h1,
