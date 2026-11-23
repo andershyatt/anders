@@ -642,13 +642,14 @@ function FieldControl({
 
   return (
     <label className="planner-field" htmlFor={id}>
-      <span>{field.label}</span>
+      {!field.hideLabel && <span>{field.label}</span>}
       {field.help && <p className="planner-field__help">{field.help}</p>}
       <input
         id={id}
         type="text"
         value={value}
         placeholder={field.placeholder}
+        aria-label={field.hideLabel ? field.label : undefined}
         autoComplete="off"
         onChange={(event) => onChange(event.target.value)}
       />
