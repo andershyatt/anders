@@ -403,7 +403,10 @@ function FieldControl({
   onChange: (next: string) => void
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
-  const suggestions = field.suggestions ?? SONG_FIELD_SUGGESTIONS[field.key]
+  const suggestions =
+    field.key === 'Cocktail hour songs' || field.key === 'Dinner songs'
+      ? undefined
+      : (field.suggestions ?? SONG_FIELD_SUGGESTIONS[field.key])
 
   if (field.key === EXTRA_PARENT_DANCES) {
     return <ParentDanceList value={value} formats={parentDanceFormatOptions(services)} onChange={onChange} />
@@ -461,7 +464,12 @@ function FieldControl({
         pickerKey={field.key}
         screenTitle={field.screenTitle}
         playlists={suggestionPlaylists(suggestions)}
-        allowImport={suggestionIds(suggestions).some((listId) => listId === 'cocktail-dinner' || listId === 'open-dancing')}
+        allowImport={
+          field.key === 'Cocktail hour songs' ||
+          field.key === 'Dinner songs' ||
+          field.key === 'Open dancing songs' ||
+          suggestionIds(suggestions).some((listId) => listId === 'cocktail-dinner' || listId === 'open-dancing')
+        }
         token={token}
         pickerMode={pickerMode}
         repertoireOnly={repertoireOnly}
