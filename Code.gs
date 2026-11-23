@@ -296,6 +296,10 @@ function doPost(e) {
     var body = {};
     try { body = JSON.parse((e && e.postData && e.postData.contents) || '{}'); }
     catch (x) { return json_({ ok: false, error: 'bad_json' }); }
+    if (body.action === 'publicPlaylist') {
+      try { return json_(publicPlaylist_(body)); }
+      catch (err) { return json_({ ok: false, error: 'send_failed' }); }
+    }
     if (body.action === 'resolveSlug') return resolveSlug_(body.slug);
     if (body.action === 'load') return loadResponse_(body.c);
     if (body.action === 'importPlaylist') return importPlaylist_(body);
@@ -2316,4 +2320,54 @@ function appendSheetTable_(body, node, compact) {
       if (header) cell.setBackgroundColor('#f4f1ea');
     }
   }
+}
+
+/**
+ * Live Song List "Send to Anders". No couple token.
+ * eventDate arrives as YYYY-MM-DD or already as "Tuesday, June 1st, 2027".
+ * Each song line is "1. Artist - Song title".
+ */
+function publicPlaylist_(body) {
+  if (!body || typeof body !== 'object') return { ok: false, error: 'bad_request' };
+  var songs = Object.prototype.toString.call(body.songs) === '[object Array]' ? body.songs : [];
+  var lines = [];
+  var limit = Math.min(songs.length, 500);
+  for (var i = 0; i < limit; i++) {
+    var song = songs[i] || {};
+    var artist = String(song.artist == null ? '' : song.artist).trim();
+    var title = String(song.title == null ? '' : song.title).trim() || '(untitled)';
+    lines.push((i + 1) + '. ' + (artist ? artist + ' - ' + title : title));
+  }
+  if (!lines.length) return { ok: false, error: 'no_songs' };
+
+  function textOr_(value, fallback) {
+    var text = value == null ? '' : String(value).trim();
+    return text || fallback;
+  }
+  var name = textOr_(body.name, '(not provided)');
+  var email = textOr_(body.email, '(not provided)');
+  var rawDate = textOr_(body.eventDate, '');
+  var eventDate = rawDate ? friendlyDate_(rawDate) : '(not provided)';
+  if (!eventDate) eventDate = '(not provided)';
+  var notes = textOr_(body.notes, '(none)');
+  if (notes.length > 5000) notes = notes.substring(0, 5000);
+
+  var message = [
+    'Anders Hyatt Music — Client Playlist',
+    '',
+    'Name: ' + name,
+    'Email: ' + email,
+    'Event date: ' + eventDate,
+    'Notes: ' + notes,
+    '',
+    'Songs (' + lines.length + '):'
+  ].concat(lines).join('\n');
+
+  var subject = name === '(not provided)' ? 'Playlist request' : 'Playlist request from ' + name;
+  var mail = { to: NOTIFY_EMAIL, subject: subject, body: message };
+  if (typeof body.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())) {
+    mail.replyTo = body.email.trim();
+  }
+  MailApp.sendEmail(mail);
+  return { ok: true };
 }
