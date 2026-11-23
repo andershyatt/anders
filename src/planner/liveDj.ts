@@ -39,6 +39,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     key: 'Officiant microphone notes',
     label: 'Anything to add?',
     kind: 'text',
+    hideLabel: true,
     placeholder: 'Anything to add?',
   },
   {
@@ -51,6 +52,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     key: 'Other ceremony speakers notes',
     label: 'Anything to add?',
     kind: 'text',
+    hideLabel: true,
     placeholder: 'Anything to add?',
   },
   {
