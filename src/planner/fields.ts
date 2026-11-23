@@ -114,6 +114,26 @@ export const plannerSections: PlannerSection[] = [
     title: 'Details',
     blurb: '',
     fields: [
+      {
+        key: 'Planner (name/contact)',
+        label: 'Planner (name/contact)',
+        kind: 'text',
+        placeholder: 'Name, phone, or email',
+      },
+      { key: 'Venue manager', label: 'Venue manager', kind: 'text' },
+      { key: 'Photographer', label: 'Photographer', kind: 'text' },
+      {
+        key: 'How late is the photographer scheduled?',
+        label: 'How late is the photographer scheduled?',
+        kind: 'text',
+      },
+      { key: 'Videographer', label: 'Videographer', kind: 'text' },
+      {
+        key: 'How late is the videographer scheduled?',
+        label: 'How late is the videographer scheduled?',
+        kind: 'text',
+      },
+      { key: 'Caterer info', label: 'Caterer', kind: 'text' },
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
       {
         key: 'Wedding website password',
@@ -149,33 +169,6 @@ export const plannerSections: PlannerSection[] = [
         kind: 'textarea',
         placeholder: "Anything else you'd like us to know",
       },
-    ],
-  },
-  {
-    id: 'vendors',
-    title: 'Vendors',
-    blurb: 'Who else is on your vendor team, in case Anders needs to coordinate.',
-    fields: [
-      {
-        key: 'Planner (name/contact)',
-        label: 'Planner (name/contact)',
-        kind: 'text',
-        placeholder: 'Name, phone, or email',
-      },
-      { key: 'Venue manager', label: 'Venue manager', kind: 'text' },
-      { key: 'Photographer', label: 'Photographer', kind: 'text' },
-      {
-        key: 'How late is the photographer scheduled?',
-        label: 'How late is the photographer scheduled?',
-        kind: 'text',
-      },
-      { key: 'Videographer', label: 'Videographer', kind: 'text' },
-      {
-        key: 'How late is the videographer scheduled?',
-        label: 'How late is the videographer scheduled?',
-        kind: 'text',
-      },
-      { key: 'Caterer info', label: 'Caterer', kind: 'text' },
     ],
   },
   {
@@ -379,7 +372,6 @@ export const VIDEOGRAPHER_LATE_FIELD = 'How late is the videographer scheduled?'
 export const MANAGED_SECTION_IDS = new Set([
   'wedding-details',
   'venue-questions',
-  'vendors',
   'timeline',
   'ceremony',
   'cocktail-hour',
@@ -844,6 +836,54 @@ function percentOf(answered: number, total: number): number {
   return Math.round((answered / total) * 100)
 }
 
+/** Open dancing and slow dances stay optional. Cocktail hour and dinner are scored separately. */
+const OPTIONAL_SONG_KEYS = new Set(['Open dancing songs', 'Slow dance songs'])
+
+const COCKTAIL_STYLE = 'Cocktail hour music type'
+const COCKTAIL_NOTES = 'Cocktail hour vibe'
+const COCKTAIL_SONGS = 'Cocktail hour songs'
+const DINNER_STYLE = 'Dinner music type'
+const DINNER_NOTES = 'Dinner music notes'
+const DINNER_SONGS = 'Dinner songs'
+
+const SCORED_ACTIVITY_KEYS = new Set([
+  COCKTAIL_STYLE,
+  COCKTAIL_NOTES,
+  COCKTAIL_SONGS,
+  DINNER_STYLE,
+  DINNER_NOTES,
+  DINNER_SONGS,
+])
+
+/** A song on the list, or any text in the notes box, counts as doing something. */
+function didSongOrNote(answers: Record<string, string>, notesKey: string, songsKey: string): boolean {
+  if ((answers[notesKey] ?? '').trim() !== '') return true
+  return parseCocktailSongs(answers[songsKey] ?? '', 500).length > 0
+}
+
+/**
+ * Live + DJ: style is one half, and a song or a note is the other half.
+ * Live-only and DJ-only have no style question, so a song or a note is the whole score.
+ */
+function scoreSongSection(
+  keys: ReadonlySet<string>,
+  answers: Record<string, string>,
+  styleKey: string,
+  notesKey: string,
+  songsKey: string,
+): { answered: number; total: number } | null {
+  const hasStyle = keys.has(styleKey)
+  const hasActivity = keys.has(notesKey) || keys.has(songsKey)
+  if (!hasStyle && !hasActivity) return null
+  if (!hasStyle) {
+    return { answered: didSongOrNote(answers, notesKey, songsKey) ? 1 : 0, total: 1 }
+  }
+  let answered = 0
+  if ((answers[styleKey] ?? '').trim() !== '') answered += 1
+  if (didSongOrNote(answers, notesKey, songsKey)) answered += 1
+  return { answered, total: 2 }
+}
+
 const DO_NOT_PLAY_SONGS = 'Do not play songs'
 const DO_NOT_PLAY_NOTES = 'Do-not-play list'
 
@@ -867,11 +907,21 @@ export function tallyPlannerFields(list: readonly PlannerField[], answers: Recor
   let total = 0
   let answered = 0
   let doNotPlay = false
+  const keys = new Set(list.map((field) => field.key))
+  for (const score of [
+    scoreSongSection(keys, answers, COCKTAIL_STYLE, COCKTAIL_NOTES, COCKTAIL_SONGS),
+    scoreSongSection(keys, answers, DINNER_STYLE, DINNER_NOTES, DINNER_SONGS),
+  ]) {
+    if (!score) continue
+    answered += score.answered
+    total += score.total
+  }
   for (const field of list) {
     if (field.key === DO_NOT_PLAY_SONGS || field.key === DO_NOT_PLAY_NOTES) {
       doNotPlay = true
       continue
     }
+    if (OPTIONAL_SONG_KEYS.has(field.key) || SCORED_ACTIVITY_KEYS.has(field.key)) continue
     if (!fieldCountsTowardProgress(field)) continue
     total += 1
     if ((answers[field.key] ?? '').trim() !== '') answered += 1
@@ -1042,7 +1092,10 @@ export function removedSectionEntries(
       if (field.heading) labels.set(subsectionId(section.id, field.key), field.heading)
     }
   }
-  return [...removed].map((id) => ({ id, label: labels.get(id) ?? id }))
+  return [...removed].flatMap((id) => {
+    const label = labels.get(id)
+    return label ? [{ id, label }] : []
+  })
 }
 
 export const PARENT_DANCE_LIVE_DJ = [

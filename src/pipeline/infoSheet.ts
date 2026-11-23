@@ -98,6 +98,13 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
   {
     title: 'Basics',
     keys: [
+      'Planner (name/contact)',
+      'Venue manager',
+      'Photographer',
+      'How late is the photographer scheduled?',
+      'Videographer',
+      'How late is the videographer scheduled?',
+      'Caterer info',
       'Event type',
       'Event date',
       'Venue',

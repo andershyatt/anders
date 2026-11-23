@@ -1133,7 +1133,14 @@ var FIELD_PLACE = {
   'Private last dance wanted': ['Reception', 'Private last dance'],
   'Private last dance section': ['Reception', 'Private last dance'],
   'Do-not-play list': ['Reception', 'Do Not Play'],
-  'Do not play songs': ['Reception', 'Do Not Play']
+  'Do not play songs': ['Reception', 'Do Not Play'],
+  'Planner (name/contact)': ['Details', 'Vendors'],
+  'Venue manager': ['Details', 'Vendors'],
+  'Photographer': ['Details', 'Vendors'],
+  'How late is the photographer scheduled?': ['Details', 'Vendors'],
+  'Videographer': ['Details', 'Vendors'],
+  'How late is the videographer scheduled?': ['Details', 'Vendors'],
+  'Caterer info': ['Details', 'Vendors']
 };
 
 function placeFor_(field) {
