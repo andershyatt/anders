@@ -50,7 +50,17 @@ var PLANNER_FIELDS = [
   'Reception music notes',
   'Reception music Anders chooses',
   'Reception music songs',
-  'Collapsed sections'
+  'Collapsed sections',
+  'Have a wedding website',
+  'Officiant microphone notes',
+  'Other ceremony speakers notes',
+  'Having parent dances',
+  'Parent dances notes',
+  'Extra parent dances',
+  'Introduction no music',
+  'Section renames',
+  'Last song of the night notes',
+  'Private last dance notes'
 ];
 var PHOTO_FIELD = 'Couple photo';
 var FLOORPLAN_FIELD = 'Floor plan PDF';
@@ -1134,6 +1144,19 @@ var FIELD_PLACE = {
   'Private last dance section': ['Reception', 'Private last dance'],
   'Do-not-play list': ['Reception', 'Do Not Play'],
   'Do not play songs': ['Reception', 'Do Not Play'],
+  'Have a wedding website': ['Details', 'Wedding website'],
+  'Wedding website': ['Details', 'Wedding website'],
+  'Wedding website password': ['Details', 'Wedding website'],
+  'Officiant microphone': ['Ceremony', 'Ceremony details'],
+  'Officiant microphone notes': ['Ceremony', 'Ceremony details'],
+  'Other ceremony speakers': ['Ceremony', 'Ceremony details'],
+  'Other ceremony speakers notes': ['Ceremony', 'Ceremony details'],
+  'Having parent dances': ['Reception', 'Parent Dances'],
+  'Parent dances notes': ['Reception', 'Parent Dances'],
+  'Extra parent dances': ['Reception', 'Parent Dances'],
+  'Introduction no music': ['Reception', 'Introductions'],
+  'Last song of the night notes': ['Reception', 'Last song of the night'],
+  'Private last dance notes': ['Reception', 'Private last dance'],
   'Planner (name/contact)': ['Details', 'Vendors'],
   'Venue manager': ['Details', 'Vendors'],
   'Photographer': ['Details', 'Vendors'],

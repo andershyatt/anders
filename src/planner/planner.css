@@ -292,8 +292,15 @@
 
 .planner-section__tools {
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.3rem;
+}
+
+.planner-rename {
+  width: min(18rem, 100%);
+  font: inherit;
 }
 
 .planner-section__tools button,

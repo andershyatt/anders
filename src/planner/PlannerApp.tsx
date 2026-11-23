@@ -1,5 +1,16 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf, type PlannerLoadSuccess } from './api'
+import ParentDanceList from './ParentDanceList'
+import {
+  EXTRA_PARENT_DANCES,
+  HAVING_PARENT_DANCES,
+  PARENT_DANCE_FATHER,
+  PARENT_DANCE_MOTHER,
+  PARENT_DANCE_YES,
+  blankParentDance,
+  parseExtraParentDances,
+  serializeExtraParentDances,
+} from './parentDances'
 import {
   DANCE_LENGTH,
   DANCE_PERFORMANCE,
@@ -40,6 +51,14 @@ import {
   removedSectionEntries,
   serializeRemovedSections,
   subsectionId,
+  INTRODUCTION_NO_MUSIC,
+  PROCESSIONALS,
+  SECTION_RENAMES,
+  applyLegacyPlannerAnswers,
+  parseSectionRenames,
+  processionalId,
+  processionalTitle,
+  parentDanceFormatOptions,
   type BookedServices,
   type PlannerBasics,
   type PlannerField,
@@ -376,6 +395,12 @@ function FieldControl({
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
 
+  if (field.key === EXTRA_PARENT_DANCES) {
+    return <ParentDanceList value={value} formats={parentDanceFormatOptions(services)} onChange={onChange} />
+  }
+
+  if (field.key === SECTION_RENAMES || field.key === INTRODUCTION_NO_MUSIC) return null
+
   if (field.kind === 'style' || field.kind === 'yesno') {
     const answer = field.kind === 'style' ? ceremonyStyleValue(field.key, value, services) : value
     const base = field.options ?? (field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services))
@@ -639,7 +664,7 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
   const services = preview ?? result.services
   const musicChoices = cocktailMusicChoices(services)
   if (musicChoices.length === 1) next['Cocktail hour music type'] = musicChoices[0]
-  const fields = applyDoNotPlayFields(
+  const fields = applyLegacyPlannerAnswers(applyDoNotPlayFields(
     normalizePlannerTimes(
       applyDanceLengthAnswers(
         applyLiveOnlyPreCeremony(
@@ -649,7 +674,7 @@ function plannerView(result: PlannerLoadSuccess, preview: BookedServices | null)
         services,
       ),
     ),
-  )
+  ))
   const photo = result.fields[COUPLE_PHOTO_FIELD]
   return {
     fields,
@@ -939,6 +964,7 @@ export default function PlannerApp() {
   const [compactBar, setCompactBar] = useState(() => window.matchMedia('(max-width: 520px)').matches)
   const pendingScroll = useRef<string | null>(null)
   const [sectionHash, setSectionHash] = useState(() => window.location.hash)
+  const [renamingProcessional, setRenamingProcessional] = useState<string | null>(null)
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
     const compact = window.matchMedia('(max-width: 520px)')
@@ -1184,6 +1210,17 @@ export default function PlannerApp() {
                       <span>{section.blurb}</span>
                     </p>
                   )}
+                  {section.id === 'ceremony' &&
+                    PROCESSIONALS.filter((item) => parseRemovedSections(fields[REMOVED_SECTIONS_FIELD]).has(processionalId(item.anchor))).map(
+                      (item) => (
+                        <p className="planner-folded" key={item.anchor}>
+                          {processionalTitle(item.anchor, fields, genderNeutral)} is removed.{' '}
+                          <button type="button" onClick={() => restoreManaged(processionalId(item.anchor))}>
+                            Add it back
+                          </button>
+                        </p>
+                      ),
+                    )}
                   {section.id === 'basics' && (
                     <BasicsCard basics={basics} services={services} status={bookingStatus} eventDate={basics.date} lockOverride={lockOverride} />
                   )}
@@ -1237,9 +1274,52 @@ export default function PlannerApp() {
                     <Fragment key={field.key}>
                       {field.heading && (
                         <div className={`planner-subhead-row${receptionGroup && field.heading === receptionGroup.title ? ' is-page-title' : ''}`}>
-                          <h3 className="planner-subhead" id={`sub-${sectionSlug(field.heading)}`}>
-                            {field.heading}
+                          {(() => {
+                            const processional = section.id === 'ceremony' ? PROCESSIONALS.find((item) => item.anchor === field.key) : undefined
+                            const heading = processional ? processionalTitle(processional.anchor, fields, genderNeutral) : field.heading
+                            const removeLabel = /processional$/i.test(heading ?? '')
+                              ? `We aren't having a ${heading}`
+                              : `We aren't having a ${heading} processional`
+                            return (
+                              <>
+                          <h3 className="planner-subhead" id={`sub-${sectionSlug(heading ?? '')}`}>
+                            {renamingProcessional === field.key ? (
+                              <input
+                                className="planner-rename"
+                                aria-label="Processional name"
+                                defaultValue={heading}
+                                autoFocus
+                                onBlur={(event) => {
+                                  const current = parseSectionRenames(fields[SECTION_RENAMES])
+                                  const id = processionalId(field.key)
+                                  const title = event.target.value.trim()
+                                  const next = { ...current }
+                                  if (title) next[id] = title
+                                  else delete next[id]
+                                  updateField(SECTION_RENAMES, Object.keys(next).length ? JSON.stringify(next) : '')
+                                  setRenamingProcessional(null)
+                                }}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter') (event.target as HTMLInputElement).blur()
+                                }}
+                              />
+                            ) : (
+                              heading
+                            )}
                           </h3>
+                          {processional && (
+                            <div className="planner-section__tools">
+                              <button type="button" onClick={() => setRenamingProcessional(field.key)}>
+                                Rename
+                              </button>
+                              <button type="button" onClick={() => removeManaged(processionalId(field.key))}>
+                                {removeLabel}
+                              </button>
+                            </div>
+                          )}
+                              </>
+                            )
+                          })()}
                           {section.id === 'reception' && (
                             <div className="planner-section__tools">
                               {!receptionGroup && (
@@ -1349,8 +1429,46 @@ export default function PlannerApp() {
                                 : songListMode(field.key, fields)
                           }
                           sectionNote={fields[SECTION_NOTE_FIELD[field.key] ?? ''] ?? ''}
-                          onChange={(value) => updateField(field.key, value)}
+                          onChange={(value) => {
+                            updateField(field.key, value)
+                            if (
+                              field.key === HAVING_PARENT_DANCES &&
+                              genderNeutral &&
+                              value === PARENT_DANCE_YES &&
+                              parseExtraParentDances(fields[EXTRA_PARENT_DANCES] ?? '').length === 0
+                            ) {
+                              updateField(EXTRA_PARENT_DANCES, serializeExtraParentDances([blankParentDance()]))
+                            }
+                          }}
                         />
+                        {field.key === 'Introduction songs' && (
+                          <p>
+                            <button
+                              type="button"
+                              className="planner-section__toggle"
+                              aria-pressed={(fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes'}
+                              onClick={() =>
+                                updateField(INTRODUCTION_NO_MUSIC, (fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes' ? '' : 'Yes')
+                              }
+                            >
+                              No music
+                            </button>
+                          </p>
+                        )}
+                        {field.key === HAVING_PARENT_DANCES && fields[field.key] === PARENT_DANCE_MOTHER && (
+                          <p>
+                            <button type="button" className="planner-section__toggle" onClick={() => updateField(field.key, PARENT_DANCE_YES)}>
+                              Add the father-daughter dance
+                            </button>
+                          </p>
+                        )}
+                        {field.key === HAVING_PARENT_DANCES && fields[field.key] === PARENT_DANCE_FATHER && (
+                          <p>
+                            <button type="button" className="planner-section__toggle" onClick={() => updateField(field.key, PARENT_DANCE_YES)}>
+                              Add the mother-son dance
+                            </button>
+                          </p>
+                        )}
                         {(() => {
                           const notice = songNotices[field.key]
                           if (!notice || (notice.kind === 'text' && !notice.text)) return null
