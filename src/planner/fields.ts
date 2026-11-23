@@ -13,6 +13,17 @@ import {
 } from './liveDj'
 import { parseChecks, serializeChecks } from './checks'
 import { parseCocktailSongs } from './cocktailSongs'
+import {
+  EXTRA_PARENT_DANCES,
+  HAVING_PARENT_DANCES,
+  PARENT_DANCES_NOTES,
+  PARENT_DANCE_FATHER,
+  PARENT_DANCE_MOTHER,
+  PARENT_DANCE_NO,
+  PARENT_DANCE_OTHER,
+  PARENT_DANCE_YES,
+  extraParentDanceProgress,
+} from './parentDances'
 import { PHOTO_BOOTH_FIELDS, photoBoothProgress } from './photoBooth'
 import type { SuggestionListId } from './suggestions'
 
@@ -134,6 +145,11 @@ export const plannerSections: PlannerSection[] = [
         kind: 'text',
       },
       { key: 'Caterer info', label: 'Caterer', kind: 'text' },
+      {
+        key: 'Have a wedding website',
+        label: 'Do you have a wedding website?',
+        kind: 'yesno',
+      },
       { key: 'Wedding website', label: 'Wedding website', kind: 'text', placeholder: 'https://' },
       {
         key: 'Wedding website password',
@@ -629,6 +645,7 @@ const HIDE_WHEN_REMOVED: Record<string, string> = {
   'Mother of the groom fade out': 'Mother-son section',
   'Private last dance wanted': 'Private last dance section',
   'Private last dance': 'Private last dance section',
+  'Private last dance notes': 'Private last dance section',
   'Introductions happening': 'Introductions section',
   'Who is being introduced': 'Introductions section',
   'Couple introduction name': 'Introductions section',
@@ -674,8 +691,15 @@ export function wifiDetailsVisible(fields: Record<string, string>): boolean {
   return (fields['Internet access'] ?? '').trim().toLowerCase() === 'yes'
 }
 
+export const HAVE_WEDDING_WEBSITE = 'Have a wedding website'
+export const WEDDING_WEBSITE_FIELD = 'Wedding website'
+
 export function websitePasswordVisible(fields: Record<string, string>): boolean {
-  return (fields['Wedding website'] ?? '').trim() !== ''
+  return (fields[HAVE_WEDDING_WEBSITE] ?? '').trim().toLowerCase() === 'yes'
+}
+
+export function weddingWebsiteVisible(fields: Record<string, string>): boolean {
+  return websitePasswordVisible(fields)
 }
 
 /** DJ booked, live music not booked. Uses the cloned live+DJ template. */
@@ -710,7 +734,10 @@ const LIVE_ONLY_HIDDEN = new Set([
   'Slow dance songs',
   'Dance floor lighting',
   'Last song of the night with guests',
+  'Last song of the night notes',
   'Private last dance section',
+  'Private last dance notes',
+  'Introduction no music',
   'Private last dance wanted',
   'Private last dance',
   'Do not play songs',
@@ -762,6 +789,117 @@ function answerIsNa(fields: Record<string, string>, key: string): boolean {
   return (fields[key] ?? '').trim().toLowerCase() === 'n/a'
 }
 
+const PARENT_DANCES_NOTES_KEY = PARENT_DANCES_NOTES
+
+const FATHER_DANCE_KEYS = new Set([
+  'Having a father-daughter dance',
+  'Father-daughter section',
+  'Father of the bride name',
+  'Father/daughter dance song',
+  'Father/daughter format',
+  'Father of the bride dance choreographed',
+  'Father of the bride start cue',
+  'Father of the bride stop cue',
+  'Father of the bride fade out',
+])
+
+const MOTHER_DANCE_KEYS = new Set([
+  'Having a mother-son dance',
+  'Mother-son section',
+  'Mother of the groom name',
+  'Mother/son dance song',
+  'Mother/son format',
+  'Mother of the groom dance choreographed',
+  'Mother of the groom start cue',
+  'Mother of the groom stop cue',
+  'Mother of the groom fade out',
+])
+
+function danceHasSaved(fields: Record<string, string>, keys: ReadonlySet<string>): boolean {
+  for (const key of keys) {
+    if (key.endsWith('section')) continue
+    if ((fields[key] ?? '').trim()) return true
+  }
+  return false
+}
+
+function parentDanceHidden(key: string, fields: Record<string, string>, genderNeutral: boolean): boolean {
+  const father = FATHER_DANCE_KEYS.has(key)
+  const mother = MOTHER_DANCE_KEYS.has(key)
+  if (!father && !mother) return false
+  const mode = (fields[HAVING_PARENT_DANCES] ?? '').trim()
+  if (!mode) return !(father ? danceHasSaved(fields, FATHER_DANCE_KEYS) : danceHasSaved(fields, MOTHER_DANCE_KEYS))
+  if (mode === PARENT_DANCE_NO || mode === PARENT_DANCE_OTHER) return true
+  if (genderNeutral && mode === PARENT_DANCE_YES) {
+    return father ? !danceHasSaved(fields, FATHER_DANCE_KEYS) : !danceHasSaved(fields, MOTHER_DANCE_KEYS)
+  }
+  if (father) return mode !== PARENT_DANCE_YES && mode !== PARENT_DANCE_FATHER
+  return mode !== PARENT_DANCE_YES && mode !== PARENT_DANCE_MOTHER
+}
+
+export const SECTION_RENAMES = 'Section renames'
+export const INTRODUCTION_NO_MUSIC = 'Introduction no music'
+
+export const PROCESSIONALS = [
+  {
+    anchor: 'Wedding party processional song',
+    title: 'Wedding Party Processional',
+    keys: [
+      'Wedding party processional song',
+      'Wedding party processional style (instrumental/vocals)',
+      'Wedding party processional notes',
+    ],
+  },
+  {
+    anchor: 'Bridal processional song',
+    title: 'Bridal Processional',
+    neutralTitle: "Couple's Processional",
+    keys: ['Bridal processional song', 'Bridal processional style', 'Bridal processional notes'],
+  },
+  {
+    anchor: 'Additional processional song',
+    title: 'Additional Processional',
+    keys: ['Additional processional song', 'Additional processional style', 'Additional processional notes'],
+  },
+] as const
+
+export function processionalId(anchor: string): string {
+  return `ceremony:${anchor}`
+}
+
+export function processionalForKey(key: string) {
+  return PROCESSIONALS.find((item) => (item.keys as readonly string[]).includes(key))
+}
+
+export function parseSectionRenames(raw: string | undefined): Record<string, string> {
+  const trimmed = (raw ?? '').trim()
+  if (!trimmed) return {}
+  try {
+    const data = JSON.parse(trimmed) as unknown
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return {}
+    const renames: Record<string, string> = {}
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === 'string' && value.trim()) renames[key] = value.trim()
+    }
+    return renames
+  } catch {
+    return {}
+  }
+}
+
+export function processionalTitle(anchor: string, fields: Record<string, string>, genderNeutral = false): string {
+  const item = PROCESSIONALS.find((entry) => entry.anchor === anchor)
+  const fallback = item ? (genderNeutral && 'neutralTitle' in item && item.neutralTitle ? item.neutralTitle : item.title) : anchor
+  const custom = parseSectionRenames(fields[SECTION_RENAMES])[processionalId(anchor)]
+  return custom || fallback
+}
+
+function processionalHidden(key: string, fields: Record<string, string>): boolean {
+  const item = processionalForKey(key)
+  if (!item) return false
+  return parseRemovedSections(fields[REMOVED_SECTIONS_FIELD]).has(processionalId(item.anchor))
+}
+
 export function fieldAnswerVisible(
   key: string,
   services: BookedServices,
@@ -781,7 +919,12 @@ export function fieldAnswerVisible(
       : services
   if (!fieldVisible(key, asked)) return false
   if (key === WIFI_DETAILS_FIELD) return wifiDetailsVisible(fields)
+  if (key === WEDDING_WEBSITE_FIELD) return weddingWebsiteVisible(fields)
   if (key === WEBSITE_PASSWORD_FIELD) return websitePasswordVisible(fields)
+  if (processionalHidden(key, fields)) return false
+  if (parentDanceHidden(key, fields, genderNeutral)) return false
+  if (key === PARENT_DANCES_NOTES_KEY && (fields[HAVING_PARENT_DANCES] ?? '').trim() !== PARENT_DANCE_OTHER) return false
+  if (key === EXTRA_PARENT_DANCES && (fields[HAVING_PARENT_DANCES] ?? '').trim() !== PARENT_DANCE_YES) return false
   if (key === VIDEOGRAPHER_LATE_FIELD) return false
   if (key === PHOTOGRAPHER_LATE_FIELD) return (fields.Photographer ?? '').trim() !== ''
   const gate = YES_GATED[key]
@@ -823,6 +966,7 @@ export interface ProgressCount {
 /** Notes, fade timestamps, optional free text, and "Anders chooses" checks do not count. */
 export function fieldCountsTowardProgress(field: PlannerField): boolean {
   if (field.kind === 'fold' || field.kind === 'floorplan' || field.kind === 'check') return false
+  if (NON_PROGRESS_KEYS.has(field.key)) return false
   if (field.key === 'Toasts/speeches' || field.key === 'Other announcement notes') return true
   const label = field.label.trim().toLowerCase().replace(/\s+/g, ' ')
   if (label === 'notes' || label === 'additional notes') return false
@@ -836,8 +980,24 @@ function percentOf(answered: number, total: number): number {
   return Math.round((answered / total) * 100)
 }
 
-/** Open dancing and slow dances stay optional. Cocktail hour and dinner are scored separately. */
-const OPTIONAL_SONG_KEYS = new Set(['Open dancing songs', 'Slow dance songs'])
+/** Slow dances stay optional. Cocktail, dinner, and open dancing are scored as a question plus a song or a note. */
+const OPTIONAL_SONG_KEYS = new Set(['Slow dance songs'])
+
+const OPEN_DANCE_QUESTION = 'Clean music edits'
+const OPEN_DANCE_NOTES = 'DJ music requests'
+const OPEN_DANCE_SONGS = 'Open dancing songs'
+
+const NON_PROGRESS_KEYS = new Set([
+  WEBSITE_PASSWORD_FIELD,
+  'Officiant microphone notes',
+  'Other ceremony speakers notes',
+  'Last song of the night notes',
+  'Private last dance notes',
+  PARENT_DANCES_NOTES,
+  SECTION_RENAMES,
+  INTRODUCTION_NO_MUSIC,
+  EXTRA_PARENT_DANCES,
+])
 
 const COCKTAIL_STYLE = 'Cocktail hour music type'
 const COCKTAIL_NOTES = 'Cocktail hour vibe'
@@ -853,6 +1013,12 @@ const SCORED_ACTIVITY_KEYS = new Set([
   DINNER_STYLE,
   DINNER_NOTES,
   DINNER_SONGS,
+  OPEN_DANCE_QUESTION,
+  OPEN_DANCE_NOTES,
+  OPEN_DANCE_SONGS,
+  HAVE_WEDDING_WEBSITE,
+  WEDDING_WEBSITE_FIELD,
+  'Introduction songs',
 ])
 
 /** A song on the list, or any text in the notes box, counts as doing something. */
@@ -884,6 +1050,35 @@ function scoreSongSection(
   return { answered, total: 2 }
 }
 
+function scoreWebsite(keys: ReadonlySet<string>, answers: Record<string, string>): { answered: number; total: number } | null {
+  if (!keys.has(HAVE_WEDDING_WEBSITE)) return null
+  const answer = (answers[HAVE_WEDDING_WEBSITE] ?? '').trim().toLowerCase()
+  if (answer === 'no') return { answered: 1, total: 1 }
+  if (answer === 'yes') {
+    const url = (answers[WEDDING_WEBSITE_FIELD] ?? '').trim() !== ''
+    return { answered: url ? 2 : 1, total: 2 }
+  }
+  return { answered: 0, total: 1 }
+}
+
+function introSongsChosen(raw: string): boolean {
+  const trimmed = raw.trim()
+  if (!trimmed || trimmed === '[]') return false
+  try {
+    const data = JSON.parse(trimmed) as unknown
+    if (!Array.isArray(data)) return true
+    return data.some((item) => item && typeof item === 'object' && String((item as { title?: string }).title ?? '').trim() !== '')
+  } catch {
+    return true
+  }
+}
+
+function scoreIntroSongs(keys: ReadonlySet<string>, answers: Record<string, string>): { answered: number; total: number } | null {
+  if (!keys.has('Introduction songs')) return null
+  const done = introSongsChosen(answers['Introduction songs'] ?? '') || (answers[INTRODUCTION_NO_MUSIC] ?? '').trim().toLowerCase() === 'yes'
+  return { answered: done ? 1 : 0, total: 1 }
+}
+
 const DO_NOT_PLAY_SONGS = 'Do not play songs'
 const DO_NOT_PLAY_NOTES = 'Do-not-play list'
 
@@ -911,6 +1106,9 @@ export function tallyPlannerFields(list: readonly PlannerField[], answers: Recor
   for (const score of [
     scoreSongSection(keys, answers, COCKTAIL_STYLE, COCKTAIL_NOTES, COCKTAIL_SONGS),
     scoreSongSection(keys, answers, DINNER_STYLE, DINNER_NOTES, DINNER_SONGS),
+    scoreSongSection(keys, answers, OPEN_DANCE_QUESTION, OPEN_DANCE_NOTES, OPEN_DANCE_SONGS),
+    scoreWebsite(keys, answers),
+    scoreIntroSongs(keys, answers),
   ]) {
     if (!score) continue
     answered += score.answered
@@ -922,6 +1120,12 @@ export function tallyPlannerFields(list: readonly PlannerField[], answers: Recor
       continue
     }
     if (OPTIONAL_SONG_KEYS.has(field.key) || SCORED_ACTIVITY_KEYS.has(field.key)) continue
+    if (field.key === EXTRA_PARENT_DANCES) {
+      const extra = extraParentDanceProgress(answers[field.key] ?? '')
+      answered += extra.answered
+      total += extra.total
+      continue
+    }
     if (!fieldCountsTowardProgress(field)) continue
     total += 1
     if ((answers[field.key] ?? '').trim() !== '') answered += 1
@@ -990,6 +1194,21 @@ export function songListAsPlainText(raw: string): string {
  * Do Not Play keeps its song list. Text from the old songs box and from
  * "Other music or styles to avoid" is combined into the one notes box.
  */
+/** Keep older plans readable: a saved website URL means Yes, and filled parent dances pick the matching answer. */
+export function applyLegacyPlannerAnswers(fields: Record<string, string>): Record<string, string> {
+  let next = fields
+  if (!(next[HAVE_WEDDING_WEBSITE] ?? '').trim() && (next[WEDDING_WEBSITE_FIELD] ?? '').trim()) {
+    next = { ...next, [HAVE_WEDDING_WEBSITE]: 'Yes' }
+  }
+  if (!(next[HAVING_PARENT_DANCES] ?? '').trim()) {
+    const father = danceHasSaved(next, FATHER_DANCE_KEYS)
+    const mother = danceHasSaved(next, MOTHER_DANCE_KEYS)
+    const mode = father && mother ? PARENT_DANCE_YES : mother ? PARENT_DANCE_MOTHER : father ? PARENT_DANCE_FATHER : ''
+    if (mode) next = { ...next, [HAVING_PARENT_DANCES]: mode }
+  }
+  return next
+}
+
 export function applyDoNotPlayFields(fields: Record<string, string>): Record<string, string> {
   const songsRaw = fields[DO_NOT_PLAY_SONGS] ?? ''
   const notesRaw = fields[DO_NOT_PLAY_NOTES] ?? ''
@@ -1069,6 +1288,9 @@ export function applyRemovedSections(sections: PlannerSection[], fields: Record<
   if (removed.size === 0) return sections
   return sections.flatMap((section) => {
     if (removed.has(section.id)) return []
+    if (section.id === 'ceremony') {
+      return [{ ...section, fields: section.fields.filter((field) => !processionalHidden(field.key, fields)) }]
+    }
     if (section.id !== 'reception') return [section]
     let current = ''
     const kept = section.fields.filter((field) => {
@@ -1087,10 +1309,13 @@ export function removedSectionEntries(
   const labels = new Map<string, string>()
   for (const section of sections) {
     labels.set(section.id, section.title)
-    if (section.id !== 'reception') continue
+    if (section.id !== 'reception' && section.id !== 'ceremony') continue
     for (const field of section.fields) {
       if (field.heading) labels.set(subsectionId(section.id, field.key), field.heading)
     }
+  }
+  for (const item of PROCESSIONALS) {
+    labels.set(processionalId(item.anchor), processionalTitle(item.anchor, fields))
   }
   return [...removed].flatMap((id) => {
     const label = labels.get(id)
@@ -1161,6 +1386,9 @@ const NEUTRAL_FIELD: Record<string, Partial<PlannerField>> = {
 /** Display-only wording. The gender-neutral setting itself is never shown. */
 export function neutralizeField(field: PlannerField, services: BookedServices): PlannerField {
   const override = NEUTRAL_FIELD[field.key]
+  if (field.key === 'Having parent dances') {
+    return { ...field, options: ['Yes', 'No', 'Other'] }
+  }
   if (!override) return field
   const next = { ...field, ...override }
   if (field.key === 'Father/daughter dance song' || field.key === 'Mother/son dance song') {
@@ -1179,7 +1407,16 @@ export function fieldIncludedInSave(
   fields: Record<string, string>,
   genderNeutral = false,
 ): boolean {
-  if (key === REMOVED_SECTIONS_FIELD || key === COLLAPSED_SECTIONS_FIELD || key === PHOTOGRAPHER_LATE_FIELD) return true
+  if (
+    key === REMOVED_SECTIONS_FIELD ||
+    key === COLLAPSED_SECTIONS_FIELD ||
+    key === PHOTOGRAPHER_LATE_FIELD ||
+    key === SECTION_RENAMES ||
+    key === INTRODUCTION_NO_MUSIC ||
+    key === EXTRA_PARENT_DANCES
+  ) {
+    return true
+  }
   if (fieldAnswerVisible(key, services, fields, genderNeutral)) return true
   const fold = FOLDED_ANSWER[key]
   return Boolean(fold && (fields[fold] ?? '').trim().toLowerCase() === 'removed')

@@ -30,16 +30,28 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
   {
     key: 'Officiant microphone',
     label: 'Would you like us to provide a microphone for the officiant to use during the ceremony?',
-    kind: 'choice-other',
+    kind: 'yesno',
     heading: 'Ceremony details',
     help: 'We can provide a wireless microphone. The mic can be handheld or we can provide a mic stand.',
     options: ['Yes', 'No'],
   },
   {
+    key: 'Officiant microphone notes',
+    label: 'Anything to add?',
+    kind: 'text',
+    placeholder: 'Anything to add?',
+  },
+  {
     key: 'Other ceremony speakers',
     label: 'Besides the officiant, are you having any other speakers? (poem reading, scripture reading, etc.)',
-    kind: 'choice-other',
+    kind: 'yesno',
     options: ['Yes', 'No'],
+  },
+  {
+    key: 'Other ceremony speakers notes',
+    label: 'Anything to add?',
+    kind: 'text',
+    placeholder: 'Anything to add?',
   },
   {
     key: 'Pre-ceremony performance',
@@ -242,6 +254,49 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     kind: 'check',
   },
   {
+    key: 'Having parent dances',
+    label: 'Are you having any parent dances?',
+    kind: 'yesno',
+    stack: true,
+    options: ['Yes', 'Yes, mother-son only', 'Yes, father-daughter only', 'No', 'Other'],
+  },
+  {
+    key: 'Parent dances notes',
+    label: 'Tell us about the parent dances',
+    kind: 'textarea',
+    rows: 3,
+    placeholder: 'Anything to add?',
+  },
+  {
+    key: 'Extra parent dances',
+    label: 'Additional parent dances',
+    kind: 'text',
+  },
+  {
+    key: 'Introduction no music',
+    label: 'No music',
+    kind: 'text',
+  },
+  {
+    key: 'Section renames',
+    label: 'Section renames',
+    kind: 'text',
+  },
+  {
+    key: 'Last song of the night notes',
+    label: 'Notes',
+    kind: 'textarea',
+    rows: 2,
+    placeholder: 'Anything to add?',
+  },
+  {
+    key: 'Private last dance notes',
+    label: 'Notes',
+    kind: 'textarea',
+    rows: 2,
+    placeholder: 'Anything to add?',
+  },
+  {
     key: 'Introductions section',
     label: 'Introductions',
     kind: 'fold',
@@ -270,7 +325,6 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     label: 'Father-daughter dance',
     kind: 'fold',
     foldLabel: 'Father-daughter dance',
-    heading: 'Parent Dances',
   },
   {
     key: 'Having a father-daughter dance',
@@ -327,10 +381,13 @@ export function liveDjCeremony(find: FindField): PlannerSection {
   return {
     id: 'ceremony',
     title: 'Ceremony',
-    blurb: 'Music for walking down and back up the aisle, plus music before the ceremony to set the mood.',
+    blurb:
+      'Music for walking down (processional) and back up (recessional) the aisle, plus music before the ceremony to set the mood.',
     fields: [
       take(find, 'Officiant microphone'),
+      take(find, 'Officiant microphone notes'),
       take(find, 'Other ceremony speakers'),
+      take(find, 'Other ceremony speakers notes'),
       take(find, 'Pre-ceremony performance'),
       take(find, 'Pre-ceremony music type'),
       take(find, 'Pre-ceremony music', { label: 'Notes', song: undefined }),
@@ -403,6 +460,8 @@ export function liveDjReception(find: FindField): PlannerSection {
       take(find, 'First dance start cue'),
       take(find, 'First dance stop cue'),
       take(find, 'First dance fade out'),
+      take(find, 'Having parent dances', { heading: 'Parent Dances' }),
+      take(find, 'Parent dances notes'),
       take(find, 'Father-daughter section'),
       take(find, 'Having a father-daughter dance'),
       take(find, 'Father of the bride name'),
@@ -421,6 +480,7 @@ export function liveDjReception(find: FindField): PlannerSection {
       take(find, 'Mother of the groom start cue'),
       take(find, 'Mother of the groom stop cue'),
       take(find, 'Mother of the groom fade out'),
+      take(find, 'Extra parent dances'),
       take(find, 'Other special dance'),
       take(find, 'Toasts/speeches', {
         heading: 'Toasts/Speeches',
@@ -451,9 +511,11 @@ export function liveDjReception(find: FindField): PlannerSection {
         note: 'This is your last dance song with your guests. End the night with a bang!',
         help: 'Please choose the last song you would like to hear on the dance floor with your guests. Upbeat dance songs help to end the night on a high note. Classic singalong songs always work well. A slow dance song can work too. Most importantly, it should be a song you love. This song will also signal the end of the evening.',
       }),
+      take(find, 'Last song of the night notes'),
       take(find, 'Private last dance section'),
       take(find, 'Private last dance wanted'),
       take(find, 'Private last dance', { suggestions: 'sheet-first-dance' }),
+      take(find, 'Private last dance notes'),
       take(find, 'Do not play songs'),
       take(find, 'Do-not-play list', {
         label: 'Notes',
