@@ -198,3 +198,21 @@ export function resolveLiveSong(value: string): LiveSongResolution {
   if (best.length > 0) return { kind: 'picker', options: options(best) }
   return { kind: 'remove' }
 }
+
+function parseRepertoireLabel(value: string): { title: string; artist: string } {
+  const split = value.split(' - ')
+  if (split.length < 2) return { title: value, artist: '' }
+  return { artist: split[0] ?? '', title: split.slice(1).join(' - ') }
+}
+
+/** One unambiguous live-repertoire song for an imported title. Ambiguous or unknown titles are left out. */
+export function matchLiveRepertoireSong(title: string, artist: string): { title: string; artist: string } | null {
+  const query = artist.trim() ? `${title.trim()} – ${artist.trim()}` : title.trim()
+  const result = resolveLiveSong(query)
+  if (result.kind === 'switch') return parseRepertoireLabel(result.value)
+  if (result.kind !== 'already') return null
+  const normalized = normalizeSongTitle(title)
+  const exact = songs().filter((song) => normalizeSongTitle(song.title) === normalized)
+  if (exact.length !== 1) return null
+  return { title: exact[0].title, artist: exact[0].artist }
+}

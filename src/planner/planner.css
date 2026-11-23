@@ -1362,9 +1362,10 @@
 .planner-savebar__status {
   display: flex;
   flex: 1 1 auto;
+  flex-wrap: wrap;
   align-items: center;
   min-width: 0;
-  gap: 0.35rem;
+  gap: 0.15rem 0.35rem;
 }
 
 .planner-savebar__status p {
@@ -1379,6 +1380,10 @@
 
 .planner-savebar__time {
   color: var(--color-muted);
+}
+
+.planner-draft-note {
+  flex: 1 0 100%;
 }
 
 .planner-savebar__error {

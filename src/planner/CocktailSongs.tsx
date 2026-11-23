@@ -10,7 +10,7 @@ import {
 import { importPlaylist } from './api'
 import RepertoireBrowser from './RepertoireBrowser'
 import { useSongCatalog } from '../lib/songCatalog'
-import { repertoireMatch } from './repertoire'
+import { matchLiveRepertoireSong, repertoireMatch } from './repertoire'
 import { searchSongs, type SongMatch } from './songSearch'
 import SuggestionPlaylists from './SuggestionPlaylists'
 import type { SuggestionPlaylist, SuggestedSong } from './suggestions'
@@ -236,10 +236,36 @@ export default function CocktailSongs({
     const result = await importPlaylist(token, link)
     setImporting(false)
     if (!result.ok) {
-      setImportMessage("We couldn't load that playlist. You can still add songs from the suggestions or by search.")
+      setImportMessage(
+        result.error === 'unsupported_link'
+          ? 'Paste a Spotify or Apple Music playlist link.'
+          : result.error === 'no_tracks'
+            ? "We couldn't read the songs on that playlist. Try another link, or add songs by search."
+            : "We couldn't load that playlist. You can still add songs from the suggestions or by search.",
+      )
       return
     }
-    addTracks(result.tracks)
+    if (!repertoireOnly) {
+      addTracks(result.tracks)
+      return
+    }
+    const matched = result.tracks.flatMap((track) => {
+      const song = matchLiveRepertoireSong(track.title, track.artist)
+      return song ? [song] : []
+    })
+    const missed = result.tracks.length - matched.length
+    if (matched.length === 0) {
+      setImportMessage('None of those songs are in the live repertoire.')
+      return
+    }
+    addTracks(matched)
+    if (missed > 0) {
+      setImportMessage((current) =>
+        [current, `${missed} ${missed === 1 ? 'song is' : 'songs are'} not in the live repertoire, so ${missed === 1 ? 'it was' : 'they were'} left off.`]
+          .filter(Boolean)
+          .join(' '),
+      )
+    }
   }
 
   const showList = open && query.trim().length >= MIN_QUERY && !full && (loading || results.length > 0)
@@ -547,15 +573,16 @@ export default function CocktailSongs({
             onAdd={(song) => addTracks([song])}
           />
         )}
-        {(pickerMode === 'dj' || (pickerMode === 'mix' && mixView === 'dj')) && allowImport && (
+        {allowImport && (
           <div className="planner-import">
             <label htmlFor={`${listId}-playlist`}>Paste a Spotify or Apple Music playlist link</label>
             <div className="planner-import__row">
               <input
                 id={`${listId}-playlist`}
-                type="url"
+                type="text"
+                inputMode="url"
                 value={importUrl}
-                placeholder="https://open.spotify.com/playlist/…"
+                placeholder="https://music.apple.com/… or open.spotify.com/playlist/…"
                 onChange={(event) => setImportUrl(event.target.value)}
               />
               <button type="button" disabled={importing || !importUrl.trim()} onClick={() => void loadPlaylist()}>

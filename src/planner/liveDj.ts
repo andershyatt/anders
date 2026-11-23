@@ -260,7 +260,7 @@ export const LIVE_DJ_EXTRA: PlannerField[] = [
     label: 'Are you having any parent dances?',
     kind: 'yesno',
     stack: true,
-    options: ['Yes', 'Yes, mother-son only', 'Yes, father-daughter only', 'No', 'Other'],
+    options: ['Yes', 'Yes, mother-son only', 'Yes, father-daughter only', 'No'],
   },
   {
     key: 'Parent dances notes',

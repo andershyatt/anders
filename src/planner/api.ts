@@ -207,11 +207,23 @@ export async function loadPlanner(token: string): Promise<PlannerLoadResult> {
   }
 }
 
+const ADMIN_KEY_STORAGE = 'anders-pipeline-admin-key'
+
+/** True when this browser opened the planner from the pipeline and has Anders's key stored locally. The couple link never carries the key. */
+export function plannerOpenedAsAdmin(): boolean {
+  if (new URLSearchParams(window.location.search).get('from') !== 'pipeline') return false
+  try {
+    return Boolean(localStorage.getItem(ADMIN_KEY_STORAGE)?.trim())
+  } catch {
+    return false
+  }
+}
+
 /** Present only when Anders opened this planner from the pipeline. */
 function plannerAdminKey(): string {
-  if (new URLSearchParams(window.location.search).get('from') !== 'pipeline') return ''
+  if (!plannerOpenedAsAdmin()) return ''
   try {
-    return localStorage.getItem('anders-pipeline-admin-key')?.trim() ?? ''
+    return localStorage.getItem(ADMIN_KEY_STORAGE)?.trim() ?? ''
   } catch {
     return ''
   }

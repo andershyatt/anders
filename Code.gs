@@ -317,7 +317,7 @@ function doPost(e) {
       var lockDate = couple.date instanceof Date ? Utilities.formatDate(couple.date, 'America/New_York', 'yyyy-MM-dd') : String(couple.date || '').trim();
       var lockedOn = lockoutIso_(lockDate);
       var today = Utilities.formatDate(new Date(), 'America/New_York', 'yyyy-MM-dd');
-      if (couple.lockOverride !== 'Unlocked' && lockedOn && today >= lockedOn) return json_({ ok: false, error: 'locked' });
+      if (couple.lockOverride !== 'Unlocked' && lockedOn && today >= lockedOn && !adminOk_(body.adminKey)) return json_({ ok: false, error: 'locked' });
     }
     var incoming = (body.fields && typeof body.fields === 'object') ? body.fields : {};
 
@@ -1381,18 +1381,118 @@ function fetchSpotifyPlaylist_(id) {
   );
 }
 
+/** Pull a music.apple.com playlist URL out of pasted share text. */
+function applePlaylistUrl_(raw) {
+  var text = String(raw || '').replace(/[\u0000-\u0020]+/g, ' ').trim();
+  var match = text.match(/https?:\/\/(?:embed\.)?music\.apple\.com\/[^\s<>"']+/i);
+  if (!match) return '';
+  var url = match[0].replace(/[),.;]+$/g, '');
+  url = url.replace(/^https?:\/\/embed\.music\.apple\.com\//i, 'https://music.apple.com/');
+  if (!/\/playlist\/(?:[^/?#]+\/)?pl\.[A-Za-z0-9.-]+/i.test(url)) return '';
+  return url;
+}
+
+function scriptJson_(html, pattern) {
+  var match = pattern.exec(html);
+  if (!match) return null;
+  try { return JSON.parse(match[1]); } catch (e) { return null; }
+}
+
+function pushAppleTrack_(tracks, seen, title, artist) {
+  title = htmlDecode_(String(title || '').replace(/\s+/g, ' '));
+  artist = htmlDecode_(String(artist || '').replace(/\s+/g, ' '));
+  if (!title || tracks.length >= 100) return;
+  var key = (title + '\n' + artist).toLowerCase();
+  if (seen[key]) return;
+  seen[key] = true;
+  tracks.push({ title: title, artist: artist });
+}
+
+/** User playlists put the track list in serialized-server-data. */
+function tracksFromSerialized_(html) {
+  var data = scriptJson_(html, /<script[^>]*id="serialized-server-data"[^>]*>([\s\S]*?)<\/script>/i);
+  if (!data || !data.data) return [];
+  var tracks = [];
+  var seen = {};
+  data.data.forEach(function (root) {
+    var sections = (root && root.data && root.data.sections) || [];
+    sections.forEach(function (section) {
+      var id = String((section && section.id) || '');
+      if (id.indexOf('track-list') !== 0 || id.indexOf('footer') !== -1) return;
+      (section.items || []).forEach(function (item) {
+        var artists = [];
+        (item.subtitleLinks || []).forEach(function (link) {
+          if (link && link.title) artists.push(String(link.title));
+        });
+        pushAppleTrack_(tracks, seen, item && item.title, artists.join(', '));
+      });
+    });
+  });
+  return tracks;
+}
+
+/** Editorial playlists list recordings in JSON-LD, without artist names. */
+function tracksFromJsonLd_(html) {
+  var data = scriptJson_(html, /<script[^>]*id=schema:music-playlist[^>]*>([\s\S]*?)<\/script>/i);
+  if (!data || data['@type'] !== 'MusicPlaylist' || !data.track) return [];
+  var list = Array.isArray(data.track) ? data.track : [data.track];
+  var rows = [];
+  list.forEach(function (track) {
+    if (!track || track['@type'] !== 'MusicRecording' || rows.length >= 100) return;
+    var idMatch = String(track.url || '').match(/\/(\d+)(?:\?|$)/);
+    rows.push({ title: track.name || '', id: idMatch ? idMatch[1] : '' });
+  });
+  return rows;
+}
+
+function lookupAppleArtists_(ids) {
+  var map = {};
+  var unique = [];
+  var seen = {};
+  ids.forEach(function (id) {
+    if (!id || seen[id]) return;
+    seen[id] = true;
+    unique.push(id);
+  });
+  for (var i = 0; i < unique.length; i += 40) {
+    var slice = unique.slice(i, i + 40);
+    try {
+      var response = UrlFetchApp.fetch('https://itunes.apple.com/lookup?id=' + slice.join(','), {
+        muteHttpExceptions: true,
+        followRedirects: true
+      });
+      if (response.getResponseCode() !== 200) continue;
+      var results = (JSON.parse(response.getContentText()).results) || [];
+      results.forEach(function (row) {
+        if (!row || row.trackId == null) return;
+        map[String(row.trackId)] = String(row.artistName || '').trim();
+      });
+    } catch (e) {}
+  }
+  return map;
+}
+
 function fetchApplePlaylist_(url) {
-  var embed = String(url).replace('https://music.apple.com/', 'https://embed.music.apple.com/');
-  var response = UrlFetchApp.fetch(embed, {
+  var page = applePlaylistUrl_(url);
+  if (!page) return [];
+  var response = UrlFetchApp.fetch(page, {
     muteHttpExceptions: true,
     followRedirects: true,
     headers: { 'User-Agent': 'Mozilla/5.0' }
   });
   if (response.getResponseCode() !== 200) return [];
   var html = response.getContentText();
-  var schema = tracksFromHtml_(html, '"name"\\s*:\\s*"([^"]+)"\\s*,\\s*"artistName"\\s*:\\s*"([^"]+)"');
-  if (schema.length) return schema;
-  return tracksFromHtml_(html, '<h3[^>]*>([^<]*)</h3>[\\s\\S]*?<h4[^>]*>([^<]*)</h4>');
+  var serialized = tracksFromSerialized_(html);
+  if (serialized.length) return serialized;
+  var rows = tracksFromJsonLd_(html);
+  if (!rows.length) return [];
+  var artists = lookupAppleArtists_(rows.map(function (row) { return row.id; }));
+  var tracks = [];
+  var seen = {};
+  rows.forEach(function (row) {
+    pushAppleTrack_(tracks, seen, row.title, artists[row.id] || '');
+  });
+  return tracks;
 }
 
 function importPlaylist_(body) {
@@ -1401,9 +1501,10 @@ function importPlaylist_(body) {
     if (!couple) return json_({ ok: false, error: 'invalid_token' });
     var url = String(body.url || '').trim();
     var spotify = /open\.spotify\.com\/(?:embed\/)?playlist\/([A-Za-z0-9]+)/.exec(url);
+    var apple = applePlaylistUrl_(url);
     var tracks = [];
     if (spotify) tracks = fetchSpotifyPlaylist_(spotify[1]);
-    else if (/music\.apple\.com\//.test(url)) tracks = fetchApplePlaylist_(url);
+    else if (apple) tracks = fetchApplePlaylist_(apple);
     else return json_({ ok: false, error: 'unsupported_link' });
     if (!tracks.length) return json_({ ok: false, error: 'no_tracks' });
     return json_({ ok: true, tracks: tracks });
