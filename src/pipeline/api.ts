@@ -204,6 +204,23 @@ export async function adminDeleteCouple(key: string, token: string): Promise<voi
   await postAdmin({ action: 'adminDeleteCouple', key, token })
 }
 
+export async function makeClientDoc(
+  key: string,
+  token: string,
+  kind: 'info sheet' | 'cheat sheet',
+  folder = '',
+): Promise<{ url: string; title: string; folder: string; replaced: boolean }> {
+  const data = await postAdmin({ action: 'makeClientDoc', key, token, kind, folder })
+  const url = text(data.url)
+  if (!url) throw new Error('The document did not open.')
+  return {
+    url,
+    title: text(data.title) || kind,
+    folder: text(data.folder),
+    replaced: data.replaced === true,
+  }
+}
+
 export function sortCouples(couples: PipelineCouple[]): PipelineCouple[] {
   return couples.slice().sort((left, right) => {
     if (!left.date && !right.date) return left.names.localeCompare(right.names)

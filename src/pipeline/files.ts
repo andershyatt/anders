@@ -1,3 +1,9 @@
+export function clientFolderName(date: string, names: string): string {
+  const compact = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.replaceAll('-', '') : 'Undated'
+  const who = names.trim() || 'Couple'
+  return `${compact} ${who}`.replace(/[\\/:*?"<>|]/g, '').slice(0, 120)
+}
+
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
