@@ -888,7 +888,10 @@ export function sectionProgress(
   answers: Record<string, string>,
   knownVenue = false,
 ): ProgressCount {
-  if (section.id === 'basics' || section.id === 'notes') return { answered: 0, total: 0, percent: 0, omit: true }
+  if (section.id === 'notes') return { answered: 0, total: 0, percent: 0, omit: true }
+  // Basics is reference info the couple does not fill in, so it reads complete
+  // without adding a question to the overall score.
+  if (section.id === 'basics') return { answered: 0, total: 0, percent: 100 }
   if (section.id === 'photo-booth') return photoBoothProgress(answers, knownVenue)
   if (section.id === 'timeline') {
     const notes = (answers.Timeline ?? '').trim()

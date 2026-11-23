@@ -39,12 +39,7 @@ export default function BoothGallery({ field, value, locked, onChange }: BoothGa
     onChange(serializeChecks(next, parsed?.other ?? ''))
   }
 
-  const POPULAR = new Set([
-  '2"x6" strip size print',
-  '2x6 - three photo strip - square images - small space for text/logo',
-])
-
-const previewSrc = preview ? boothImage(preview) : undefined
+  const previewSrc = preview ? boothImage(preview) : undefined
 
   return (
     <fieldset className="planner-gallery">
@@ -64,7 +59,6 @@ const previewSrc = preview ? boothImage(preview) : undefined
                   ✓
                 </span>
               )}
-              {POPULAR.has(option) && <span className="planner-gallery__popular">Most popular</span>}
               {image && (
                 <button
                   type="button"
@@ -73,7 +67,6 @@ const previewSrc = preview ? boothImage(preview) : undefined
                   onClick={() => setPreview(option)}
                 >
                   <img src={image} alt="" loading="lazy" decoding="async" />
-                  <span>View</span>
                 </button>
               )}
               <label
