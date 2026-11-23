@@ -1080,7 +1080,7 @@ export default function PlannerApp() {
           <p className="planner-top__brand planner-top__brand--short">
             <a href="../">AHM - WEDDING MUSIC PLANNER</a>
           </p>
-          {basics.names.trim() && <p className="planner-top__names">{basics.names.trim()}</p>}
+          {fromPipeline && basics.names.trim() && <p className="planner-top__names">{basics.names.trim()}</p>}
         </div>
         {standalone ? (
           <button type="button" className="app-refresh" onClick={() => window.location.reload()}>

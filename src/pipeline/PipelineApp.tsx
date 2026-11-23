@@ -417,12 +417,6 @@ export default function PipelineApp() {
             <button type="button" className="gold" onClick={() => setAdding((current) => !current)}>
               {adding ? 'Close form' : 'Add couple'}
             </button>
-            <button type="button" onClick={() => setExpandedCards(new Set(couples.map((couple) => couple.token)))}>
-              Expand all
-            </button>
-            <button type="button" onClick={() => setExpandedCards(new Set())}>
-              Collapse all
-            </button>
           </div>
         </div>
       )}
