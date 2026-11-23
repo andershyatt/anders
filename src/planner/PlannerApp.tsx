@@ -936,17 +936,22 @@ export default function PlannerApp() {
   const progressLook = progressTone(progressCount)
   const contentSections = shownSections
   const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches)
+  const [compactBar, setCompactBar] = useState(() => window.matchMedia('(max-width: 520px)').matches)
   const pendingScroll = useRef<string | null>(null)
   const [sectionHash, setSectionHash] = useState(() => window.location.hash)
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
+    const compact = window.matchMedia('(max-width: 520px)')
     const onMedia = () => setWide(media.matches)
+    const onCompact = () => setCompactBar(compact.matches)
     const onHash = () => setSectionHash(window.location.hash)
     media.addEventListener('change', onMedia)
+    compact.addEventListener('change', onCompact)
     window.addEventListener('hashchange', onHash)
     window.addEventListener('popstate', onHash)
     return () => {
       media.removeEventListener('change', onMedia)
+      compact.removeEventListener('change', onCompact)
       window.removeEventListener('hashchange', onHash)
       window.removeEventListener('popstate', onHash)
     }
@@ -1492,8 +1497,7 @@ export default function PlannerApp() {
                   {!saveMessage && dirty && <p>Unsaved changes</p>}
                   {savedLabel && !saveFailed && (
                     <p className="planner-savebar__time">
-                      <span className="planner-savebar__when planner-savebar__when--full">Last saved {savedLabel}</span>
-                      <span className="planner-savebar__when planner-savebar__when--short">Last saved {savedLabelShort}</span>
+                      Last saved {compactBar ? savedLabelShort : savedLabel}
                     </p>
                   )}
                 </div>
