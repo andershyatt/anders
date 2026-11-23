@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
-import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf, type PlannerLoadSuccess } from './api'
+import { isInvalidLink, loadPlanner, plannerOpenedAsAdmin, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf, type PlannerLoadSuccess } from './api'
 import ParentDanceList from './ParentDanceList'
 import {
   EXTRA_PARENT_DANCES,
@@ -83,7 +83,8 @@ import {
 import CheckAll from './CheckAll'
 import IntroSongs from './IntroSongs'
 import { PERFORMANCE_OPTIONS, applyPreCeremonyMusicTypeLabel } from './liveDj'
-import { suggestionBrowseTitle, suggestionIds, suggestionPlaylists, suggestedSongs, useSuggestionLists } from './suggestions'
+import { SONG_FIELD_SUGGESTIONS, suggestionBrowseTitle, suggestionIds, suggestionPlaylists, suggestedSongs, useSuggestionLists } from './suggestions'
+import { clearPlannerDraft, restorePlannerDraft, writePlannerDraft } from './draft'
 import { clearPlannerCache, readPlannerCache, updatePlannerCacheFields, writePlannerCache } from './loadCache'
 import ChoiceWithOther from './ChoiceWithOther'
 import CocktailSongs from './CocktailSongs'
@@ -262,12 +263,14 @@ function BasicsCard({
   status,
   eventDate,
   lockOverride,
+  adminEditing = false,
 }: {
   basics: PlannerBasics
   services: BookedServices
   status: string
   eventDate: string
   lockOverride: string
+  adminEditing?: boolean
 }) {
   const rows = [
     { label: 'Names', value: basics.names },
@@ -284,7 +287,13 @@ function BasicsCard({
     {
       label: 'Lockout',
       value: lockoutDate(eventDate)
-        ? `${formatCoupleDate(lockoutDate(eventDate))} · ${plannerLocked(eventDate, undefined, lockOverride) ? '🔒 Locked' : '🔓 Unlocked'}`
+        ? `${formatCoupleDate(lockoutDate(eventDate))} · ${
+            plannerLocked(eventDate, undefined, lockOverride)
+              ? adminEditing
+                ? '🔒 Locked for the couple · you can edit'
+                : '🔒 Locked'
+              : '🔓 Unlocked'
+          }`
         : '',
     },
   ].filter((row) => row.value.trim() !== '')
@@ -394,6 +403,7 @@ function FieldControl({
   onChange: (next: string) => void
 }) {
   const id = `field-${field.key.replace(/[^a-z0-9]+/gi, '-')}`
+  const suggestions = field.suggestions ?? SONG_FIELD_SUGGESTIONS[field.key]
 
   if (field.key === EXTRA_PARENT_DANCES) {
     return <ParentDanceList value={value} formats={parentDanceFormatOptions(services)} onChange={onChange} />
@@ -404,13 +414,12 @@ function FieldControl({
   if (field.kind === 'style' || field.kind === 'yesno') {
     const answer = field.kind === 'style' ? ceremonyStyleValue(field.key, value, services) : value
     const base = field.options ?? (field.kind === 'yesno' ? YES_NO_OPTIONS : ceremonyStyleOptions(field.key, services))
-    const known =
-      field.key === 'Internet access'
-        ? (base.find((option) => option.toLowerCase() === answer.trim().toLowerCase()) ?? '')
-        : (base.find((option) => option.toLowerCase() === answer.trim().toLowerCase()) ?? '')
-    const options = field.key === 'Internet access' ? [...base] : choicesWithSaved(base, answer)
-    const selected = field.key === 'Internet access' ? known : (options.find((option) => option.toLowerCase() === answer.trim().toLowerCase()) ?? '')
-    const legacy = field.key === 'Internet access' && value.trim() && !known ? value.trim() : ''
+    const options = field.key === 'Internet access' || field.key === HAVING_PARENT_DANCES ? [...base] : choicesWithSaved(base, answer)
+    const selected = options.find((option) => option.toLowerCase() === answer.trim().toLowerCase()) ?? ''
+    const legacy =
+      (field.key === 'Internet access' || field.key === HAVING_PARENT_DANCES) && value.trim() && !selected
+        ? value.trim()
+        : ''
     return (
       <div>
         <ChoiceGroup
@@ -451,8 +460,8 @@ function FieldControl({
         picker={field.picker}
         pickerKey={field.key}
         screenTitle={field.screenTitle}
-        playlists={suggestionPlaylists(field.suggestions)}
-        allowImport={suggestionIds(field.suggestions).some((id) => id === 'cocktail-dinner' || id === 'open-dancing')}
+        playlists={suggestionPlaylists(suggestions)}
+        allowImport={suggestionIds(suggestions).some((listId) => listId === 'cocktail-dinner' || listId === 'open-dancing')}
         token={token}
         pickerMode={pickerMode}
         repertoireOnly={repertoireOnly}
@@ -463,7 +472,7 @@ function FieldControl({
   }
 
   if (field.kind === 'intro-songs') {
-    return <IntroSongs label={field.label} value={value} onChange={onChange} suggestions={suggestedSongs(field.suggestions)} />
+    return <IntroSongs label={field.label} value={value} onChange={onChange} suggestions={suggestedSongs(suggestions)} />
   }
 
   if (field.kind === 'fold') {
@@ -594,8 +603,8 @@ function FieldControl({
         label={field.label}
         help={field.help}
         hideLabel={field.hideLabel}
-        suggestions={repertoireOnly ? [] : suggestedSongs(field.suggestions)}
-        suggestionTitle={repertoireOnly ? undefined : suggestionBrowseTitle(field.suggestions)}
+        suggestions={repertoireOnly ? [] : suggestedSongs(suggestions)}
+        suggestionTitle={repertoireOnly ? undefined : suggestionBrowseTitle(suggestions)}
         repertoireOnly={repertoireOnly}
         value={value}
         multiline={field.song === 'list'}
@@ -699,6 +708,13 @@ export default function PlannerApp() {
   const previewServices = useMemo(() => servicesFromPreview(window.location.search), [])
   const cachedLoad = useMemo(() => (token ? readPlannerCache(token) : null), [token])
   const cachedView = useMemo(() => (cachedLoad ? plannerView(cachedLoad, previewServices) : null), [cachedLoad, previewServices])
+  const adminEditing = useMemo(() => plannerOpenedAsAdmin(), [])
+  const openingDraft = useMemo(() => {
+    const base = cachedView?.fields ?? emptyFields(plannerFieldKeys)
+    if (!token || !cachedView) return { fields: base, restored: false, discarded: false }
+    const coupleLocked = plannerLocked(cachedView.basics.date, undefined, cachedView.lockOverride) && !adminEditing
+    return restorePlannerDraft(token, base, String(cachedView.lastUpdated ?? ''), coupleLocked)
+  }, [adminEditing, cachedView, token])
   const [status, setStatus] = useState<Status>({ kind: cachedView ? 'ready' : token ? 'loading' : 'invalid' })
   const [services, setServices] = useState<BookedServices>(cachedView?.services ?? previewServices ?? ALL_SERVICES)
   const [genderNeutral, setGenderNeutral] = useState(cachedView?.genderNeutral ?? false)
@@ -706,8 +722,9 @@ export default function PlannerApp() {
   const [lockOverride, setLockOverride] = useState<'' | 'Unlocked'>(cachedView?.lockOverride ?? '')
   const [songNotices, setSongNotices] = useState<Record<string, { kind: 'text'; text: string } | { kind: 'picker'; options: string[] }>>({})
   const [basics, setBasics] = useState<PlannerBasics>(cachedView?.basics ?? EMPTY_BASICS)
-  const [fields, setFields] = useState<Record<string, string>>(() => cachedView?.fields ?? emptyFields(plannerFieldKeys))
+  const [fields, setFields] = useState<Record<string, string>>(openingDraft.fields)
   const [savedFields, setSavedFields] = useState<Record<string, string>>(() => cachedView?.fields ?? emptyFields(plannerFieldKeys))
+  const [draftNote, setDraftNote] = useState(openingDraft.restored)
   const [couplePhoto, setCouplePhoto] = useState(cachedView?.couplePhoto ?? '')
   const [couplePhotoUrl, setCouplePhotoUrl] = useState<string | null>(cachedView?.couplePhotoUrl ?? null)
   const [floorPlan, setFloorPlan] = useState<{ name: string; url: string } | null>(cachedView?.floorPlan ?? null)
@@ -724,7 +741,8 @@ export default function PlannerApp() {
   const [saveMessage, setSaveMessage] = useState('')
   const [saveFailed, setSaveFailed] = useState(false)
 
-  const dirty = status.kind === 'ready' && !fieldsEqual(fields, savedFields)
+  const locked = plannerLocked(basics.date, undefined, lockOverride) && !adminEditing
+  const dirty = status.kind === 'ready' && !locked && !fieldsEqual(fields, savedFields)
   const suggestionsReady = useSuggestionLists(status.kind === 'ready')
 
   useEffect(() => {
@@ -759,15 +777,18 @@ export default function PlannerApp() {
       writePlannerCache(token, result)
       const view = plannerView(result, previewServices)
       timelineWasEmpty.current = view.timelineEmpty
+      const coupleLocked = plannerLocked(view.basics.date, undefined, view.lockOverride) && !adminEditing
+      const restored = restorePlannerDraft(token, view.fields, String(view.lastUpdated ?? ''), coupleLocked)
       const saved = savedRef.current
       const current = fieldsRef.current
-      const edited = Object.keys(current).some((key) => (current[key] ?? '') !== (saved[key] ?? ''))
+      const edited = !restored.discarded && !coupleLocked && Object.keys(current).some((key) => (current[key] ?? '') !== (saved[key] ?? ''))
       setSavedFields(view.fields)
       setFields(
         edited
           ? Object.fromEntries(Object.keys(view.fields).map((key) => [key, (current[key] ?? '') !== (saved[key] ?? '') ? current[key] : view.fields[key]]))
-          : view.fields,
+          : restored.fields,
       )
+      setDraftNote(edited || restored.restored)
       setCouplePhoto(view.couplePhoto)
       if (view.couplePhotoUrl) setCouplePhotoUrl(view.couplePhotoUrl)
       setFloorPlan(view.floorPlan)
@@ -784,7 +805,16 @@ export default function PlannerApp() {
     return () => {
       cancelled = true
     }
-  }, [previewServices, token])
+  }, [adminEditing, previewServices, token])
+
+  useEffect(() => {
+    if (!token || status.kind !== 'ready' || locked) return
+    if (!dirty) {
+      clearPlannerDraft(token)
+      return
+    }
+    writePlannerDraft(token, String(lastUpdated ?? ''), savedFields, fields)
+  }, [dirty, fields, lastUpdated, locked, savedFields, status.kind, token])
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -918,7 +948,7 @@ export default function PlannerApp() {
   )
 
   const onSave = useCallback(async () => {
-    if (!token || saving || plannerLocked(basics.date, undefined, lockOverride)) return
+    if (!token || saving || locked) return
     setSaving(true)
     setSaveFailed(false)
     setSaveMessage('')
@@ -933,11 +963,13 @@ export default function PlannerApp() {
       return
     }
     setSavedFields(fields)
+    clearPlannerDraft(token)
+    setDraftNote(false)
     const savedAt = result.lastUpdated ?? new Date().toISOString()
     setLastUpdated(savedAt)
     updatePlannerCacheFields(token, fields, savedAt)
     setSaveMessage('Saved')
-  }, [basics.date, fields, genderNeutral, lockOverride, saving, services, token])
+  }, [fields, genderNeutral, locked, saving, services, token])
 
   const sections = useMemo(() => {
     const visible = visibleSections(services, fields, genderNeutral)
@@ -1154,7 +1186,7 @@ export default function PlannerApp() {
 
 
             <form
-              className={`planner-form${plannerLocked(basics.date, undefined, lockOverride) ? ' is-locked' : ''}`}
+              className={`planner-form${locked ? ' is-locked' : ''}`}
               data-suggestions={suggestionsReady ? 'ready' : 'loading'}
               onSubmit={(event) => {
                 event.preventDefault()
@@ -1223,13 +1255,13 @@ export default function PlannerApp() {
                       ),
                     )}
                   {section.id === 'basics' && (
-                    <BasicsCard basics={basics} services={services} status={bookingStatus} eventDate={basics.date} lockOverride={lockOverride} />
+                    <BasicsCard basics={basics} services={services} status={bookingStatus} eventDate={basics.date} lockOverride={lockOverride} adminEditing={adminEditing} />
                   )}
                   {section.id === 'photo-booth' && (
                     <PhotoBoothPanel
                       knownVenue={services.knownVenue}
                       fields={fields}
-                      locked={plannerLocked(basics.date, undefined, lockOverride)}
+                      locked={locked}
                       onChange={updateField}
                     />
                   )}
@@ -1617,6 +1649,7 @@ export default function PlannerApp() {
                 <div className="planner-savebar__status" aria-live="polite">
                   {saveFailed && <p className="planner-savebar__error">{saveMessage}</p>}
                   {!saveFailed && saveMessage && <p>{saveMessage}</p>}
+                  {draftNote && dirty && <p className="planner-draft-note">We restored changes you hadn't saved yet</p>}
                   {!saveMessage && dirty && <p>Unsaved changes</p>}
                   {savedLabel && !saveFailed && (
                     <p className="planner-savebar__time">
@@ -1624,7 +1657,7 @@ export default function PlannerApp() {
                     </p>
                   )}
                 </div>
-                <button type="submit" className="btn" disabled={saving || plannerLocked(basics.date, undefined, lockOverride)}>
+                <button type="submit" className="btn" disabled={saving || locked}>
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>

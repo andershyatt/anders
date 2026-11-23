@@ -1428,7 +1428,7 @@ const NEUTRAL_FIELD: Record<string, Partial<PlannerField>> = {
 export function neutralizeField(field: PlannerField, services: BookedServices): PlannerField {
   const override = NEUTRAL_FIELD[field.key]
   if (field.key === 'Having parent dances') {
-    return { ...field, options: ['Yes', 'No', 'Other'] }
+    return { ...field, options: ['Yes', 'No'] }
   }
   if (!override) return field
   const next = { ...field, ...override }
