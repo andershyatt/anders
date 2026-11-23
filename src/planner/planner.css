@@ -303,6 +303,37 @@
   font: inherit;
 }
 
+.planner-no-music-row {
+  margin: 0 0 0.7rem;
+}
+
+.planner-no-music {
+  min-height: 44px;
+  padding: 0.45rem 0.95rem;
+  border: 1px solid #3c342c;
+  border-radius: 4px;
+  background: #fffdf8;
+  color: #3c342c;
+  font-family: var(--font-nav);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.planner-no-music.is-on {
+  background: #3c342c;
+  color: #fffdf8;
+}
+
+.planner-no-music__note {
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0.85rem;
+  background: #f3f0ea;
+  color: #6b645c;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 .planner-section__tools button,
 .planner-removed button {
   border: 1px solid #c4b4a4;

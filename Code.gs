@@ -300,7 +300,7 @@ function doPost(e) {
     if (body.action === 'load') return loadResponse_(body.c);
     if (body.action === 'importPlaylist') return importPlaylist_(body);
     if (body.action === 'searchSongs') return searchSongs_(body);
-    if (body.action === 'adminList' || body.action === 'adminCouple' || body.action === 'adminAddCouple' || body.action === 'adminSetStatus' || body.action === 'adminDeleteCouple') {
+    if (body.action === 'adminList' || body.action === 'adminCouple' || body.action === 'adminAddCouple' || body.action === 'adminSetStatus' || body.action === 'adminDeleteCouple' || body.action === 'makeClientDoc') {
       return adminDispatch_(body);
     }
 
@@ -1468,6 +1468,7 @@ function adminDispatch_(body) {
   if (body.action === 'adminAddCouple') return adminAddCouple_(body.couple || body);
   if (body.action === 'adminSetStatus') return adminSetStatus_(body);
   if (body.action === 'adminDeleteCouple') return adminDeleteCouple_(body);
+  if (body.action === 'makeClientDoc') return makeClientDoc_(body);
   return json_({ ok: false, error: 'unknown_action' });
 }
 
@@ -1751,4 +1752,568 @@ function adminList_() {
     });
   }
   return json_({ ok: true, couples: couples });
+}
+/**
+ * Google Docs for the pipeline. On the next deploy, approve:
+ * https://www.googleapis.com/auth/documents
+ * https://www.googleapis.com/auth/drive
+ * Drive is already used for photos. Docs is the new one.
+ */
+var CLIENTS_FOLDER_NAME = 'CLIENTS';
+
+function makeClientDoc_(body) {
+  var couple = findCouple_(body.token);
+  if (!couple) return json_({ ok: false, error: 'missing_couple' });
+  var fields = plannerFieldsFor_(couple.token);
+  var kind = body.kind === 'cheat sheet' ? 'cheat sheet' : 'info sheet';
+  var names = String(couple.names || '').trim() || 'Couple';
+  var date = couple.date instanceof Date ? Utilities.formatDate(couple.date, 'America/New_York', 'yyyy-MM-dd') : String(couple.date || '').trim();
+  var folderName = String(body.folder || '').trim() || clientFolderName_(date, names);
+  var title = names + ' ' + kind;
+  var folder = childFolder_(clientsFolder_(), folderName);
+  var found = folder.getFilesByName(title);
+  var doc;
+  var replaced = false;
+  if (found.hasNext()) {
+    doc = DocumentApp.openById(found.next().getId());
+    replaced = true;
+    while (found.hasNext()) found.next().setTrashed(true);
+  } else {
+    doc = DocumentApp.create(title);
+    DriveApp.getFileById(doc.getId()).moveTo(folder);
+  }
+  doc.setName(title);
+  var detail = sheetDetail_(couple, fields, date);
+  var nodes = kind === 'cheat sheet' ? cheatNodes_(detail) : infoNodes_(detail);
+  writeSheet_(doc, nodes, kind === 'cheat sheet');
+  var url = doc.getUrl();
+  doc.saveAndClose();
+  return json_({ ok: true, url: url, title: title, folder: folderName, replaced: replaced });
+}
+
+function clientFolderName_(date, names) {
+  var compact = /^\d{4}-\d{2}-\d{2}$/.test(String(date || '')) ? String(date).replace(/-/g, '') : 'Undated';
+  var who = String(names || '').trim() || 'Couple';
+  return (compact + ' ' + who).replace(/[\\/:*?"<>|]/g, '').slice(0, 120);
+}
+
+function clientsFolder_() {
+  var props = PropertiesService.getScriptProperties();
+  var saved = props.getProperty('CLIENTS_FOLDER_ID');
+  if (saved) {
+    try { var existing = DriveApp.getFolderById(saved); if (!existing.isTrashed()) return existing; } catch (e) {}
+  }
+  var matches = [];
+  var it = DriveApp.getFoldersByName(CLIENTS_FOLDER_NAME);
+  while (it.hasNext()) matches.push(it.next());
+  var chosen = null;
+  for (var i = 0; i < matches.length; i++) {
+    var parents = matches[i].getParents();
+    var parentName = parents.hasNext() ? parents.next().getName() : '';
+    if (/docs|ah music|anders/i.test(parentName)) { chosen = matches[i]; break; }
+  }
+  if (!chosen) chosen = matches.length ? matches[0] : DriveApp.createFolder(CLIENTS_FOLDER_NAME);
+  props.setProperty('CLIENTS_FOLDER_ID', chosen.getId());
+  return chosen;
+}
+
+function childFolder_(parent, name) {
+  var it = parent.getFoldersByName(name);
+  return it.hasNext() ? it.next() : parent.createFolder(name);
+}
+
+function sheetDetail_(couple, fields, date) {
+  var sh = couple.sheet;
+  var headers = headerRow_(sh);
+  var display = sh.getRange(couple.row, 1, 1, headers.length).getDisplayValues()[0];
+  var txt = function (h) {
+    var i = headers.indexOf(h);
+    return i === -1 ? '' : String(display[i] == null ? '' : display[i]).trim();
+  };
+  return {
+    names: String(couple.names || '').trim() || 'Couple',
+    date: friendlyDate_(date),
+    iso: date,
+    venue: String(couple.venue || '').trim(),
+    venueAddress: couple.basics.venueAddress || '',
+    startTime: couple.basics.startTime || '',
+    length: couple.basics.length || '',
+    guestCount: couple.basics.guestCount || '',
+    eventType: couple.basics.eventType || '',
+    team: txt('Team') || couple.basics.booked || '',
+    services: couple.services || { live: false, dj: false },
+    genderNeutral: !!couple.genderNeutral,
+    fields: fields
+  };
+}
+
+function friendlyDate_(iso) {
+  var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || '').trim());
+  if (!match) return String(iso || '');
+  var date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var day = date.getDate();
+  var suffix = 'th';
+  if (day % 10 === 1 && day !== 11) suffix = 'st';
+  else if (day % 10 === 2 && day !== 12) suffix = 'nd';
+  else if (day % 10 === 3 && day !== 13) suffix = 'rd';
+  return days[date.getDay()] + ', ' + months[date.getMonth()] + ' ' + day + suffix + ', ' + date.getFullYear();
+}
+
+function sf_(detail, key) {
+  return String((detail.fields && detail.fields[key]) || '').trim();
+}
+
+function songLines_(raw) {
+  raw = String(raw || '').trim();
+  if (!raw) return [];
+  if (raw.charAt(0) === '[') {
+    try {
+      var data = JSON.parse(raw);
+      if (Object.prototype.toString.call(data) === '[object Array]') {
+        var lines = [];
+        data.forEach(function (item) {
+          if (!item || !String(item.title || '').trim()) return;
+          var name = item.artist ? String(item.title).trim() + ' - ' + String(item.artist).trim() : String(item.title).trim();
+          var extra = [];
+          if (item.mustPlay) extra.push('must play');
+          if (item.who) extra.push('for ' + String(item.who).trim());
+          if (item.note) extra.push(String(item.note).trim());
+          lines.push(extra.length ? name + ' (' + extra.join('; ') + ')' : name);
+        });
+        if (lines.length) return lines;
+      }
+    } catch (e) {}
+  }
+  return raw.split(/\n+/).map(function (line) { return String(line).trim(); }).filter(function (line) { return line; });
+}
+
+function removedMap_(detail) {
+  var map = {};
+  try {
+    var data = JSON.parse(sf_(detail, 'Removed sections') || '[]');
+    if (Object.prototype.toString.call(data) === '[object Array]') data.forEach(function (id) { map[String(id)] = true; });
+  } catch (e) {}
+  return map;
+}
+
+function renamed_(detail, anchor, fallback) {
+  try {
+    var data = JSON.parse(sf_(detail, 'Section renames') || '{}');
+    var custom = data && data['ceremony:' + anchor];
+    if (custom && String(custom).trim()) return String(custom).trim();
+  } catch (e) {}
+  return fallback;
+}
+
+function liveOnly_(detail) { return !!(detail.services.live && !detail.services.dj); }
+function djOnly_(detail) { return !!(detail.services.dj && !detail.services.live); }
+
+function pushText_(nodes, kind, text) {
+  if (!String(text || '').trim()) return;
+  nodes.push({ kind: kind, text: String(text).trim() });
+}
+
+function pushLines_(nodes, lines) {
+  lines.forEach(function (line) { pushText_(nodes, 'bullet', line); });
+}
+
+function songNodes_(lines) {
+  if (!lines.length) return [];
+  if (lines.length < 8) return lines.map(function (line) { return { kind: 'bullet', text: line }; });
+  var mid = Math.ceil(lines.length / 2);
+  var rows = [];
+  for (var i = 0; i < mid; i++) rows.push([lines[i] || '', lines[i + mid] || '']);
+  return [{ kind: 'table', labelColumn: false, rows: rows }];
+}
+
+function labelTable_(rows) {
+  var kept = rows.filter(function (row) { return String(row[1] || '').trim(); });
+  if (!kept.length) return null;
+  return { kind: 'table', labelColumn: true, rows: kept };
+}
+
+function addSection_(nodes, title, body) {
+  if (!body.length) return;
+  nodes.push({ kind: 'heading', text: title });
+  body.forEach(function (node) { nodes.push(node); });
+}
+
+function timeOn_(line) {
+  var match = String(line).match(/\b(\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)?)\b/i);
+  return match ? match[1].replace(/\s+/g, '').replace(/\./g, '').toLowerCase() : '';
+}
+
+function timelineTimes_(timeline) {
+  var specs = [
+    ['Ceremony', [/ceremon/i, /processional/i, /recessional/i]],
+    ['Cocktail hour', [/cocktail/i]],
+    ['Introductions', [/introduction/i]],
+    ['Dinner', [/dinner/i]],
+    ['Toasts', [/toast/i, /speech/i]],
+    ['First dance', [/first dance/i]],
+    ['Parent dances', [/parent dance/i, /father[- ]daughter/i, /mother[- ]son/i]],
+    ['Open dancing', [/open danc/i]],
+    ['Last songs', [/last song/i, /last dance/i, /private last/i]]
+  ];
+  var found = {};
+  String(timeline || '').split(/\n+/).forEach(function (line) {
+    var when = timeOn_(line);
+    if (!when) return;
+    specs.forEach(function (spec) {
+      if (found[spec[0]]) return;
+      if (spec[1].some(function (pattern) { return pattern.test(line); })) found[spec[0]] = when;
+    });
+  });
+  return found;
+}
+
+function infoNodes_(detail) {
+  var nodes = [{ kind: 'title', text: detail.names + ' info sheet' }];
+  var services = [detail.services.live ? 'Live music' : '', detail.services.dj ? 'DJ' : '', detail.services.photobooth ? 'Photo booth' : ''].filter(Boolean).join(', ');
+  var photo = [sf_(detail, 'Photographer'), sf_(detail, 'How late is the photographer scheduled?') ? 'until ' + sf_(detail, 'How late is the photographer scheduled?') : ''].filter(Boolean).join(' · ');
+  var video = [sf_(detail, 'Videographer'), sf_(detail, 'How late is the videographer scheduled?') ? 'until ' + sf_(detail, 'How late is the videographer scheduled?') : ''].filter(Boolean).join(' · ');
+  var basics = labelTable_([
+    ['Couple', detail.names], ['Date', detail.date], ['Venue', detail.venue], ['Address', detail.venueAddress],
+    ['Start', detail.startTime], ['Length', detail.length], ['Guests', detail.guestCount], ['Event', detail.eventType],
+    ['Services', services], ['Team', detail.team], ['Planner', sf_(detail, 'Planner (name/contact)')],
+    ['Venue manager', sf_(detail, 'Venue manager')], ['Photographer', photo], ['Videographer', video],
+    ['Caterer', sf_(detail, 'Caterer info')], ['Website', sf_(detail, 'Wedding website')],
+    ['Website password', sf_(detail, 'Wedding website password')], ['Instagram', sf_(detail, 'IG handle')],
+    ['Dress code', sf_(detail, 'Dress code')], ['Colors', sf_(detail, 'Wedding colors')],
+    ['Day-of contact', sf_(detail, 'Day-of contact') || sf_(detail, 'Photo Booth: Day-of contact')]
+  ]);
+  if (basics) addSection_(nodes, 'Couple, venue, and vendors', [basics]);
+  pushText_(nodes, 'text', sf_(detail, 'Basic notes'));
+  var times = timelineTimes_(sf_(detail, 'Timeline'));
+  if (!times.Ceremony && detail.startTime) times.Ceremony = detail.startTime;
+  var glance = [];
+  [
+    ['Ceremony', true], ['Cocktail hour', true], ['Introductions', !(liveOnly_(detail) || sf_(detail, 'Introductions happening').toLowerCase() === 'no')],
+    ['Dinner', true], ['Toasts', !!(sf_(detail, 'Toasts/speeches') || times.Toasts)],
+    ['First dance', sf_(detail, 'Having a first dance').toLowerCase() !== 'no'],
+    ['Parent dances', sf_(detail, 'Having parent dances') !== 'No'],
+    ['Open dancing', !liveOnly_(detail)], ['Last songs', !liveOnly_(detail)]
+  ].forEach(function (row) {
+    if (!row[1]) return;
+    var how = '';
+    if (row[0] === 'Ceremony') how = sf_(detail, 'Pre-ceremony performance');
+    if (row[0] === 'Cocktail hour') how = sf_(detail, 'Cocktail hour music type');
+    if (row[0] === 'Dinner') how = sf_(detail, 'Dinner music type');
+    if (row[0] === 'Introductions') how = sf_(detail, 'Introduction no music').toLowerCase() === 'yes' ? 'No music' : (songLines_(sf_(detail, 'Introduction songs')).length ? 'With songs' : '');
+    if (row[0] === 'First dance') how = sf_(detail, 'First dance format (live/DJ, full/shortened)');
+    if (row[0] === 'Parent dances') how = sf_(detail, 'Having parent dances');
+    if (row[0] === 'Open dancing') how = sf_(detail, 'Clean music edits');
+    if (row[0] === 'Last songs') how = songLines_(sf_(detail, 'Last song of the night with guests'))[0] || '';
+    if (row[0] === 'Toasts') how = sf_(detail, 'Toasts/speeches') ? 'Speeches' : '';
+    var when = times[row[0]] || '';
+    if (!when && !how && row[0] !== 'Ceremony' && row[0] !== 'Cocktail hour' && row[0] !== 'Dinner') return;
+    glance.push([row[0], when || '—', how || '—']);
+  });
+  if (glance.length) addSection_(nodes, 'Day at a glance', [{ kind: 'table', labelColumn: false, header: true, rows: [['Section', 'Time', 'How it is played']].concat(glance) }]);
+  var timeline = String(sf_(detail, 'Timeline')).split(/\n+/).map(function (line) { return line.trim(); }).filter(Boolean);
+  if (timeline.length) addSection_(nodes, 'Timeline', timeline.map(function (line) { return { kind: 'bullet', text: line }; }));
+  addSection_(nodes, 'Ceremony', ceremonyNodes_(detail));
+  var cocktail = [];
+  [sf_(detail, 'Cocktail hour music type'), sf_(detail, 'Cocktail hour vibe'), sf_(detail, 'Cocktail hour timing notes')].forEach(function (line) { pushText_(cocktail, 'bullet', line); });
+  songNodes_(songLines_(sf_(detail, 'Cocktail hour songs'))).forEach(function (node) { cocktail.push(node); });
+  addSection_(nodes, 'Cocktail hour', cocktail);
+  if (!liveOnly_(detail) && sf_(detail, 'Introductions happening').toLowerCase() !== 'no') {
+    var intro = [];
+    pushText_(intro, 'bullet', sf_(detail, 'Who is being introduced'));
+    pushText_(intro, 'bullet', sf_(detail, 'Couple introduction name'));
+    if (sf_(detail, 'Introduction no music').toLowerCase() === 'yes') pushText_(intro, 'bullet', 'No song for this introduction');
+    else songNodes_(songLines_(sf_(detail, 'Introduction songs'))).forEach(function (node) { intro.push(node); });
+    pushText_(intro, 'bullet', sf_(detail, 'Introductions'));
+    addSection_(nodes, 'Introductions', intro);
+  }
+  var dinner = [];
+  [sf_(detail, 'Dinner music type'), sf_(detail, 'Dinner music notes')].forEach(function (line) { pushText_(dinner, 'bullet', line); });
+  songNodes_(songLines_(sf_(detail, 'Dinner songs'))).forEach(function (node) { dinner.push(node); });
+  addSection_(nodes, 'Dinner', dinner);
+  if (sf_(detail, 'Toasts/speeches')) addSection_(nodes, 'Toasts', sf_(detail, 'Toasts/speeches').split(/\n+/).map(function (line) { return line.trim(); }).filter(Boolean).map(function (line) { return { kind: 'bullet', text: line }; }));
+  if (sf_(detail, 'Having a first dance').toLowerCase() !== 'no') {
+    var first = [];
+    pushText_(first, 'bullet', sf_(detail, 'First dance format (live/DJ, full/shortened)'));
+    if (sf_(detail, 'First dance choreographed')) pushText_(first, 'bullet', 'Choreographed: ' + sf_(detail, 'First dance choreographed'));
+    if (sf_(detail, 'First dance start cue')) pushText_(first, 'bullet', 'Start: ' + sf_(detail, 'First dance start cue'));
+    if (sf_(detail, 'First dance stop cue')) pushText_(first, 'bullet', 'Stop: ' + sf_(detail, 'First dance stop cue'));
+    pushText_(first, 'bullet', sf_(detail, 'First dance fade out'));
+    songLines_(sf_(detail, "Couple's first dance song")).forEach(function (line) { pushText_(first, 'bullet', line); });
+    addSection_(nodes, 'First dance', first);
+  }
+  addSection_(nodes, 'Parent dances', parentNodes_(detail));
+  if (!liveOnly_(detail)) {
+    var open = [];
+    pushText_(open, 'bullet', sf_(detail, 'Clean music edits'));
+    pushText_(open, 'bullet', sf_(detail, 'DJ music requests'));
+    songNodes_(songLines_(sf_(detail, 'Open dancing songs'))).forEach(function (node) { open.push(node); });
+    addSection_(nodes, 'Open dancing', open);
+    var slow = [];
+    pushText_(slow, 'bullet', sf_(detail, 'Slow songs preference'));
+    songLines_(sf_(detail, 'Slow dance songs')).forEach(function (line) { pushText_(slow, 'bullet', line); });
+    addSection_(nodes, 'Slow songs', slow);
+    var last = [];
+    songLines_(sf_(detail, 'Last song of the night with guests')).forEach(function (line) { pushText_(last, 'bullet', 'With guests: ' + line); });
+    pushText_(last, 'bullet', sf_(detail, 'Last song of the night notes'));
+    addSection_(nodes, 'Last song of the night', last);
+    if (sf_(detail, 'Private last dance wanted').toLowerCase() === 'yes' || sf_(detail, 'Private last dance')) {
+      var priv = [];
+      songLines_(sf_(detail, 'Private last dance')).forEach(function (line) { pushText_(priv, 'bullet', line); });
+      pushText_(priv, 'bullet', sf_(detail, 'Private last dance notes'));
+      addSection_(nodes, 'Private last dance', priv);
+    }
+    addSection_(nodes, 'Do not play', songNodes_(songLines_(sf_(detail, 'Do not play songs')).concat(songLines_(sf_(detail, 'Do-not-play list')))));
+  }
+  var other = [];
+  pushText_(other, 'bullet', sf_(detail, 'Reception music notes'));
+  pushText_(other, 'bullet', sf_(detail, 'Notes'));
+  addSection_(nodes, 'Other notes', other);
+  return nodes;
+}
+
+function ceremonyNodes_(detail) {
+  var nodes = [];
+  var table = labelTable_([
+    ['Officiant microphone', sf_(detail, 'Officiant microphone')],
+    ['Officiant note', sf_(detail, 'Officiant microphone notes')],
+    ['Other speakers', sf_(detail, 'Other ceremony speakers')],
+    ['Speaker note', sf_(detail, 'Other ceremony speakers notes')],
+    ['Pre-ceremony', sf_(detail, 'Pre-ceremony performance')],
+    ['Pre-ceremony style', sf_(detail, 'Pre-ceremony music type')]
+  ]);
+  if (table) nodes.push(table);
+  var pre = songLines_(sf_(detail, 'Pre-ceremony music'));
+  if (pre.length) { pushText_(nodes, 'text', 'Pre-ceremony notes'); pushLines_(nodes, pre); }
+  var gone = removedMap_(detail);
+  var list = [
+    ['Wedding party processional song', 'Wedding Party Processional', '', 'Wedding party processional style (instrumental/vocals)', 'Wedding party processional notes'],
+    ['Bridal processional song', 'Bridal Processional', "Couple's Processional", 'Bridal processional style', 'Bridal processional notes'],
+    ['Additional processional song', 'Additional Processional', '', 'Additional processional style', 'Additional processional notes']
+  ];
+  list.forEach(function (item) {
+    if (gone['ceremony:' + item[0]]) return;
+    if (item[0] === 'Additional processional song' && !detail.genderNeutral && !sf_(detail, item[0])) return;
+    var songs = songLines_(sf_(detail, item[0]));
+    var style = djOnly_(detail) ? '' : sf_(detail, item[3]);
+    var notes = sf_(detail, item[4]);
+    if (!songs.length && !style && !notes) return;
+    var fallback = detail.genderNeutral && item[2] ? item[2] : item[1];
+    pushText_(nodes, 'text', renamed_(detail, item[0], fallback));
+    pushText_(nodes, 'bullet', style);
+    pushLines_(nodes, songs);
+    pushText_(nodes, 'bullet', notes);
+  });
+  var recessional = songLines_(sf_(detail, 'Recessional song'));
+  var recessionalStyle = djOnly_(detail) ? '' : sf_(detail, 'Recessional style');
+  var cue = sf_(detail, 'Recessional cue');
+  var recessionalNotes = sf_(detail, 'Recessional notes');
+  if (recessional.length || recessionalStyle || cue || recessionalNotes) {
+    pushText_(nodes, 'text', 'Recessional');
+    pushText_(nodes, 'bullet', recessionalStyle);
+    if (cue) pushText_(nodes, 'bullet', 'Cue: ' + cue);
+    pushLines_(nodes, recessional);
+    pushText_(nodes, 'bullet', recessionalNotes);
+  }
+  return nodes;
+}
+
+function parentNodes_(detail) {
+  var mode = sf_(detail, 'Having parent dances');
+  if (mode === 'No') return sf_(detail, 'Parent dances notes') ? [{ kind: 'bullet', text: sf_(detail, 'Parent dances notes') }] : [];
+  var nodes = [];
+  function side(title, songKey, nameKey, formatKey, choreoKey, startKey, stopKey, fadeKey) {
+    var bits = [songLines_(sf_(detail, songKey)).join('; '), sf_(detail, nameKey), sf_(detail, formatKey)];
+    if (sf_(detail, choreoKey)) bits.push('Choreographed: ' + sf_(detail, choreoKey));
+    if (sf_(detail, startKey)) bits.push('Start: ' + sf_(detail, startKey));
+    if (sf_(detail, stopKey)) bits.push('Stop: ' + sf_(detail, stopKey));
+    if (sf_(detail, fadeKey)) bits.push(sf_(detail, fadeKey));
+    bits = bits.filter(Boolean);
+    if (!bits.length) return;
+    pushText_(nodes, 'text', title);
+    pushLines_(nodes, bits);
+  }
+  if (mode !== 'Yes, mother-son only') side(detail.genderNeutral ? 'Parent dance' : 'Father-daughter', 'Father/daughter dance song', 'Father of the bride name', 'Father/daughter format', 'Father of the bride dance choreographed', 'Father of the bride start cue', 'Father of the bride stop cue', 'Father of the bride fade out');
+  if (mode !== 'Yes, father-daughter only') side(detail.genderNeutral ? 'Parent dance' : 'Mother-son', 'Mother/son dance song', 'Mother of the groom name', 'Mother/son format', 'Mother of the groom dance choreographed', 'Mother of the groom start cue', 'Mother of the groom stop cue', 'Mother of the groom fade out');
+  if (mode === 'Yes') {
+    try {
+      var extra = JSON.parse(sf_(detail, 'Extra parent dances') || '[]');
+      if (Object.prototype.toString.call(extra) === '[object Array]') extra.forEach(function (dance) {
+        if (!dance) return;
+        var bits = [songLines_(dance.song || '').join('; '), dance.format || ''];
+        if (dance.choreographed) bits.push('Choreographed: ' + dance.choreographed);
+        if (dance.startCue) bits.push('Start: ' + dance.startCue);
+        if (dance.stopCue) bits.push('Stop: ' + dance.stopCue);
+        if (dance.fade) bits.push(dance.fade);
+        bits = bits.filter(Boolean);
+        if (!bits.length && !dance.title) return;
+        pushText_(nodes, 'text', dance.title || 'Parent dance');
+        pushLines_(nodes, bits);
+      });
+    } catch (e) {}
+  }
+  pushText_(nodes, 'bullet', sf_(detail, 'Parent dances notes'));
+  pushText_(nodes, 'bullet', sf_(detail, 'Other special dance'));
+  return nodes;
+}
+
+function cheatNodes_(detail) {
+  var guests = detail.guestCount ? detail.guestCount + ' guests' : '';
+  var title = [detail.names, detail.date, detail.venue, guests].filter(Boolean).join(' – ');
+  var nodes = [{ kind: 'title', text: detail.names + ' cheat sheet' }, { kind: 'text', text: title }];
+  pushText_(nodes, 'bullet', sf_(detail, 'IG handle'));
+  if (detail.team) detail.team.split('\n').forEach(function (line, index) {
+    line = String(line || '').trim();
+    if (!line) return;
+    pushText_(nodes, index === 0 ? 'bullet' : 'text', index === 0 ? 'Your team: ' + line : line);
+  });
+  var photo = [sf_(detail, 'Photographer'), sf_(detail, 'Videographer')].filter(Boolean).join(' · ');
+  if (photo) pushText_(nodes, 'bullet', 'Photo: ' + photo);
+  var contact = sf_(detail, 'Day-of contact') || sf_(detail, 'Photo Booth: Day-of contact');
+  if (contact) pushText_(nodes, 'bullet', 'Day-of contact: ' + contact);
+  String(sf_(detail, 'Timeline')).split(/\n+/).map(function (line) { return line.trim(); }).filter(Boolean).slice(0, 16).forEach(function (line) { pushText_(nodes, 'text', line); });
+  var gone = removedMap_(detail);
+  [
+    ['Officiant microphone', sf_(detail, 'Officiant microphone')],
+    ['Other ceremony speakers', sf_(detail, 'Other ceremony speakers')]
+  ].forEach(function (row) { if (row[1]) pushText_(nodes, 'text', row[0] + ' - ' + row[1]); });
+  [
+    ['Wedding party processional song', 'Wedding Party Processional', '', 'Wedding party processional style (instrumental/vocals)'],
+    ['Bridal processional song', 'Bridal Processional', "Couple's Processional", 'Bridal processional style'],
+    ['Additional processional song', 'Additional Processional', '', 'Additional processional style']
+  ].forEach(function (item) {
+    if (gone['ceremony:' + item[0]]) return;
+    var song = songLines_(sf_(detail, item[0])).join('; ');
+    if (!song) return;
+    var style = djOnly_(detail) ? '' : sf_(detail, item[3]);
+    var fallback = detail.genderNeutral && item[2] ? item[2] : item[1];
+    pushText_(nodes, 'text', renamed_(detail, item[0], fallback) + ' - ' + [song, style].filter(Boolean).join(' — '));
+  });
+  var recessional = songLines_(sf_(detail, 'Recessional song')).join('; ');
+  if (recessional) {
+    var style = djOnly_(detail) ? '' : sf_(detail, 'Recessional style');
+    var cue = sf_(detail, 'Recessional cue');
+    pushText_(nodes, 'text', 'Recessional - ' + [recessional, style, cue].filter(Boolean).join(' — '));
+  }
+  var mode = sf_(detail, 'Having parent dances');
+  var parents = [];
+  if (mode !== 'Yes, mother-son only') songLines_(sf_(detail, 'Father/daughter dance song')).forEach(function (line) {
+    var format = sf_(detail, 'Father/daughter format');
+    parents.push(format ? 'Father-daughter - ' + line + ' [' + format + ']' : 'Father-daughter - ' + line);
+  });
+  if (mode !== 'Yes, father-daughter only') songLines_(sf_(detail, 'Mother/son dance song')).forEach(function (line) {
+    var format = sf_(detail, 'Mother/son format');
+    parents.push(format ? 'Mother-son - ' + line + ' [' + format + ']' : 'Mother-son - ' + line);
+  });
+  if (mode === 'Yes') {
+    try {
+      var extra = JSON.parse(sf_(detail, 'Extra parent dances') || '[]');
+      if (Object.prototype.toString.call(extra) === '[object Array]') extra.forEach(function (dance) {
+        var song = songLines_(dance && dance.song || '').join('; ');
+        if (!song && !(dance && dance.title)) return;
+        var label = (dance && dance.title) || 'Parent dance';
+        parents.push(dance.format ? label + ' - ' + song + ' [' + dance.format + ']' : label + ' - ' + song);
+      });
+    } catch (e2) {}
+  }
+  var intro = sf_(detail, 'Introduction no music').toLowerCase() === 'yes' && !songLines_(sf_(detail, 'Introduction songs')).length
+    ? ['No song for this introduction'] : songLines_(sf_(detail, 'Introduction songs'));
+  var sections = [
+    ['INTRODUCTIONS', intro],
+    ["COUPLE'S FIRST DANCE", songLines_(sf_(detail, "Couple's first dance song")).map(function (line) {
+      var format = sf_(detail, 'First dance format (live/DJ, full/shortened)');
+      return format ? line + ' [' + format + ']' : line;
+    })],
+    ['TOASTS / SPEECHES', songLines_(sf_(detail, 'Toasts/speeches'))],
+    ['PARENT DANCES', mode === 'No' ? [] : parents],
+    ['RECEPTION MUSIC (POST DINNER)', [sf_(detail, 'Reception music notes')].concat(songLines_(sf_(detail, 'Reception music songs'))).filter(Boolean)],
+    ['DJ NOTES', [sf_(detail, 'DJ music requests'), sf_(detail, 'Clean music edits')].filter(Boolean)],
+    ['MUST PLAYS', (function () {
+      try {
+        var data = JSON.parse(sf_(detail, 'Open dancing songs') || '[]');
+        if (Object.prototype.toString.call(data) !== '[object Array]') return [];
+        return data.filter(function (song) { return song && song.mustPlay && song.title; }).map(function (song) {
+          return song.artist ? song.title + ' - ' + song.artist + ' (must play)' : song.title + ' (must play)';
+        });
+      } catch (e3) { return []; }
+    })()],
+    ['OPEN DANCING', songLines_(sf_(detail, 'Open dancing songs')).slice(0, 24)],
+    ['SLOW SONGS', [sf_(detail, 'Slow songs preference')].concat(songLines_(sf_(detail, 'Slow dance songs'))).filter(Boolean)],
+    ['LAST SONG OF THE NIGHT', songLines_(sf_(detail, 'Last song of the night with guests'))],
+    ['DO NOT PLAY', songLines_(sf_(detail, 'Do not play songs')).concat(songLines_(sf_(detail, 'Do-not-play list'))).slice(0, 20)]
+  ];
+  var skip = { INTRODUCTIONS: 1, 'DJ NOTES': 1, 'MUST PLAYS': 1, 'OPEN DANCING': 1, 'SLOW SONGS': 1, 'LAST SONG OF THE NIGHT': 1, 'DO NOT PLAY': 1 };
+  sections.forEach(function (section) {
+    if (liveOnly_(detail) && skip[section[0]]) return;
+    if (!section[1].length) return;
+    nodes.push({ kind: 'heading', text: section[0] });
+    section[1].forEach(function (line) { pushText_(nodes, 'bullet', line); });
+  });
+  return nodes;
+}
+
+function writeSheet_(doc, nodes, compact) {
+  var body = doc.getBody();
+  body.setMarginTop(compact ? 29 : 32);
+  body.setMarginBottom(compact ? 29 : 32);
+  body.setMarginLeft(compact ? 32 : 36);
+  body.setMarginRight(compact ? 32 : 36);
+  var count = body.getNumChildren();
+  for (var i = count - 1; i >= 1; i--) body.removeChild(body.getChild(i));
+  var first = body.getChild(0).asParagraph();
+  first.clear();
+  var usedFirst = false;
+  nodes.forEach(function (node) {
+    if (node.kind === 'table') { appendSheetTable_(body, node, compact); usedFirst = true; return; }
+    if (node.kind === 'bullet') {
+      var item = body.appendListItem(node.text || '');
+      item.setGlyphType(DocumentApp.GlyphType.BULLET);
+      styleRun_(item, compact ? 10.5 : 11, false, '#222222', 0, 2);
+      usedFirst = true;
+      return;
+    }
+    var paragraph = !usedFirst ? first : body.appendParagraph('');
+    paragraph.setText(node.text || '');
+    usedFirst = true;
+    var size = node.kind === 'title' ? (compact ? 14 : 16) : node.kind === 'heading' ? (compact ? 11.5 : 13) : (compact ? 10.5 : 11);
+    styleRun_(paragraph, size, node.kind === 'title' || node.kind === 'heading', node.kind === 'heading' ? '#4e5c41' : '#222222', node.kind === 'heading' ? (compact ? 8 : 12) : 0, node.kind === 'title' ? 6 : 2);
+  });
+  if (body.getNumChildren() > 1) {
+    var opening = body.getChild(0);
+    if (opening.getType() === DocumentApp.ElementType.PARAGRAPH && opening.asParagraph().getText() === '') body.removeChild(opening);
+  }
+}
+
+function styleRun_(element, size, bold, color, before, after) {
+  var text = element.editAsText();
+  text.setFontFamily('Arial');
+  text.setFontSize(size);
+  text.setBold(!!bold);
+  text.setForegroundColor(color);
+  element.setSpacingBefore(before);
+  element.setSpacingAfter(after);
+}
+
+function appendSheetTable_(body, node, compact) {
+  if (!node.rows || !node.rows.length) return;
+  var table = body.appendTable(node.rows);
+  var size = compact ? 10 : 10.5;
+  for (var r = 0; r < node.rows.length; r++) {
+    for (var c = 0; c < node.rows[r].length; c++) {
+      var cell = table.getCell(r, c);
+      var header = !!node.header && r === 0;
+      var label = !!node.labelColumn && c === 0;
+      try {
+        var text = cell.editAsText();
+        if (text.getText()) {
+          text.setFontFamily('Arial');
+          text.setFontSize(size);
+          text.setBold(header || label);
+          text.setForegroundColor('#222222');
+        }
+      } catch (err) {}
+      if (header) cell.setBackgroundColor('#f4f1ea');
+    }
+  }
 }

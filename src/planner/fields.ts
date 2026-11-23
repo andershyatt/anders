@@ -818,9 +818,16 @@ const MOTHER_DANCE_KEYS = new Set([
 function danceHasSaved(fields: Record<string, string>, keys: ReadonlySet<string>): boolean {
   for (const key of keys) {
     if (key.endsWith('section')) continue
+    if (key === 'Having a father-daughter dance' || key === 'Having a mother-son dance') continue
     if ((fields[key] ?? '').trim()) return true
   }
   return false
+}
+
+/** A side counts when its details are filled, or the old yes/no was Yes. A lone No does not. */
+function parentSideActive(fields: Record<string, string>, yesKey: string, keys: ReadonlySet<string>): boolean {
+  if (danceHasSaved(fields, keys)) return true
+  return (fields[yesKey] ?? '').trim().toLowerCase() === 'yes'
 }
 
 function parentDanceHidden(key: string, fields: Record<string, string>, genderNeutral: boolean): boolean {
@@ -937,8 +944,8 @@ export function fieldAnswerVisible(
     return false
   }
   const declined = HIDE_WHEN_NO[key]
-  const parentYesNo = declined === 'Having a father-daughter dance' || declined === 'Having a mother-son dance'
-  if (declined && answerIsNo(fields, declined) && !(genderNeutral && parentYesNo)) return false
+  const retiredParentQuestion = declined === 'Having a father-daughter dance' || declined === 'Having a mother-son dance'
+  if (declined && !retiredParentQuestion && answerIsNo(fields, declined)) return false
   const removed = HIDE_WHEN_REMOVED[key]
   if (removed && (fields[removed] ?? '').trim().toLowerCase() === 'removed') return false
   return true
@@ -997,6 +1004,8 @@ const NON_PROGRESS_KEYS = new Set([
   SECTION_RENAMES,
   INTRODUCTION_NO_MUSIC,
   EXTRA_PARENT_DANCES,
+  'Having a father-daughter dance',
+  'Having a mother-son dance',
 ])
 
 const COCKTAIL_STYLE = 'Cocktail hour music type'
@@ -1061,22 +1070,43 @@ function scoreWebsite(keys: ReadonlySet<string>, answers: Record<string, string>
   return { answered: 0, total: 1 }
 }
 
-function introSongsChosen(raw: string): boolean {
+function introProgressSongs(raw: string): Array<{ who: string }> | null {
   const trimmed = raw.trim()
-  if (!trimmed || trimmed === '[]') return false
+  if (!trimmed || trimmed === '[]') return []
   try {
     const data = JSON.parse(trimmed) as unknown
-    if (!Array.isArray(data)) return true
-    return data.some((item) => item && typeof item === 'object' && String((item as { title?: string }).title ?? '').trim() !== '')
+    if (!Array.isArray(data)) return null
+    const songs: Array<{ who: string }> = []
+    for (const item of data) {
+      if (!item || typeof item !== 'object') continue
+      const title = String((item as { title?: string }).title ?? '').trim()
+      if (!title) continue
+      songs.push({ who: String((item as { who?: string }).who ?? '').trim() })
+    }
+    return songs
   } catch {
-    return true
+    return null
   }
 }
 
+/**
+ * No music finishes the song part. Each chosen song counts, and so does
+ * "Who will be walking out to this song?" on that song.
+ */
 function scoreIntroSongs(keys: ReadonlySet<string>, answers: Record<string, string>): { answered: number; total: number } | null {
   if (!keys.has('Introduction songs')) return null
-  const done = introSongsChosen(answers['Introduction songs'] ?? '') || (answers[INTRODUCTION_NO_MUSIC] ?? '').trim().toLowerCase() === 'yes'
-  return { answered: done ? 1 : 0, total: 1 }
+  if ((answers[INTRODUCTION_NO_MUSIC] ?? '').trim().toLowerCase() === 'yes') return { answered: 1, total: 1 }
+  const songs = introProgressSongs(answers['Introduction songs'] ?? '')
+  if (songs === null) return { answered: 1, total: 2 }
+  if (songs.length === 0) return { answered: 0, total: 1 }
+  let answered = 0
+  let total = 0
+  for (const song of songs) {
+    total += 2
+    answered += 1
+    if (song.who) answered += 1
+  }
+  return { answered, total }
 }
 
 const DO_NOT_PLAY_SONGS = 'Do not play songs'
@@ -1201,9 +1231,20 @@ export function applyLegacyPlannerAnswers(fields: Record<string, string>): Recor
     next = { ...next, [HAVE_WEDDING_WEBSITE]: 'Yes' }
   }
   if (!(next[HAVING_PARENT_DANCES] ?? '').trim()) {
-    const father = danceHasSaved(next, FATHER_DANCE_KEYS)
-    const mother = danceHasSaved(next, MOTHER_DANCE_KEYS)
-    const mode = father && mother ? PARENT_DANCE_YES : mother ? PARENT_DANCE_MOTHER : father ? PARENT_DANCE_FATHER : ''
+    const father = parentSideActive(next, 'Having a father-daughter dance', FATHER_DANCE_KEYS)
+    const mother = parentSideActive(next, 'Having a mother-son dance', MOTHER_DANCE_KEYS)
+    const fatherNo = (next['Having a father-daughter dance'] ?? '').trim().toLowerCase() === 'no'
+    const motherNo = (next['Having a mother-son dance'] ?? '').trim().toLowerCase() === 'no'
+    const mode =
+      father && mother
+        ? PARENT_DANCE_YES
+        : mother
+          ? PARENT_DANCE_MOTHER
+          : father
+            ? PARENT_DANCE_FATHER
+            : fatherNo && motherNo
+              ? PARENT_DANCE_NO
+              : ''
     if (mode) next = { ...next, [HAVING_PARENT_DANCES]: mode }
   }
   return next

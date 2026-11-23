@@ -10,6 +10,7 @@ import {
   adminDeleteCouple,
   adminList,
   adminSetStatus,
+  makeClientDoc,
   clearAdminKey,
   matchesStages,
   plannerLink,
@@ -18,11 +19,7 @@ import {
   storedAdminKey,
   type NewCoupleInput,
 } from './api'
-import { buildCheatSheet } from './cheatSheet'
-import { sheetFileName } from './files'
-import { buildInfoSheet } from './infoSheet'
 import { coupleProgress } from './progress'
-import { clientFolderName, saveClientDocument } from './shortcuts'
 import { clearPipelineCache, coupleLocallyEdited, readPipelineCache, writePipelineCache } from './listCache'
 import { couplePlaylistName, playlistChoices } from './songs'
 import type { PendingPlaylist, SpotifyPlaylistResult } from './spotify'
@@ -711,6 +708,7 @@ function CoupleCard({
   const [pendingVenue, setPendingVenue] = useState<VenueMatch | null>(null)
   const [pendingServices, setPendingServices] = useState<PipelineCouple['services'] | null>(null)
   const [docNote, setDocNote] = useState('')
+  const [docUrl, setDocUrl] = useState('')
   const [pendingDelete, setPendingDelete] = useState('')
   const tone = stageOf(couple.bookingStatus)
   const toneClass = tone === 'Booked' ? 'booked' : tone === 'Completed' ? 'done' : 'pending'
@@ -736,12 +734,14 @@ function CoupleCard({
     onChange({ ...couple, ...patch, updatedBy: 'Anders' })
   }
 
-  async function storeDoc(kind: 'info sheet' | 'cheat sheet', folder: string) {
-    await run(couple, async (full) => {
-      const blob = kind === 'info sheet' ? await buildInfoSheet(full) : await buildCheatSheet(full)
-      const filename = sheetFileName(full.names, kind)
-      const note = await saveClientDocument(blob, filename, folder)
-      setDocNote(note)
+  async function storeDoc(kind: 'info sheet' | 'cheat sheet') {
+    await run(couple, async () => {
+      const made = await makeClientDoc(adminKey, couple.token, kind)
+      const opened = window.open(made.url, '_blank', 'noopener')
+      const verb = made.replaced ? 'Updated' : 'Saved'
+      const tab = opened ? ' It is open in a new tab.' : ''
+      setDocUrl(made.url)
+      setDocNote(`${verb} ${made.title} in CLIENTS / ${made.folder}.${tab}`)
     })
   }
 
@@ -972,7 +972,7 @@ function CoupleCard({
             disabled={busy === 'info'}
             onClick={() => {
               setBusy('info')
-              void storeDoc('info sheet', clientFolderName(couple.date, couple.names)).finally(() => setBusy(''))
+              void storeDoc('info sheet').finally(() => setBusy(''))
             }}
           >
             Make info sheet
@@ -982,7 +982,7 @@ function CoupleCard({
             disabled={busy === 'cheat'}
             onClick={() => {
               setBusy('cheat')
-              void storeDoc('cheat sheet', clientFolderName(couple.date, couple.names)).finally(() => setBusy(''))
+              void storeDoc('cheat sheet').finally(() => setBusy(''))
             }}
           >
             Make cheat sheet
@@ -1009,11 +1009,10 @@ function CoupleCard({
             disabled={busy === 'delete'}
             onClick={() => {
               setBusy('delete')
-              void run(couple, async (full) => {
-                const blob = await buildInfoSheet(full)
-                const filename = sheetFileName(full.names, 'info sheet')
-                const note = await saveClientDocument(blob, filename, 'DELETED PLANNERS')
-                setPendingDelete(note)
+              void run(couple, async () => {
+                const made = await makeClientDoc(adminKey, couple.token, 'info sheet', 'DELETED PLANNERS')
+                window.open(made.url, '_blank', 'noopener')
+                setPendingDelete(`Saved ${made.title} in CLIENTS / ${made.folder}. `)
                 setConfirming(true)
               }).finally(() => setBusy(''))
             }}
@@ -1175,7 +1174,7 @@ function CoupleCard({
           </div>
         )}
         {docNote && (
-          <div className="pipeline-dialog-backdrop" onClick={() => setDocNote('')}>
+          <div className="pipeline-dialog-backdrop" onClick={() => { setDocNote(''); setDocUrl('') }}>
             <div
               role="dialog"
               aria-modal="true"
@@ -1184,8 +1183,15 @@ function CoupleCard({
               onClick={(event) => event.stopPropagation()}
             >
               <p id={`doc-${couple.token}`}>{docNote}</p>
+              {docUrl && (
+                <p>
+                  <a href={docUrl} target="_blank" rel="noopener noreferrer">
+                    Open the document
+                  </a>
+                </p>
+              )}
               <div>
-                <button type="button" className="gold" onClick={() => setDocNote('')}>
+                <button type="button" className="gold" onClick={() => { setDocNote(''); setDocUrl('') }}>
                   OK
                 </button>
               </div>

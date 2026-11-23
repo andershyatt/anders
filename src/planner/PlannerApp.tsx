@@ -1345,7 +1345,7 @@ export default function PlannerApp() {
                           <span>{field.callout}</span>
                         </p>
                       )}
-                      {showField && field.note && (
+                      {showField && field.note && !(field.key === 'Introduction songs' && (fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes') && (
                         field.heading ? (
                           <p className="planner-callout">
                             <span>{field.note}</span>
@@ -1411,6 +1411,23 @@ export default function PlannerApp() {
                       </>
                     ) : (
                       <>
+                        {field.key === 'Introduction songs' && (
+                          <p className="planner-no-music-row">
+                            <button
+                              type="button"
+                              className={(fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes' ? 'planner-no-music is-on' : 'planner-no-music'}
+                              aria-pressed={(fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes'}
+                              onClick={() =>
+                                updateField(INTRODUCTION_NO_MUSIC, (fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes' ? '' : 'Yes')
+                              }
+                            >
+                              {(fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes' ? '✓ No music' : 'No music'}
+                            </button>
+                          </p>
+                        )}
+                        {field.key === 'Introduction songs' && (fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes' ? (
+                          <p className="planner-no-music__note">No song for this introduction</p>
+                        ) : (
                         <FieldControl
                           field={field}
                           value={fields[field.key] ?? ''}
@@ -1442,19 +1459,6 @@ export default function PlannerApp() {
                             }
                           }}
                         />
-                        {field.key === 'Introduction songs' && (
-                          <p>
-                            <button
-                              type="button"
-                              className="planner-section__toggle"
-                              aria-pressed={(fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes'}
-                              onClick={() =>
-                                updateField(INTRODUCTION_NO_MUSIC, (fields[INTRODUCTION_NO_MUSIC] ?? '') === 'Yes' ? '' : 'Yes')
-                              }
-                            >
-                              No music
-                            </button>
-                          </p>
                         )}
                         {field.key === HAVING_PARENT_DANCES && fields[field.key] === PARENT_DANCE_MOTHER && (
                           <p>
