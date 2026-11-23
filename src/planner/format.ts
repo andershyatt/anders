@@ -230,6 +230,19 @@ export function formatSavedAt(value: string | number | undefined): string {
   })
 }
 
+/** Narrow save bar. The year is left off so the time still fits. */
+export function formatSavedAtShort(value: string | number | undefined): string {
+  if (value === undefined || value === null || value === '') return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
 export function fieldsEqual(left: Record<string, string>, right: Record<string, string>): boolean {
   const keys = new Set([...Object.keys(left), ...Object.keys(right)])
   for (const key of keys) {

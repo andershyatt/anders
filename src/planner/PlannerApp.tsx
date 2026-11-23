@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { isInvalidLink, loadPlanner, saveErrorMessage, savePlanner, uploadFloorPlan, uploadTimelinePdf, type PlannerLoadSuccess } from './api'
 import {
   DANCE_LENGTH,
@@ -52,6 +52,7 @@ import {
   formatDance,
   formatCoupleDate,
   formatSavedAt,
+  formatSavedAtShort,
   isIsoDate,
   lockoutDate,
   choiceGroupIsLong,
@@ -933,44 +934,24 @@ export default function PlannerApp() {
   const progressCount = plannerProgressCount(shownSections, progressFields, services.knownVenue)
   const progress = progressCount.percent
   const progressLook = progressTone(progressCount)
-  const contentSections = useMemo(() => shownSections.filter((section) => section.id !== 'basics'), [shownSections])
+  const contentSections = shownSections
   const [wide, setWide] = useState(() => window.matchMedia('(min-width: 900px)').matches)
-  const [basicsOpen, setBasicsOpen] = useState(true)
-  const basicsRef = useRef<HTMLElement | null>(null)
+  const [compactBar, setCompactBar] = useState(() => window.matchMedia('(max-width: 520px)').matches)
   const pendingScroll = useRef<string | null>(null)
-  useLayoutEffect(() => {
-    const el = basicsRef.current
-    if (!el) return
-    const apply = () => {
-      if (!window.matchMedia('(min-width: 900px)').matches) {
-        el.style.width = ''
-        return
-      }
-      el.style.width = 'max-content'
-      const natural = el.getBoundingClientRect().width
-      const column = el.parentElement?.clientWidth ?? natural
-      el.style.width = `${Math.min(column, Math.round(natural * 1.3))}px`
-    }
-    apply()
-    const parent = el.parentElement
-    const observer = new ResizeObserver(apply)
-    if (parent) observer.observe(parent)
-    window.addEventListener('resize', apply)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', apply)
-    }
-  }, [basicsOpen, wide])
   const [sectionHash, setSectionHash] = useState(() => window.location.hash)
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
+    const compact = window.matchMedia('(max-width: 520px)')
     const onMedia = () => setWide(media.matches)
+    const onCompact = () => setCompactBar(compact.matches)
     const onHash = () => setSectionHash(window.location.hash)
     media.addEventListener('change', onMedia)
+    compact.addEventListener('change', onCompact)
     window.addEventListener('hashchange', onHash)
     window.addEventListener('popstate', onHash)
     return () => {
       media.removeEventListener('change', onMedia)
+      compact.removeEventListener('change', onCompact)
       window.removeEventListener('hashchange', onHash)
       window.removeEventListener('popstate', onHash)
     }
@@ -1038,46 +1019,7 @@ export default function PlannerApp() {
     setSectionHash('')
   }
   const savedLabel = formatSavedAt(lastUpdated)
-  const [place, setPlace] = useState('')
-  useEffect(() => {
-    if (status.kind !== 'ready') return
-    let frame = 0
-    const update = () => {
-      frame = 0
-      const header = document.querySelector('.planner-top')
-      const line = (header?.getBoundingClientRect().bottom ?? 0) + 4
-      const selectedHeading = document.querySelector('.planner-section.is-selected h2, .planner-section.is-selected .planner-subhead')
-      let section = selectedHeading?.textContent?.trim() ?? ''
-      let sub = ''
-      for (const el of document.querySelectorAll('.planner-section.is-selected h2, .planner-section.is-selected .planner-subhead')) {
-        const rect = el.getBoundingClientRect()
-        if (rect.height === 0) continue
-        if (rect.top > line) break
-        if (el.classList.contains('planner-subhead')) {
-          const title = el.textContent?.trim() ?? ''
-          if (!section || section.toLowerCase() === title.toLowerCase()) section = title
-          else sub = title
-        } else {
-          section = el.textContent?.trim() ?? ''
-          sub = ''
-        }
-      }
-      const next = section ? (sub ? `${section} › ${sub}` : section) : ''
-      setPlace((current) => (current === next ? current : next))
-    }
-    const onScroll = () => {
-      if (frame) return
-      frame = window.requestAnimationFrame(update)
-    }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      if (frame) window.cancelAnimationFrame(frame)
-    }
-  }, [status.kind, shownSections])
+  const savedLabelShort = formatSavedAtShort(lastUpdated)
   useEffect(() => {
     const viewport = window.visualViewport
     if (!viewport) return
@@ -1128,10 +1070,17 @@ export default function PlannerApp() {
       <header className="planner-top">
         <SectionMenu sections={status.kind === 'ready' ? shownSections : []} />
         <div className="planner-top__title">
-          <a href="../">Anders Hyatt Music</a>
+          <p className="planner-top__brand planner-top__brand--full">
+            <a href="../">Anders Hyatt Music</a>
+            <span className="planner-top__sep" aria-hidden="true">
+              •
+            </span>
+            <span className="planner-top__product">Wedding planner</span>
+          </p>
+          <p className="planner-top__brand planner-top__brand--short">
+            <a href="../">AHM - WEDDING MUSIC PLANNER</a>
+          </p>
           {basics.names.trim() && <p className="planner-top__names">{basics.names.trim()}</p>}
-          <p>Wedding planner</p>
-          {place && <p className="planner-top__place">{place}</p>}
         </div>
         {standalone ? (
           <button type="button" className="app-refresh" onClick={() => window.location.reload()}>
@@ -1209,7 +1158,7 @@ export default function PlannerApp() {
                 const sectionFields = receptionGroup ? receptionGroup.fields : section.fields
                 let hideSubsection = false
                 return (
-                <section key={section.id} id={section.id} ref={section.id === 'basics' ? basicsRef : undefined} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}${section.id === 'basics' && !basicsOpen ? ' is-collapsed' : ''}`}>
+                <section key={section.id} id={section.id} className={`planner-section${section.id === selectedId ? ' is-selected' : ''}${receptionGroup ? ' is-subsection' : ''}`}>
                   {(!receptionGroup || (!wide && section.id === selectedId)) && (
                   <div className="planner-section__head">
                     {!wide && section.id === selectedId && (
@@ -1220,18 +1169,6 @@ export default function PlannerApp() {
                       </div>
                     )}
                     {!receptionGroup && <h2>{section.title}</h2>}
-                    {section.id === 'basics' && (
-                      <div className="planner-section__tools">
-                        <button
-                          type="button"
-                          className="planner-section__toggle"
-                          aria-expanded={basicsOpen}
-                          onClick={() => setBasicsOpen((open) => !open)}
-                        >
-                          {basicsOpen ? 'Collapse' : 'Expand'}
-                        </button>
-                      </div>
-                    )}
                     {managed && !receptionGroup && (
                       <div className="planner-section__tools">
                         <button type="button" onClick={() => removeManaged(section.id)}>
@@ -1549,16 +1486,20 @@ export default function PlannerApp() {
                 <blockquote>You must always believe that life is as extraordinary as music says it is.</blockquote>
                 <figcaption>— Rebecca West, The Fountain Overflows</figcaption>
               </figure>
-              <div className={`planner-progress is-${progressLook}`} aria-label={`Planner progress ${progress} percent`}>
-                <div className="planner-progress__fill" style={{ width: `${progress}%` }} />
-                <span>{progress}% answered</span>
-              </div>
               <div className="planner-savebar">
+                <div className={`planner-progress is-${progressLook}`} aria-label={`Planner progress ${progress} percent`}>
+                  <div className="planner-progress__fill" style={{ width: `${progress}%` }} />
+                  <span>{progress}% answered</span>
+                </div>
                 <div className="planner-savebar__status" aria-live="polite">
                   {saveFailed && <p className="planner-savebar__error">{saveMessage}</p>}
                   {!saveFailed && saveMessage && <p>{saveMessage}</p>}
-                  {!saveMessage && dirty && <p>You have unsaved changes</p>}
-                  {savedLabel && <p className="planner-savebar__time">Last saved {savedLabel}</p>}
+                  {!saveMessage && dirty && <p>Unsaved changes</p>}
+                  {savedLabel && !saveFailed && (
+                    <p className="planner-savebar__time">
+                      Last saved {compactBar ? savedLabelShort : savedLabel}
+                    </p>
+                  )}
                 </div>
                 <button type="submit" className="btn" disabled={saving || plannerLocked(basics.date, undefined, lockOverride)}>
                   {saving ? 'Saving…' : 'Save'}

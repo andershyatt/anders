@@ -888,7 +888,7 @@ export function sectionProgress(
   answers: Record<string, string>,
   knownVenue = false,
 ): ProgressCount {
-  if (section.id === 'basics' || section.id === 'notes') return { answered: 0, total: 0, percent: 0, omit: true }
+  if (section.id === 'notes' || section.id === 'basics') return { answered: 0, total: 0, percent: 0, omit: true }
   if (section.id === 'photo-booth') return photoBoothProgress(answers, knownVenue)
   if (section.id === 'timeline') {
     const notes = (answers.Timeline ?? '').trim()
