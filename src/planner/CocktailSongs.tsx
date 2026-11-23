@@ -241,7 +241,9 @@ export default function CocktailSongs({
           ? 'Paste a Spotify or Apple Music playlist link.'
           : result.error === 'no_tracks'
             ? "We couldn't read the songs on that playlist. Try another link, or add songs by search."
-            : "We couldn't load that playlist. You can still add songs from the suggestions or by search.",
+            : playlists.length > 0
+              ? "We couldn't load that playlist. You can still add songs from the suggestions or by search."
+              : "We couldn't load that playlist. You can still add songs by search.",
       )
       return
     }

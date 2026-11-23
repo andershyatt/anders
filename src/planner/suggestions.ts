@@ -146,7 +146,7 @@ export function suggestedSongs(id: SuggestionListId | readonly SuggestionListId[
 /**
  * Which playlist feeds each song field.
  * Ceremony and special dances prefer the live sheet tag, and fall back to the saved list.
- * Open dancing, cocktail/dinner, and introductions stay on the saved lists.
+ * Cocktail hour and dinner do not use a suggested list. Open dancing and introductions stay on the saved lists.
  * Gender-neutral parent dances combine the father and mother tags in neutralizeField.
  */
 export const SONG_FIELD_SUGGESTIONS: Record<string, SuggestionListId> = {
@@ -160,8 +160,6 @@ export const SONG_FIELD_SUGGESTIONS: Record<string, SuggestionListId> = {
   'Private last dance': 'sheet-first-dance',
   'Last song of the night with guests': 'open-dancing',
   'Introduction songs': 'introductions',
-  'Cocktail hour songs': 'cocktail-dinner',
-  'Dinner songs': 'cocktail-dinner',
   'Open dancing songs': 'open-dancing',
 }
 
