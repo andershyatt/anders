@@ -79,7 +79,7 @@ function updatedLineFor(couple: PipelineCouple): string {
 }
 
 function cardControl(target: EventTarget | null): boolean {
-  return target instanceof Element && Boolean(target.closest('button, a, input, textarea, select, label'))
+  return target instanceof Element && Boolean(target.closest('button, a, input, textarea, select, label, .pipeline-dialog-backdrop'))
 }
 
 function ShortLinkRow({ slug }: { slug?: string }) {
@@ -172,6 +172,11 @@ export default function PipelineApp() {
     return cachedCouples ? 'ready' : 'loading'
   })
   const [notice, setNotice] = useState('')
+  const [noticeHref, setNoticeHref] = useState('')
+  function showNotice(value: string, href = '') {
+    setNotice(value)
+    setNoticeHref(href)
+  }
   const [error, setError] = useState(() => {
     const oauthError = new URLSearchParams(window.location.search).get('error')
     return oauthError ? spotifyOauthMessage(oauthError) : ''
@@ -243,6 +248,7 @@ export default function PipelineApp() {
         setSpotifyReady(spotify.spotifyConnected())
         if (!pending) {
           setNotice('Spotify is connected on this browser.')
+          setNoticeHref('')
           return
         }
         const result = await spotify.createSpotifyPlaylist(pending.name, pending.songs)
@@ -351,7 +357,7 @@ export default function PipelineApp() {
   }
 
   async function withDetail(couple: PipelineCouple, task: (detail: PipelineDetail) => Promise<void>) {
-    setNotice('')
+    showNotice('')
     setError('')
     try {
       const detail = await adminCouple(key, couple.token)
@@ -450,7 +456,19 @@ export default function PipelineApp() {
         )}
         {status === 'ready' && (
           <>
-            {notice && <p className="pipeline-note">{notice}</p>}
+            {notice && (
+              <p className="pipeline-note">
+                {notice}
+                {noticeHref && (
+                  <>
+                    {' '}
+                    <a href={noticeHref} target="_blank" rel="noopener noreferrer">
+                      Open the info sheet
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
             {error && <p className="pipeline-error">{error}</p>}
             {adding && (
               <form
@@ -586,7 +604,7 @@ export default function PipelineApp() {
                       type="button"
                       onClick={() => {
                         void navigator.clipboard.writeText(created)
-                        setNotice('Planner link copied.')
+                        showNotice('Planner link copied.')
                       }}
                     >
                       Copy
@@ -604,7 +622,7 @@ export default function PipelineApp() {
                   spotifyReady={spotifyReady}
                   onChange={(next) => setCouples((current) => current.map((item) => (item.token === next.token ? next : item)))}
                   onRemove={(token) => setCouples((current) => current.filter((item) => item.token !== token))}
-                  onNotice={setNotice}
+                  onNotice={showNotice}
                   onError={setError}
                   onCreated={setCreatedPlaylist}
                   run={withDetail}
@@ -691,7 +709,7 @@ function CoupleCard({
   spotifyReady: boolean
   onChange: (couple: PipelineCouple) => void
   onRemove: (token: string) => void
-  onNotice: (value: string) => void
+  onNotice: (value: string, href?: string) => void
   onError: (value: string) => void
   onCreated: (result: SpotifyPlaylistResult) => void
   run: (couple: PipelineCouple, task: (detail: PipelineDetail) => Promise<void>) => Promise<void>
@@ -704,12 +722,14 @@ function CoupleCard({
   const [busy, setBusy] = useState('')
   const [statusOpen, setStatusOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [saveBeforeDelete, setSaveBeforeDelete] = useState(true)
+  const [deletePhase, setDeletePhase] = useState<'saving' | 'deleting' | ''>('')
+  const deleting = useRef(false)
   const [venueDraft, setVenueDraft] = useState(couple.venue)
   const [pendingVenue, setPendingVenue] = useState<VenueMatch | null>(null)
   const [pendingServices, setPendingServices] = useState<PipelineCouple['services'] | null>(null)
   const [docNote, setDocNote] = useState('')
   const [docUrl, setDocUrl] = useState('')
-  const [pendingDelete, setPendingDelete] = useState('')
   const tone = stageOf(couple.bookingStatus)
   const toneClass = tone === 'Booked' ? 'booked' : tone === 'Completed' ? 'done' : 'pending'
   const progress = coupleProgress(couple)
@@ -747,6 +767,62 @@ function CoupleCard({
 
   function failSpotify(reason: unknown) {
     onError(messageFor(reason))
+  }
+
+  function cancelDelete() {
+    if (deleting.current) return
+    setConfirming(false)
+  }
+
+  function confirmDelete() {
+    if (deleting.current) return
+    const saveFirst = saveBeforeDelete
+    const name = couple.names || 'the wedding'
+    deleting.current = true
+    setBusy('delete')
+    setDeletePhase(saveFirst ? 'saving' : 'deleting')
+    // Open during the click. window.open after the save request is usually blocked.
+    const preview = saveFirst ? window.open('about:blank', '_blank') : null
+    if (preview) preview.opener = null
+    void (async () => {
+      let saved = false
+      let link = ''
+      try {
+        if (saveFirst) {
+          const made = await makeClientDoc(adminKey, couple.token, 'info sheet', 'DELETED PLANNERS')
+          saved = true
+          if (preview && !preview.closed) {
+            try {
+              preview.location.replace(made.url)
+            } catch {
+              link = made.url
+              preview.close()
+            }
+          } else {
+            const opened = window.open(made.url, '_blank')
+            if (opened) opened.opener = null
+            else link = made.url
+          }
+          setDeletePhase('deleting')
+        }
+        await adminDeleteCouple(adminKey, couple.token)
+        onRemove(couple.token)
+        onNotice(
+          saveFirst ? `Deleted ${name}. Info sheet saved in CLIENTS / DELETED PLANNERS.` : `Deleted ${name}.`,
+          link || undefined,
+        )
+        setConfirming(false)
+      } catch (reason) {
+        if (!saved && preview && !preview.closed) preview.close()
+        onError(saved ? `Info sheet saved in CLIENTS / DELETED PLANNERS. ${messageFor(reason)}` : messageFor(reason))
+        if (saved && link) onNotice('Info sheet saved in CLIENTS / DELETED PLANNERS.', link)
+        setConfirming(false)
+      } finally {
+        deleting.current = false
+        setBusy('')
+        setDeletePhase('')
+      }
+    })()
   }
 
   const updatedLine = updatedLineFor(couple)
@@ -1008,13 +1084,8 @@ function CoupleCard({
             className="pipeline-delete"
             disabled={busy === 'delete'}
             onClick={() => {
-              setBusy('delete')
-              void run(couple, async () => {
-                const made = await makeClientDoc(adminKey, couple.token, 'info sheet', 'DELETED PLANNERS')
-                window.open(made.url, '_blank', 'noopener')
-                setPendingDelete(`Saved ${made.title} in CLIENTS / ${made.folder}. `)
-                setConfirming(true)
-              }).finally(() => setBusy(''))
+              setSaveBeforeDelete(true)
+              setConfirming(true)
             }}
           >
             Delete wedding
@@ -1071,35 +1142,34 @@ function CoupleCard({
           </div>
         )}
         {confirming && (
-          <div className="pipeline-dialog-backdrop" onClick={() => setConfirming(false)}>
+          <div className="pipeline-dialog-backdrop" onClick={cancelDelete}>
             <div
               role="dialog"
               aria-modal="true"
+              aria-busy={busy === 'delete'}
               aria-labelledby={`delete-${couple.token}`}
               className="pipeline-dialog"
               onClick={(event) => event.stopPropagation()}
             >
               <p id={`delete-${couple.token}`}>
-                {pendingDelete} Delete {couple.names || 'this wedding'}? This removes the couple and their planner answers.
+                Delete {couple.names || 'this wedding'}? This removes the couple and their planner answers.
               </p>
+              <label className="pipeline-dialog__save" htmlFor={`save-sheet-${couple.token}`}>
+                <input
+                  id={`save-sheet-${couple.token}`}
+                  type="checkbox"
+                  checked={saveBeforeDelete}
+                  disabled={busy === 'delete'}
+                  onChange={(event) => setSaveBeforeDelete(event.target.checked)}
+                />
+                Save info sheet to Deleted Planners first
+              </label>
               <div>
-                <button type="button" onClick={() => setConfirming(false)}>
+                <button type="button" disabled={busy === 'delete'} onClick={cancelDelete}>
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  className="pipeline-danger"
-                  onClick={() => {
-                    setConfirming(false)
-                    void adminDeleteCouple(adminKey, couple.token)
-                      .then(() => {
-                        onRemove(couple.token)
-                        onNotice(`Deleted ${couple.names || 'the wedding'}.`)
-                      })
-                      .catch((reason: unknown) => onError(messageFor(reason)))
-                  }}
-                >
-                  Delete wedding
+                <button type="button" className="pipeline-danger" disabled={busy === 'delete'} onClick={confirmDelete}>
+                  {deletePhase === 'saving' ? 'Saving…' : deletePhase === 'deleting' ? 'Deleting…' : 'Delete wedding'}
                 </button>
               </div>
             </div>
