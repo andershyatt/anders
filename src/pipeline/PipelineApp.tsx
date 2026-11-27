@@ -82,6 +82,28 @@ function cardControl(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(target.closest('button, a, input, textarea, select, label, .pipeline-dialog-backdrop'))
 }
 
+/** Close a tab opened for the info sheet. If Safari will not close it, leave a short note instead of about:blank. */
+function closePreview(preview: Window | null) {
+  if (!preview) return
+  try {
+    if (!preview.closed) preview.close()
+  } catch {
+    /* The tab can outlive the call on iPhone. */
+  }
+  try {
+    if (preview.closed) return
+    const doc = preview.document
+    doc.open()
+    doc.write('<!DOCTYPE html><title>Info sheet not saved</title><body><p></p></body>')
+    doc.close()
+    const note = doc.querySelector('p')
+    if (note) note.textContent = 'The info sheet was not saved. You can close this tab.'
+    preview.close()
+  } catch {
+    /* Cross-origin or already gone. */
+  }
+}
+
 function ShortLinkRow({ slug }: { slug?: string }) {
   const [copied, setCopied] = useState(false)
   if (!slug) return null
@@ -724,6 +746,7 @@ function CoupleCard({
   const [confirming, setConfirming] = useState(false)
   const [saveBeforeDelete, setSaveBeforeDelete] = useState(true)
   const [deletePhase, setDeletePhase] = useState<'saving' | 'deleting' | ''>('')
+  const [deleteError, setDeleteError] = useState('')
   const deleting = useRef(false)
   const [venueDraft, setVenueDraft] = useState(couple.venue)
   const [pendingVenue, setPendingVenue] = useState<VenueMatch | null>(null)
@@ -780,10 +803,11 @@ function CoupleCard({
     const name = couple.names || 'the wedding'
     deleting.current = true
     setBusy('delete')
+    setDeleteError('')
     setDeletePhase(saveFirst ? 'saving' : 'deleting')
     // Open during the click. window.open after the save request is usually blocked.
+    // Leave opener intact so a failed save can still close this tab. iPhone Safari will not close a tab whose opener was cleared.
     const preview = saveFirst ? window.open('about:blank', '_blank') : null
-    if (preview) preview.opener = null
     void (async () => {
       let saved = false
       let link = ''
@@ -794,9 +818,14 @@ function CoupleCard({
           if (preview && !preview.closed) {
             try {
               preview.location.replace(made.url)
+              preview.opener = null
             } catch {
               link = made.url
-              preview.close()
+              try {
+                preview.close()
+              } catch {
+                /* The notice link still opens the saved sheet. */
+              }
             }
           } else {
             const opened = window.open(made.url, '_blank')
@@ -807,16 +836,18 @@ function CoupleCard({
         }
         await adminDeleteCouple(adminKey, couple.token)
         onRemove(couple.token)
+        onError('')
         onNotice(
           saveFirst ? `Deleted ${name}. Info sheet saved in CLIENTS / DELETED PLANNERS.` : `Deleted ${name}.`,
           link || undefined,
         )
         setConfirming(false)
       } catch (reason) {
-        if (!saved && preview && !preview.closed) preview.close()
-        onError(saved ? `Info sheet saved in CLIENTS / DELETED PLANNERS. ${messageFor(reason)}` : messageFor(reason))
+        if (!saved) closePreview(preview)
+        const message = saved ? `Info sheet saved in CLIENTS / DELETED PLANNERS. ${messageFor(reason)}` : messageFor(reason)
+        setDeleteError(message)
+        onError(message)
         if (saved && link) onNotice('Info sheet saved in CLIENTS / DELETED PLANNERS.', link)
-        setConfirming(false)
       } finally {
         deleting.current = false
         setBusy('')
@@ -1085,6 +1116,7 @@ function CoupleCard({
             disabled={busy === 'delete'}
             onClick={() => {
               setSaveBeforeDelete(true)
+              setDeleteError('')
               setConfirming(true)
             }}
           >
@@ -1164,6 +1196,11 @@ function CoupleCard({
                 />
                 Save info sheet to Deleted Planners first
               </label>
+              {deleteError && (
+                <p className="pipeline-error" role="alert">
+                  {deleteError}
+                </p>
+              )}
               <div>
                 <button type="button" disabled={busy === 'delete'} onClick={cancelDelete}>
                   Cancel

@@ -69,8 +69,10 @@ async function postAdmin(body: Record<string, unknown>): Promise<Record<string, 
   if (!text.startsWith('{')) throw new Error('The planner service did not answer.')
   const data = JSON.parse(text) as Record<string, unknown>
   if (data.ok === false) {
-    const error = typeof data.error === 'string' ? data.error : 'server_error'
-    throw new Error(error)
+    const code = typeof data.error === 'string' && data.error.trim() ? data.error.trim() : 'server_error'
+    const detail = typeof data.message === 'string' ? data.message.trim() : ''
+    // Apps Script reports every uncaught exception as error "server_error" and puts the real text in message.
+    throw new Error(detail || code)
   }
   return data
 }
